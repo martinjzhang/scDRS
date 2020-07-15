@@ -1,2 +1,4 @@
-# scDRS
-Disease relevance score for scRNA-seq
+# scTRS
+Trait-relevance score informed scRNA-seq analysis
+
+

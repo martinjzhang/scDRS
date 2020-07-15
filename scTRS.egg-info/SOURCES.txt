@@ -1,0 +1,8 @@
+README.md
+setup.py
+scTRS/util.py
+scTRS.egg-info/PKG-INFO
+scTRS.egg-info/SOURCES.txt
+scTRS.egg-info/dependency_links.txt
+scTRS.egg-info/not-zip-safe
+scTRS.egg-info/top_level.txt
