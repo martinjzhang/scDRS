@@ -94,4 +94,6 @@ def load_tms_ct(file_path, data_name='facs', flag_size_factor=True,
         
     # Add extra annotations
     adata.obs['age_num'] = [int(x.replace('m','')) for x in adata.obs['age']]
+    adata.obs['tissue_celltype'] = ['%s.%s'%(x,y) for x,y in zip(adata.obs['tissue'],
+                                                                 adata.obs['cell_ontology_class'])]
     return adata
