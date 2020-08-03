@@ -133,7 +133,42 @@ def score_cell_kangcheng_072920(data,
     
     return adata if copy else None
 
-def gearys_c(adata, vals):
+def gearys_c(adata, val_obs, prefix, stratify_obs=None, copy=False):
+    """
+    Interface of computing Geary's C statistics
+    
+    Args:
+        adata: Anndata object
+        val_obs: the obs name to calculate this statistics
+        prefix: the name will be `prefix`_gearys_C
+        stratify_obs: Calculate the statistics using `stratify_obs` obs column,
+            must be a categorical variable
+    """
+    
+    adata = adata.copy() if copy else adata
+    if stratify_obs is not None:
+        assert adata.obs[stratify_obs].dtype.name == 'category', \
+            "`stratify_obs` must correspond to a Categorical column"
+        categories = adata.obs[stratify_obs].unique()
+        all_c_stats = np.zeros(adata.shape[0])
+        for cat in categories:
+            s_index = adata.obs[stratify_obs] == cat
+            all_c_stats[s_index] = _gearys_c(adata[s_index], adata[s_index].obs[val_obs])
+        
+    else:
+        all_c_stats = _gearys_c(adata, adata.obs[val_obs])
+    
+    gearys_C_name = prefix + '_gearys_C'
+    if gearys_C_name in adata.obs.columns:
+        print('# gearys_c: overwrite original %s in adata.obs.columns'
+              %gearys_C_name)
+    adata.obs[gearys_C_name] = all_c_stats
+    # adata.obs[gearys_C_name] = adata.obs[gearys_C_name].astype('category')
+
+    return adata if copy else None
+
+    
+def _gearys_c(adata, vals):
     """Compute Geary's C statistics for an AnnData
     Adopted from https://github.com/ivirshup/scanpy/blob/metrics/scanpy/metrics/_gearys_c.py
     
@@ -151,6 +186,8 @@ def gearys_c(adata, vals):
         vals (Array-like):
             Values to calculate Geary's C for. If one dimensional, should have
             shape `(n_obs,)`. 
+    Returns:
+        C: the Geary's C statistics
     """
     graph = adata.obsp["connectivities"]
     assert graph.shape[0] == graph.shape[1]
