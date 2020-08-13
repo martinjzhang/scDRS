@@ -3,6 +3,8 @@ import numpy as np
 import scipy as sp
 from statsmodels.stats.multitest import multipletests
 import pandas as pd
+import scTRS.util as util
+
 
 def score_cell(data, 
                gene_list, 
@@ -45,7 +47,7 @@ def score_cell(data,
     adata.obs[trs_name] = adata[:, gene_list_overlap].X.mean(axis=1)
     
     if flag_correct_background:
-        v_mean,v_var = get_sparse_var(adata.X, axis=1)
+        v_mean,v_var = util.get_sparse_var(adata.X, axis=1)
         v_std = np.sqrt(v_var)
         adata.obs[trs_name] = (adata.obs[trs_name] - v_mean) / v_std * \
                                 np.sqrt(len(gene_list_overlap))
@@ -216,15 +218,6 @@ def _gearys_c(adata, vals):
         
     return C
 
-def get_sparse_var(sparse_X, axis=0):
-    
-    v_mean = sparse_X.mean(axis=axis)
-    v_mean = np.array(v_mean).reshape([-1])
-    v_var = sparse_X.power(2).mean(axis=axis)
-    v_var = np.array(v_var).reshape([-1])
-    v_var = v_var - v_mean**2
-    
-    
-    return v_mean,v_var
+
     
     
