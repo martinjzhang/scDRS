@@ -87,4 +87,35 @@ def empirical_zsc(score, null):
     df['cum_prop'] = (np.cumsum(df['is_null']) + 1) / (len(null) + 2)
     df = df[df['id'].str.startswith('score_')].sort_index()
     return sp.stats.norm.ppf(df['cum_prop'].values)
+
+
+# https://github.com/scikit-learn/scikit-learn/blob/0fb307bf3/sklearn/preprocessing/_data.py#L1092
+def sparse_robust_scale(X, quantile_range=(25.0, 75.0), copy=True):
+    """
+        sparse_robust_scale:
+        Compute the robust scale for matri X
+        
+        X: sparse matrix, rows are individuals, columns are genes,
+        
+        Return: Compute a scale for each gene
+    """
+    assert sp.sparse.issparse(X), "X must be a sparse matrix"
+    # at fit, convert sparse matrices to csc for optimized computation of the quantiles
+    X = X.tocsc(copy=copy)
+    q_min, q_max = quantile_range
+    if not 0 <= q_min <= q_max <= 100:
+        raise ValueError("Invalid quantile range: %s" %
+                         str(quantile_range))
     
+    quantiles = []
+    for feature_idx in range(X.shape[1]):
+        column_nnz_data = X.data[X.indptr[feature_idx]:
+                                 X.indptr[feature_idx + 1]]
+        column_data = np.zeros(shape=X.shape[0], dtype=X.dtype)
+        column_data[:len(column_nnz_data)] = column_nnz_data
+
+        quantiles.append(np.nanpercentile(column_data, quantile_range))
+
+    quantiles = np.transpose(quantiles)
+
+    return quantiles[1] - quantiles[0]
