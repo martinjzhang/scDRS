@@ -66,15 +66,20 @@ def score_cell(data,
         raise ValueError('# score_cell: trs_opt needs to be one of [mean]')
     if nullset_opt not in [None, 'random', 'random_mean_match']:
         raise ValueError('# score_cell: nullset_opt needs to be one of [random, random_mean_match]')
-        
+    
     # Gene statistics
     df_gene = pd.DataFrame(index=adata.var_names)
     df_gene['gene'] = df_gene.index
-    df_gene['mean'] = adata.X.mean(axis=0).T
+    if 'mean' in adata.var.columns:
+        if verbose:
+            print('Using precomputed mean expression in adata.var')
+        df_gene['mean'] = adata.var['mean']
+    else:
+        df_gene['mean'] = adata.X.mean(axis=0).T
     df_gene = df_gene.sort_values(by=['mean'])
     df_gene['rank'] = np.arange(df_gene.shape[0])+1
     df_gene['mean_rank_bin'] = pd.cut(df_gene['rank'], bins=n_genebin)
-    
+
     # Update gene_list  
     n_gene_old = len(gene_list)
     gene_list = list(set(adata.var_names) & set(gene_list))
@@ -99,7 +104,7 @@ def score_cell(data,
                 if (n_gene_in_bin>0) & (v_gene_bin.shape[0]>0):
                     ind_select = np.random.permutation(v_gene_bin.shape[0])[0:n_gene_in_bin]
                     dic_null_list[i_list] += list(v_gene_bin[ind_select])
-                
+                            
     if verbose:
         print('# score_cell: suffix=%s, trs_opt=%s, nullset_opt=%s'
               %(suffix, trs_opt, nullset_opt))
@@ -119,16 +124,22 @@ def score_cell(data,
         for i_list in dic_null_list.keys():
             temp_v = adata[:, dic_null_list[i_list]].X.mean(axis=1)
             dic_trs['trs_null%d'%i_list] = np.array(temp_v).reshape([-1])
+     
     
     # Cell-wise background correction
     if flag_correct_background:
-        v_mean,v_var = get_sparse_var(adata.X, axis=1)
+        if ('mean' in adata.obs.columns) and ('var' in adata.obs.columns):
+            if verbose:
+                print('Use precomputed mean and var in adata.obs')
+            v_mean, v_var = adata.obs['mean'].values, adata.obs['var'].values
+        else:
+            v_mean,v_var = get_sparse_var(adata.X, axis=1)
         v_std = np.sqrt(v_var)
         dic_trs['trs'] = (dic_trs['trs'] - v_mean) / v_std * np.sqrt(len(gene_list))
         for i_list in dic_null_list.keys():
             dic_trs['trs_null%d'%i_list] = (dic_trs['trs_null%d'%i_list] - v_mean) / \
                                             v_std * np.sqrt(len(dic_null_list[i_list]))
-            
+       
     # Z-score the TRS
     dic_trs['trs_z'] = (dic_trs['trs'] - dic_trs['trs'].mean())/ dic_trs['trs'].std()
     for i_list in dic_null_list.keys():

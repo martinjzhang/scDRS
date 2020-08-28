@@ -51,12 +51,13 @@ def load_tms_processed(file_path, data_name='facs', tissue='all'):
 
 
 def load_tms_ct(file_path, data_name='facs', flag_size_factor=True, 
-                total_ct_per_cell=1e4, flag_log1p=True):
+                total_ct_per_cell=1e4, flag_log1p=True, flag_scale=False, flag_filter_genes=False):
     
     """load normalized tms ct data
     1. Load raw data ('facs' or 'droplet')
     2. Size factor normalization to counts total_ct_per_cell
     3. log(x+1) transform
+    4. [Optional] scale each gene to have unit scale
 
     Args:
         file_path (str): file path. Should contain both 
@@ -80,6 +81,9 @@ def load_tms_ct(file_path, data_name='facs', flag_size_factor=True,
     # Load filtered data
     adata = read_h5ad(file_path+'/'+file_name)
     
+    if flag_filter_genes == True:
+        sc.pp.filter_genes(adata, min_cells=3)
+        
     # Size factor normalization
     if flag_size_factor == True:
         sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
@@ -87,7 +91,10 @@ def load_tms_ct(file_path, data_name='facs', flag_size_factor=True,
     # log(x+1) transform
     if flag_log1p == True:
         sc.pp.log1p(adata)
-        
+    
+    if flag_scale == True:
+        sc.pp.scale(adata, max_value=10, zero_center=False)
+    
     if 'facs' in data_name:
         ind_select = adata.obs['age'].isin(['3m', '18m', '24m'])
         adata = adata[ind_select,]
