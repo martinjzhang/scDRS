@@ -3,6 +3,7 @@ import numpy as np
 import time
 from anndata import read_h5ad
 from anndata import AnnData
+import scTRS.method as md
 
 def load_tms_processed(file_path, data_name='facs', tissue='all'):
     
@@ -51,7 +52,8 @@ def load_tms_processed(file_path, data_name='facs', tissue='all'):
 
 
 def load_tms_ct(file_path, data_name='facs', flag_size_factor=True, 
-                total_ct_per_cell=1e4, flag_log1p=True, flag_scale=False, flag_filter_genes=False):
+                total_ct_per_cell=1e4, flag_log1p=True,
+                flag_scale=False, flag_filter_genes=False):
     
     """load normalized tms ct data
     1. Load raw data ('facs' or 'droplet')
@@ -80,6 +82,7 @@ def load_tms_ct(file_path, data_name='facs', flag_size_factor=True,
             
     # Load filtered data
     adata = read_h5ad(file_path+'/'+file_name)
+    # adata.var['raw_mean'],adata.var['raw_var'] = md.get_sparse_var(adata.X, axis=0)
     
     if flag_filter_genes == True:
         sc.pp.filter_genes(adata, min_cells=3)
