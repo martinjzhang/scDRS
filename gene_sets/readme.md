@@ -9,14 +9,22 @@ Below is a summary we obtain from different gene sets:
 - Silver gene sets: We use the gene sets compiled from https://www.biorxiv.org/content/10.1101/2020.06.28.171561v1. There are OMIM, which are known mendelian genes to the diseases, and known drug targets. Each gene are assigned equal score 1.
 - MAGMA: Nominal p-values are converted to FDR, which is taken as the score.
 - PoPS: the scores are directly used.
+
+**Ideal scnerio**
+Computed from the same summary statistics. 
+- TWAS: each gene is assigned with the most significant TWAS p-value across tissues.
+- MAGMA: computed from 10kb window, one sided p-value.
+- PoPS
+- DEPICT
+
+
 In the follows, we describe how we processed to get the gene sets.
 
-
 ## TWAS
-Downloaded from http://twas-hub.org/. 
+Compiled by kushal
 ```bash
-mkdir -p out/raw/twas out/processed/twas
-python utils.py process_twas --raw_dir out/raw/twas --processed_dir out/processed/twas
+mkdir -p out/processed/twas_kushal
+python utils.py process_twas --raw_dir /n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/gene_annotation/Genes_by_X_kushal/ --processed_dir out/processed/twas_kushal
 ```
 
 
@@ -62,7 +70,9 @@ trait=$1
 results_dir=results_gwascatalog
 mkdir -p ${results_dir}
 python utils.py run_depict --analysis_label ${trait} --path_gwas_locus gwascatalog_140201/${trait}.txt --results_dir ${results_dir}
+# $
 ```
+
 
 Now submit the jobs
 ```bash
@@ -83,23 +93,68 @@ python utils.py process_depict --raw_dir out/raw/depict --processed_dir out/proc
 ## MAGMA
 Starting with files provides by Kushal. We format the data for later convenience.
 ```bash
-mkdir -p out/raw/magma out/processed/magma
-cp /n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/gene_annotation/Genes_by_X_kushal/Genes_by_X_MAGMA_10kb_Z.txt out/raw/magma/magma_10kb_Z.txt
+mkdir -p out/raw/magma out/processed/magma_108
+cp /n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/gene_annotation/MAGMA-v108/MAGMA_v108_GENE_10_PSTAT.txt out/raw/magma/
+cp /n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/gene_annotation/MAGMA-v108/MAGMA_v108_GENE_10_ZSTAT.txt out/raw/magma/
 cp /n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/sumstats/Description_080419.xlsx out/raw/magma/description.xlsx
 
-python utils.py process_magma --raw_dir out/raw/magma --processed_dir out/processed/magma
+python utils.py process_magma --raw_dir out/raw/magma --processed_dir out/processed/magma_108
 ```
 
 ## PoPS
 
 ```bash
-mkdir -p out/raw/pops out/processed/pops_pops out/processed/pops_twas
+mkdir -p out/raw/pops out/processed/pops_pops_hits out/processed/pops_twas_hits out/processed/pops_pops_all
 wget -O out/raw/pops/PoPS_FullResults.txt.gz https://www.dropbox.com/sh/dz4haeo48s34sex/AADyog193x9waw0YXgdxDobja/results/PoPS_FullResults.txt.gz
 wget -O out/raw/pops/PASS_AllMethods_GenePrioritization.txt.gz https://www.dropbox.com/sh/dz4haeo48s34sex/AAARC3I2C3mMPl1wmLlFzY7ta/results/PASS_AllMethods_GenePrioritization.txt.gz
 wget -O out/raw/pops/UKB_AllMethods_GenePrioritization.txt.gz https://www.dropbox.com/sh/dz4haeo48s34sex/AAAhP3P1f8RzIiTjgcArHEvIa/results/UKB_AllMethods_GenePrioritization.txt.gz
 
-python utils.py process_pops --raw_dir out/raw/pops --processed_dir out/processed/pops_pops -subset pops
-python utils.py process_pops --raw_dir out/raw/pops --processed_dir out/processed/pops_twas -subset twas
+for subset in pops_hits twas_hits pops_all; do
+    python utils.py process_pops --raw_dir out/raw/pops --processed_dir out/processed/pops_${subset} --subset ${subset}
+done
 
 ```
 
+## GWAS max absolute z-score
+For each gene, we take a 10-kb window, take the maximum absolute z-score as the score for this gene.
+```bash
+mkdir -p out/raw/gwas_derived out/processed/gwas_max_abs_z
+wget -O out/raw/gwas_derived/NCBI37.3.zip https://ctg.cncr.nl/software/MAGMA/aux_files/NCBI37.3.zip 
+cd out/raw/gwas_derived
+unzip NCBI37.3.zip && rm NCBI37.3.zip README REPORT
+```
+
+```bash
+
+#!/bin/bash
+#SBATCH -n 1                # Number of cores (-n)
+#SBATCH -N 1                # Ensure that all cores are on one Node (-N)
+#SBATCH -t 0-00:20          # Runtime in D-HH:MM, minimum of 10 minutes
+#SBATCH -p shared   # Partition to submit to
+#SBATCH --mem=8           # Memory pool for all cores (see also --mem-per-cpu)
+#SBATCH -o job_out  # File to which STDOUT will be written, %j inserts jobid
+#SBATCH -e job_err  # File to which STDERR will be written, %j inserts jobid
+
+export PATH=/n/holystore01/LABS/price_lab/Users/khou/miniconda3/bin:$PATH
+export PYTHONNOUSERSITE=True
+
+trait=$1
+
+python utils.py process_gene_max_abs_z --raw_dir None --processed_dir out/processed/gwas_max_abs_z --trait ${trait}
+```
+
+
+```bash
+sumstats_dir=/n/holystore01/LABS/price_lab/Lab/ldsc/sumstats_formatted
+file_list=$(ls ${sumstats_dir}/*.sumstats)
+for f in ${file_list}; do
+    trait="$(basename $f .sumstats)"
+    echo $trait
+    sbatch submit.sh ${trait}
+done
+```
+
+## HESS
+```bash
+python utils.py process_hess --raw_dir out/raw/hess/out --processed_dir out/processed/hess
+```

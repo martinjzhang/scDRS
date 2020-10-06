@@ -15,7 +15,10 @@ class GeneSet():
         kwargs: Parameters specific to different gene set, described as follows:
             Silver: 
         """
-        assert geneset_name in ['depict', 'silver_drug', 'silver_omim', 'twas', 'magma', 'pops_pops', 'pops_twas']
+        assert geneset_name in ['depict', 
+                                'silver_drug', 'silver_omim', 
+                                'twas_kushal', 'magma_107', 'magma_108',
+                                'pops_pops_hits', 'pops_twas_hits', 'pops_pops_all', 'gwas_max_abs_z', 'kegg', 'hess']
         
         # setting up the path
         self.data_dir = join(root_dir, 'processed', geneset_name)
