@@ -17,6 +17,7 @@ def score_cell(data,
                ctrlgene_list=None,
                n_ctrl=1,
                n_genebin=200,
+               cov_list=None,
                random_seed=0,
                verbose=False,
                copy=False,
@@ -59,6 +60,10 @@ def score_cell(data,
         n_genebin : int
             Number of gene bins (to divide the genes by expression)
             Only useful when ctrl_opt is not None
+        cov_list : list of str
+            Covariates to control for.
+            The covariates are first centered and then regressed out.
+            Elements in cov_list should be present in data.obs.columns
         random_seed : int
             Random seed
         copy : bool
@@ -87,6 +92,11 @@ def score_cell(data,
         raise ValueError('# score_cell: trs_opt not in [%s]'%', '.join([str(x) for x in trs_opt_list]))
     if bc_opt not in bc_opt_list:
         raise ValueError('# score_cell: bc_opt not in [%s]'%', '.join([str(x) for x in bc_opt_list]))
+    if cov_list is not None:
+        temp_list = list(set(cov_list) - set(adata.obs.columns))
+        if len(temp_list)>0:
+            raise ValueError('# score_cell: covariates %s are not in data.obs.columns'
+                             %','.join(temp_list))
         
     if verbose:
         print('# score_cell: suffix=%s, ctrl_opt=%s, trs_opt=%s, bc_opt=%s'%(suffix, ctrl_opt, trs_opt, bc_opt))
@@ -135,12 +145,12 @@ def score_cell(data,
     
     # Compute TRS: put all methods in _compute_trs
     dic_trs = {}
-    dic_trs['trs'] = _compute_trs(adata, gene_list, gene_weight, trs_opt)
+    dic_trs['trs'] = _compute_trs(adata, gene_list, gene_weight, trs_opt, cov_list=cov_list)
     for i_list in dic_ctrl_list.keys(): 
         dic_trs['trs_ctrl%d'%i_list] = _compute_trs(adata, 
                                                     dic_ctrl_list[i_list],
                                                     dic_ctrl_weight[i_list],
-                                                    trs_opt)
+                                                    trs_opt, cov_list=cov_list)
         
     # Correct cell-specific and geneset-specific background: put all methods in _correct_background
     _correct_background(adata, dic_trs, bc_opt)
@@ -280,8 +290,8 @@ def _select_ctrl_geneset(input_df_gene, gene_list, gene_weight,
                     
     return dic_ctrl_list,dic_ctrl_weight
 
-def _compute_trs(adata, gene_list, gene_weight, trs_opt):
-# def _compute_trs(adata, gene_list, trs_opt):
+
+def _compute_trs(adata, gene_list, gene_weight, trs_opt, cov_list=None):
     """Compute TRS
     
     Args
@@ -327,8 +337,50 @@ def _compute_trs(adata, gene_list, gene_weight, trs_opt):
         temp_v = adata[:, gene_list].X.dot(v_trs_weight)
         v_trs = np.array(temp_v, dtype=np.float64).reshape([-1])    
         
+    # Regress out covariates if needed 
+    if cov_list is not None:
+        
+        mat_X = adata.obs[cov_list].values.copy()        
+        mat_X = mat_X - mat_X.mean(axis=0)
+        v_trs = _reg_out(v_trs, mat_X)
+        
     return v_trs
 
+
+def _reg_out(mat_Y, mat_X):
+    """Regress mat_X out of mat_Y
+    
+    Args
+    ----
+        mat_Y (n_sample, n_response) : np.ndarray
+            Response variable
+        mat_X (n_sample, n_covariates) : np.ndarray
+            Covariates
+            
+    Returns
+    -------
+        mat_Y_resid (n_sample, n_response) : np.ndarray
+            Response variable residual
+    """
+    
+    mat_X = np.array(mat_X)
+    if len(mat_X.shape)==1:
+        mat_X = mat_X.reshape([-1,1]) 
+    mat_Y = np.array(mat_Y)
+    if len(mat_Y.shape)==1:
+        mat_Y = mat_Y.reshape([-1,1]) 
+    
+    n_sample = mat_Y.shape[0]
+    mat_xtx = np.dot(mat_X.T, mat_X)/n_sample
+    mat_xty = np.dot(mat_X.T, mat_Y)/n_sample
+    mat_coef = np.linalg.solve(mat_xtx, mat_xty)
+    mat_Y_resid = mat_Y - mat_X.dot(mat_coef)
+    
+    if mat_Y_resid.shape[1]==1:
+        mat_Y_resid = mat_Y_resid.reshape([-1])
+    
+    return mat_Y_resid
+    
     
 def _correct_background(adata, dic_trs, bc_opt):
     """Cell-wise and gene-wise background correction
