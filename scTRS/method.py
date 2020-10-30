@@ -95,8 +95,10 @@ def score_cell(data,
     if cov_list is not None:
         temp_list = list(set(cov_list) - set(adata.obs.columns))
         if len(temp_list)>0:
-            raise ValueError('# score_cell: covariates %s are not in data.obs.columns'
+            raise ValueError('# score_cell: covariates %s not in data.obs.columns'
                              %','.join(temp_list))
+        if (len(cov_list)>0) & ('mean' not in cov_list):
+            raise ValueError('# score_cell: mean needs to be in cov_list')
         
     if verbose:
         print('# score_cell: suffix=%s, ctrl_opt=%s, trs_opt=%s, bc_opt=%s'%(suffix, ctrl_opt, trs_opt, bc_opt))
@@ -542,47 +544,80 @@ def get_p_from_empi_null(v_t,v_t_null):
 ######################## Code for downstream analysis ########################
 ##############################################################################
 
-def rank_trs_genes(data,
+def correlate_gene(data,
                    trs_name='trs_ez',
-                   method='pearson_corr',
-                   corr_method='',
+                   suffix='',
+                   corr_opt='pearson',
+                   cov_list=None,
                    copy=False):
     
-    """Rank genes based on TRS 
+    """Compute the correlation between gene expressions and TRS
     
     Args
     ----
-        data (AnnData): 
-            AnnData object
+        data (n_cell, n_gene) : AnnData
             adata.X should contain size-normalized log1p transformed count data
-        trs_name (str): 
-            The name of the trs data to correlate with
-
+        trs_name : str
+            The variable to correlate gene expression with. Should be one column in data.obs.
+        suffix : str
+            The name of the added gene-wise correlation would be 'trs_corr'+suffix.
+        corr_opt : str
+            Option for computing the correlation
+            'pearson': Pearson's correlation
+            'spearman': Spearman's correlation
+        cov_list : list of str
+            Covariates to control for.
+            The covariates are first centered and then regressed out from 
+                both trs_name and the gene expression before computing the correlation.
+            Elements in cov_list should be present in data.obs.columns
+        copy : bool
+            If to make copy of the AnnData object
+            
     Returns
     -------
         adata (AnnData): 
-            Add columns to data.obs as specified by return_list
+            Add the columns 'trs_corr'+suffix to data.var
     """
     
     adata = data.copy() if copy else data
     
+    # Check options
+    corr_opt_list = ['pearson', 'spearman']
+    if corr_opt not in corr_opt_list:
+        raise ValueError('# compute_trs_corr: corr_opt not in [%s]'
+                         %', '.join([str(x) for x in corr_opt_list]))
+    if trs_name not in adata.obs.columns:
+        raise ValueError('# compute_trs_corr: %s not in data.obs.columns'%trs_name)
+    if cov_list is not None:
+        temp_list = list(set(cov_list) - set(adata.obs.columns))
+        if len(temp_list)>0:
+            raise ValueError('# compute_trs_corr: covariates %s not in data.obs.columns'
+                             %','.join(temp_list))
+    
+    # Get data 
     mat_X = data.X.toarray()
     v_trs = data.obs[trs_name].values.copy()
     
-    # Compute correlation
-    if method=='pearson_corr':
-        v_corr = pearson_corr(mat_X, v_trs)
-        
-    if method=='spearman_corr':
-        v_corr = spearman_corr(mat_X, v_trs)
-        
+    # Regress out covariates
+    if cov_list is not None:
+        mat_cov = adata.obs[cov_list].values.copy()        
+        mat_cov = mat_cov - mat_cov.mean(axis=0)
+        v_trs = _reg_out(v_trs, mat_cov)
+        mat_X = _reg_out(mat_X, mat_cov)
     
-    adata.var['trs_corr'] = v_corr
+    # Compute correlation
+    if corr_opt=='pearson':
+        v_corr = _pearson_corr(mat_X, v_trs)
+               
+    if corr_opt=='spearman':
+        v_corr = _spearman_corr(mat_X, v_trs)
+    
+    adata.var['trs_corr'+suffix] = v_corr
         
     return adata if copy else None 
     
     
-def pearson_corr(mat_X, mat_Y):
+def _pearson_corr(mat_X, mat_Y):
     """Pearson's correlation between every columns in mat_X and mat_Y
     
     Args
@@ -613,7 +648,7 @@ def pearson_corr(mat_X, mat_Y):
         return mat_corr
     
     
-def spearman_corr(mat_X, mat_Y):
+def _spearman_corr(mat_X, mat_Y):
     """Spearman's correlation between every columns in mat_X and mat_Y
     
     Args
@@ -634,8 +669,8 @@ def spearman_corr(mat_X, mat_Y):
     if len(mat_Y.shape)==1:
         mat_Y = mat_Y.reshape([-1,1])
         
-    mat_X = get_rank(mat_X, axis=0)
-    mat_Y = get_rank(mat_Y, axis=0)
+    mat_X = _get_rank(mat_X, axis=0)
+    mat_Y = _get_rank(mat_Y, axis=0)
 
     mat_X = (mat_X-mat_X.mean(axis=0))/mat_X.std(axis=0).clip(min=1e-8)
     mat_Y = (mat_Y-mat_Y.mean(axis=0))/mat_Y.std(axis=0).clip(min=1e-8)
@@ -647,7 +682,7 @@ def spearman_corr(mat_X, mat_Y):
         return mat_corr
     
 
-def get_rank(mat_X, axis=0):
+def _get_rank(mat_X, axis=0):
     """Spearman's correlation between every columns in mat_X and mat_Y
     
     Args
