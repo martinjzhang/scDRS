@@ -82,6 +82,13 @@ def score_cell(data,
     
     adata = data.copy() if copy else data
     
+    # Pre-compute statistics
+    var_set = set(['mean','var','var_tech'])
+    obs_set = set(['mean','var'])
+    if (len(var_set-set(adata.var.columns))>0) | (len(obs_set-set(adata.obs.columns))>0):
+        if verbose: print('# score_cell: recompute statistics using method.compute_stats')
+        compute_stats(adata)
+    
     # Check options
     ctrl_opt_list = [None, 'given', 'random', 'mean_match', 'mean_bvar_match']
     trs_opt_list = ['mean', 'vst', 'inv_std']
@@ -95,8 +102,7 @@ def score_cell(data,
     if cov_list is not None:
         temp_list = list(set(cov_list) - set(adata.obs.columns))
         if len(temp_list)>0:
-            raise ValueError('# score_cell: covariates %s not in data.obs.columns'
-                             %','.join(temp_list))
+            raise ValueError('# score_cell: covariates %s not in data.obs.columns'%','.join(temp_list))
         if (len(cov_list)>0) & ('mean' not in cov_list):
             raise ValueError('# score_cell: mean needs to be in cov_list')
         
@@ -105,12 +111,6 @@ def score_cell(data,
         print('# score_cell: n_ctrl=%d, n_genebin=%d'%(n_ctrl, n_genebin))
         
     # Gene-wise statistics
-    var_set = set(['mean','var','var_tech'])
-    obs_set = set(['mean','var'])
-    if (len(var_set-set(adata.var.columns))>0) | (len(obs_set-set(adata.obs.columns))>0):
-        if verbose: print('# score_cell: recompute statistics using method.compute_stats')
-        compute_stats(adata)
-        
     df_gene = pd.DataFrame(index=adata.var_names)
     df_gene['gene'] = df_gene.index
     df_gene['mean'] = adata.var['mean']
@@ -326,14 +326,16 @@ def _compute_trs(adata, gene_list, gene_weight, trs_opt, cov_list=None):
         v_trs = np.array(temp_v, dtype=np.float64).reshape([-1])
     
     if trs_opt=='vst':
-        v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values.clip(min=1e-2))
+        v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values.clip(min=1e-1))
+        # v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values.clip(min=1e-2))
         v_trs_weight *= gene_weight
         v_trs_weight /= v_trs_weight.sum()
         temp_v = adata[:, gene_list].X.dot(v_trs_weight)
         v_trs = np.array(temp_v, dtype=np.float64).reshape([-1])
             
     if trs_opt=='inv_std':
-        v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values.clip(min=1e-2))
+        v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values.clip(min=1e-1))
+        # v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values.clip(min=1e-2))
         v_trs_weight *= gene_weight
         v_trs_weight /= v_trs_weight.sum()
         temp_v = adata[:, gene_list].X.dot(v_trs_weight)
