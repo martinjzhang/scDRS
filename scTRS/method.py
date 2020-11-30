@@ -7,6 +7,7 @@ from scipy.stats import rankdata
 import pandas as pd
 import time
 
+
 def score_cell(data, 
                gene_list, 
                gene_weight=None,
@@ -92,7 +93,7 @@ def score_cell(data,
     # Check options
     ctrl_opt_list = [None, 'given', 'random', 'mean_match', 'mean_bvar_match']
     trs_opt_list = ['mean', 'vst', 'inv_std']
-    bc_opt_list = [None, 'recipe_vision', 'empi']
+    bc_opt_list = [None, 'recipe_vision', 'empi', 'debug']
     if ctrl_opt not in ctrl_opt_list:
         raise ValueError('# score_cell: ctrl_opt not in [%s]'%', '.join([str(x) for x in ctrl_opt_list]))
     if trs_opt not in trs_opt_list:
@@ -326,16 +327,16 @@ def _compute_trs(adata, gene_list, gene_weight, trs_opt, cov_list=None):
         v_trs = np.array(temp_v, dtype=np.float64).reshape([-1])
     
     if trs_opt=='vst':
-        v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values.clip(min=1e-1))
-        # v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values.clip(min=1e-2))
+        # v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values.clip(min=1e-1))
+        v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values.clip(min=1e-2))
         v_trs_weight *= gene_weight
         v_trs_weight /= v_trs_weight.sum()
         temp_v = adata[:, gene_list].X.dot(v_trs_weight)
         v_trs = np.array(temp_v, dtype=np.float64).reshape([-1])
             
     if trs_opt=='inv_std':
-        v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values.clip(min=1e-1))
-        # v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values.clip(min=1e-2))
+        # v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values.clip(min=1e-1))
+        v_trs_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values.clip(min=1e-2))
         v_trs_weight *= gene_weight
         v_trs_weight /= v_trs_weight.sum()
         temp_v = adata[:, gene_list].X.dot(v_trs_weight)
@@ -445,11 +446,22 @@ def _correct_background(adata, dic_trs, bc_opt):
         
         for trs_name in ['trs']+trs_ctrl_list:
             dic_trs['%s_z'%trs_name] = (dic_trs[trs_name] - v_mean_ctrl)/v_std_ctrl
+            
+    if bc_opt == 'debug':
+        mat_ctrl_trs = np.zeros([n_cell, len(trs_ctrl_list)])
+        for i_trs_name,trs_name in enumerate(trs_ctrl_list):
+            mat_ctrl_trs[:,i_trs_name] = dic_trs[trs_name]
+        v_mean = mat_ctrl_trs.mean(axis=1)
+        v_std = mat_ctrl_trs.std(axis=1)
+        
+        for trs_name in ['trs']+trs_ctrl_list:
+            dic_trs['%s_z'%trs_name] = (dic_trs[trs_name] - v_mean) / v_std
         
     # Z-transform each gene set (across cells)
-    for trs_name in ['trs']+trs_ctrl_list:
-        dic_trs['%s_z'%trs_name] = (dic_trs['%s_z'%trs_name] - dic_trs['%s_z'%trs_name].mean()) \
-                                    / dic_trs['%s_z'%trs_name].std()
+    if bc_opt!='debug':
+        for trs_name in ['trs']+trs_ctrl_list:
+            dic_trs['%s_z'%trs_name] = (dic_trs['%s_z'%trs_name] - dic_trs['%s_z'%trs_name].mean()) \
+                                        / dic_trs['%s_z'%trs_name].std()
     
     # Set cells with TRS=0 to the minimum TRS z-score value
     trs_min = dic_trs['trs_z'].min()
@@ -539,6 +551,11 @@ def get_p_from_empi_null(v_t,v_t_null):
     v_pos = np.searchsorted(v_t_null, v_t, side='left')
     v_p = (v_t_null.shape[0]-v_pos+1)/(v_t_null.shape[0]+1)
     return v_p
+
+
+##############################################################################
+###################### Experimental Code for score_cell ######################
+##############################################################################
 
 
 

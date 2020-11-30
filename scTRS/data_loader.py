@@ -50,7 +50,6 @@ def load_tms_processed(file_path, data_name='facs', tissue='all'):
     return dic_data
 
 
-
 def load_tms_ct(file_path, data_name='facs', flag_size_factor=True, 
                 total_ct_per_cell=1e4, flag_log1p=True,
                 flag_scale=False, flag_filter_genes=False):
@@ -107,3 +106,34 @@ def load_tms_ct(file_path, data_name='facs', flag_size_factor=True,
     adata.obs['tissue_celltype'] = ['%s.%s'%(x,y) for x,y in zip(adata.obs['tissue'],
                                                                  adata.obs['cell_ontology_class'])]
     return adata
+
+
+def load_aizarani_raw_data(opt='raw',
+                           flag_size_factor=True,
+                           total_ct_per_cell=1e4,
+                           flag_log1p=True,):
+    
+    if opt=='raw':
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/liver_atlas'
+        adata = read_h5ad(DATA_PATH+'/obj_raw.h5ad')
+        
+        if flag_size_factor == True:
+            sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
+        if flag_log1p == True:
+            sc.pp.log1p(adata)
+        
+    if opt=='processed':
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/liver_atlas'
+        adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
+        
+    return adata
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
