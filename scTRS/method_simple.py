@@ -34,17 +34,23 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 def load_score_dataset(name, filter_homolog=True):
+    DATA_PATH = '/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data'
     assert name in ['tms_facs', 'tms_droplet']
-    if name == 'tms_facs':
-        DATA_PATH = '/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data'
-        
-        data = dl.load_tms_ct(DATA_PATH, data_name='facs')
+    if name in ['tms_facs', 'tms_droplet']:
+        if name == 'tms_facs':
+            data = dl.load_tms_ct(DATA_PATH, data_name='facs')
+        elif name == 'tms_droplet':
+            data = dl.load_tms_ct(DATA_PATH, data_name='droplet')
+        else:
+            raise NotImplementedError
+            
         if filter_homolog:
             GENE_SCORE_PATH = join(DATA_PATH, 'trs_gene_scores')
             hsapiens_mmusculus_mapping = pd.read_csv(join(GENE_SCORE_PATH, 'meta_data', 'hsapiens_mmusculus_mapping.csv'))
             hsapiens_genes = sorted(list(set(hsapiens_mmusculus_mapping['mmusculus'].values) & set(data.var_names)))
             data = data[:, hsapiens_genes].copy()
         return data
+    
     else:
         raise NotImplementedError
 
