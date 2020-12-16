@@ -11,7 +11,6 @@ from os.path import join
 # stats
 from statsmodels.stats.multitest import multipletests
 
-
 # plotting
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -35,7 +34,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 def load_score_dataset(name, filter_homolog=True):
     DATA_PATH = '/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data'
-    assert name in ['tms_facs', 'tms_droplet']
+    assert name in ['tms_facs', 'tms_droplet', 'aizarani']
     if name in ['tms_facs', 'tms_droplet']:
         if name == 'tms_facs':
             data = dl.load_tms_ct(DATA_PATH, data_name='facs')
@@ -50,7 +49,10 @@ def load_score_dataset(name, filter_homolog=True):
             hsapiens_genes = sorted(list(set(hsapiens_mmusculus_mapping['mmusculus'].values) & set(data.var_names)))
             data = data[:, hsapiens_genes].copy()
         return data
-    
+    elif name == 'aizarani':
+        data = dl.load_aizarani_raw_data(opt='processed')
+        # TODO: more filtering?
+        return data
     else:
         raise NotImplementedError
 
@@ -140,18 +142,21 @@ def score_cell(dataset, gene_list, num_ctrl = 500, num_bins=200, random_state=12
     trait_zsc, ctrl_zsc = _normalize_across_cell(trait_trs, ctrl_trs)
     trait_ep = get_p_from_empi_null(trait_zsc, ctrl_zsc.flatten())
     
-    # Within tissue normalization
-    within_tissue_trait_ep = np.zeros_like(trait_ep)
-    for tissue in score_dataset.obs['tissue'].unique():
-        tissue_index = np.where(score_dataset.obs['tissue'] == tissue)[0]
-        within_tissue_trait_ep[tissue_index] = get_p_from_empi_null(trait_zsc[tissue_index], ctrl_zsc[:, tissue_index].flatten())
     
+
     return_dict = {'trait_trs': trait_trs,
                    'pval': (np.sum(trait_trs < ctrl_trs, axis=0) + 1) / (num_ctrl + 1),
                    'trait_ep': trait_ep,
-                   'within_tissue_trait_ep': within_tissue_trait_ep,
                    'index': score_dataset.obs.index,
                    'gene_list': gene_list}
+    
+    if isinstance(dataset, str) and dataset.startswith('tms'):
+        # Within tissue normalization
+        within_tissue_trait_ep = np.zeros_like(trait_ep)
+        for tissue in score_dataset.obs['tissue'].unique():
+            tissue_index = np.where(score_dataset.obs['tissue'] == tissue)[0]
+            within_tissue_trait_ep[tissue_index] = get_p_from_empi_null(trait_zsc[tissue_index], ctrl_zsc[:, tissue_index].flatten())
+        return_dict['within_tissue_trait_ep'] = within_tissue_trait_ep
     
     def _calculate_norm_factor(v, robust_opt, axis=None):
         if robust_opt:
@@ -206,7 +211,10 @@ def load_gene_score(path, gene_id_col, score_col, ascending=True, num_genes=None
 def zsc2pval(zsc):
     return 1 - sp.stats.norm.cdf(zsc)
 
-def plot_simulation_score_hist(score_list, score_index, adata, num_bins=20, num_cols=6):
+def pval2zsc(pval):
+    return -sp.stats.norm.ppf(pval).clip(min=-10,max=10)
+
+def plot_simulation_score_hist(score_list, score_index, adata, stratify_by_tissue=True, num_bins=20, num_cols=6):
     
     num_sim = len(score_list)
     
@@ -224,30 +232,30 @@ def plot_simulation_score_hist(score_list, score_index, adata, num_bins=20, num_
     plt.xlabel('p-value bin')
     plt.ylabel('Density')
     plt.title('All')
-    
-    tissue_df = adata[score_index].obs.tissue
-    tissue_list = tissue_df.unique()
-    plt.figure(figsize=[20, 2+3*len(tissue_list)/num_cols])
-    for tissue_i, tissue in enumerate(tissue_list):
-        tissue_index = (tissue_df == tissue)
-        num_bins = 20
-        plt.subplot(int(np.ceil(len(tissue_list) / num_cols)), num_cols, tissue_i + 1)
-        hists = [np.histogram(score[tissue_index], bins=num_bins, range=(0, 1), density=True)[0] for score in score_list]
-        
-        xpos = np.arange(0, 1, 1 / num_bins) + 0.5 / num_bins
-        for hist in hists:
-            plt.plot(xpos, hist, 'k--', alpha=0.1)
-        
-        plt.errorbar(xpos, 
-                     np.mean(hists, axis=0), 
-                     np.std(hists, axis=0) * 2 / np.sqrt(num_sim), 
-                     linestyle='None', marker='^', capsize=5)
-        plt.ylim(0, 2)
-        plt.axhline(y=1., linestyle='--', color='r')
-        plt.xlabel('p-value bin')
-        plt.ylabel('Density')
-        plt.title(tissue)
-    plt.tight_layout()
+    if stratify_by_tissue:
+        tissue_df = adata[score_index].obs.tissue
+        tissue_list = tissue_df.unique()
+        plt.figure(figsize=[20, 2+3*len(tissue_list)/num_cols])
+        for tissue_i, tissue in enumerate(tissue_list):
+            tissue_index = (tissue_df == tissue)
+            num_bins = 20
+            plt.subplot(int(np.ceil(len(tissue_list) / num_cols)), num_cols, tissue_i + 1)
+            hists = [np.histogram(score[tissue_index], bins=num_bins, range=(0, 1), density=True)[0] for score in score_list]
+
+            xpos = np.arange(0, 1, 1 / num_bins) + 0.5 / num_bins
+            for hist in hists:
+                plt.plot(xpos, hist, 'k--', alpha=0.1)
+
+            plt.errorbar(xpos, 
+                         np.mean(hists, axis=0), 
+                         np.std(hists, axis=0) * 2 / np.sqrt(num_sim), 
+                         linestyle='None', marker='^', capsize=5)
+            plt.ylim(0, 2)
+            plt.axhline(y=1., linestyle='--', color='r')
+            plt.xlabel('p-value bin')
+            plt.ylabel('Density')
+            plt.title(tissue)
+        plt.tight_layout()
     plt.show()
     
 def plot_simulation_pval_calibration(pval_dict):
@@ -290,7 +298,7 @@ def plot_assoc_matrix(score_dict, score_index, adata, stratify_by):
         else:
             return ''
     
-    assert stratify_by in ['tissue', 'tissue_celltype']
+    assert stratify_by in ['tissue', 'tissue_celltype', 'celltype']
     stratify_list = sorted(list(set(adata.obs[stratify_by])))
     
     # make df for plotting
@@ -301,18 +309,20 @@ def plot_assoc_matrix(score_dict, score_index, adata, stratify_by):
 
         pval = score_dict[trait]
         fdr = multipletests(pval, method='fdr_bh')[1]
-        # TODO: check the concordance between score_index and adata 
-        # tissue
+        # TODO: check the concordance between score_index and adata
+        # TODO: Deal with the len properly??
         temp_df = df_obs.loc[fdr<0.2].copy()
-        temp_df = temp_df.groupby([stratify_by]).agg({'cell':len})
-        temp_df = temp_df.loc[~temp_df['cell'].isna()]
-        df_plot.loc[temp_df.index, trait] = temp_df['cell'].values
+        temp_df = temp_df.groupby([stratify_by]).agg({stratify_by:len})
+        temp_df = temp_df.loc[~temp_df[stratify_by].isna()]
+        df_plot.loc[temp_df.index, trait] = temp_df[stratify_by].values
     
 
     df_plot = df_plot.loc[df_plot.max(axis=1)>10]
     df_plot = df_plot.T
     df_plot[df_plot<10] = 0
-
+    if df_plot.size == 0:
+        print('No association')
+        return
     mat_annot = np.zeros(df_plot.shape, dtype=object)
     for i_col,col in enumerate(df_plot.columns):
         mat_annot[:,i_col] = [num2str(x) for x in df_plot[col].values]
@@ -350,7 +360,7 @@ def plot_qqplot(pval_dict, num_cols=6):
     plt.tight_layout()
     plt.show()
 
-def plot_pval_umap(pval_dict, score_index, umap_adata_dict, num_cols=5):
+def plot_pval_umap(pval_dict, score_index, umap_adata_dict, umap_color=['cell_ontology_class'], num_cols=5):
     """
     Overlay p-value on UMAP
     """
@@ -358,7 +368,7 @@ def plot_pval_umap(pval_dict, score_index, umap_adata_dict, num_cols=5):
         
         umap_adata = umap_adata_dict[tissue].copy() 
         fig, ax = plt.subplots(figsize=(6, 6))
-        sc.pl.umap(umap_adata, color=['cell_ontology_class'], size=20, ax=ax)
+        sc.pl.umap(umap_adata, color=umap_color, size=20, ax=ax)
         df_plot = pd.DataFrame(index=umap_adata.obs.index)
         df_plot['UMAP1'] = umap_adata.obsm['X_umap'][:,0]
         df_plot['UMAP2'] = umap_adata.obsm['X_umap'][:,1]
@@ -384,3 +394,57 @@ def plot_pval_umap(pval_dict, score_index, umap_adata_dict, num_cols=5):
 
         plt.tight_layout()
         plt.show()
+        
+
+def plot_score_correlation(score_dict, score_index, adata, stratify_by):
+    """
+    Plot the correlation matrix between pairs of traits
+    stratify_by: a list of configurations: e.g. stratify_by = {'all': True, tissue': ['Liver'], 'tissue_celltype', 'Heart.B cell']]
+    """
+    df = pd.DataFrame()
+    for trait in score_dict:
+        df[trait] = score_dict[trait]
+    
+    figsize = len(score_dict) / 3 * 2
+    
+    for group_name in stratify_by:
+        if group_name == 'all':
+            
+            df_corr = df.corr()
+            plt.figure(figsize=[figsize, figsize])
+            sns.heatmap(df_corr, annot=df_corr, fmt='0.2f', xticklabels=False, center=0.0, vmax=1.0, vmin=-1.0)
+            plt.title('TRS z-score correlation across all cells ')
+            plt.show()
+        else:
+            for group in stratify_by[group_name]:
+                index = np.where(adata.obs[group_name] == group)[0]
+                group_df = df.iloc[index, :]
+                df_corr = group_df.corr()
+
+                plt.figure(figsize=[figsize, figsize])
+                sns.heatmap(df_corr, annot=df_corr, fmt='0.2f', xticklabels=False, center=0.0, vmax=1.0, vmin=-1.0)
+                plt.title(f'TRS z-score correlation across {group} cells ')
+                plt.show()
+    
+#     if 'tissue' in stratify_by:
+#         for tissue in stratify_by['tissue']:
+#             index = np.where(adata.obs['tissue'] == tissue)[0]
+#             subset_df = df.iloc[index, :]
+#             df_corr = subset_df.corr()
+            
+#             plt.figure(figsize=[figsize, figsize])
+#             sns.heatmap(df_corr, annot=df_corr, fmt='0.2f', xticklabels=False, center=0.0, vmax=1.0, vmin=-1.0)
+#             plt.title(f'TRS z-score correlation across {tissue} cells ')
+#             plt.show()
+            
+#     if 'tissue_celltype' in stratify_by:
+#         for tc in stratify_by['tissue_celltype']:
+#             index = np.where(adata.obs['tissue_celltype'] == tc)[0]
+#             subset_df = df.iloc[index, :]
+#             df_corr = subset_df.corr()
+            
+#             plt.figure(figsize=[figsize, figsize])
+#             sns.heatmap(df_corr, annot=df_corr, fmt='0.2f', xticklabels=False, center=0.0, vmax=1.0, vmin=-1.0)
+#             plt.title(f'TRS z-score correlation across {tc} cells ')
+#             plt.show()
+            
