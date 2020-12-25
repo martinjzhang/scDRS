@@ -79,8 +79,9 @@ def _select_ctrl_genes(trait_genes, all_gene_df, bin_name, num_ctrl, num_bins):
     ctrl_genes = [[] for i in range(num_ctrl)]
     for index, bin_row in df.iterrows():
         bin_genes = sorted(list(bin_row['gene']))
+        if overlap_num.loc[index]==0: continue
         for ctrl_i in range(num_ctrl):
-            ctrl_genes[ctrl_i].extend(np.random.choice(bin_genes, size=overlap_num[index], replace=False))
+            ctrl_genes[ctrl_i].extend(np.random.choice(bin_genes, size=overlap_num.loc[index], replace=False))
     return ctrl_genes
     
     

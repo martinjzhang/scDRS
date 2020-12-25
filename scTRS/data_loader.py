@@ -127,13 +127,3 @@ def load_aizarani_raw_data(opt='raw',
         adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
         
     return adata
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
