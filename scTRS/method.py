@@ -146,18 +146,19 @@ def score_cell(data,
     # Get p-values 
     mc_p = (1+(mat_ctrl_norm_score.T>=v_norm_score).sum(axis=0))/(1+n_ctrl)
     pooled_p = get_p_from_empi_null(v_norm_score, mat_ctrl_norm_score.flatten())  
+    nlog10_pooled_p = -np.log10(pooled_p)
     pooled_z = -sp.stats.norm.ppf(pooled_p).clip(min=-10,max=10)
     
     # Return result
-    dic_res = {'raw_score':v_raw_score, 'norm_score':v_norm_score,
-               'mc_pval':mc_p, 'pval':pooled_p, 'zscore':pooled_z}
+    dic_res = {'raw_score':v_raw_score, 'norm_score':v_norm_score, 'mc_pval':mc_p,
+               'pval':pooled_p, 'nlog10_pval':nlog10_pooled_p, 'zscore':pooled_z}
     if return_ctrl_raw_score:
         for i in range(n_ctrl):
             dic_res['ctrl_raw_score_%d'%i] = mat_ctrl_raw_score[:,i]
     if return_ctrl_norm_score:
         for i in range(n_ctrl):
             dic_res['ctrl_norm_score_%d'%i] = mat_ctrl_norm_score[:,i]
-    df_res = pd.DataFrame(index=adata.obs.index,  data=dic_res)
+    df_res = pd.DataFrame(index=adata.obs.index,  data=dic_res, dtype=np.float32)
     return df_res
 
 
@@ -254,9 +255,9 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt, cov_list=None)
     if weight_opt=='uniform':
         v_score_weight = np.ones(len(gene_list))
     if weight_opt=='vs':
-        v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values + 1e-2)
+        v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values + 1e-3)
     if weight_opt=='inv_std':
-        v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values + 1e-2)
+        v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values + 1e-3)
         
     if gene_weight is not None:
         v_score_weight = v_score_weight*np.array(gene_weight)
