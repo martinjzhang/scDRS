@@ -62,8 +62,14 @@ def score_cell(data,
 
     Returns
     -------
-        df_res (n_cell, n_key) : pd.DataFrame
-            Columns corresponds to the scores 
+        df_res (n_cell, n_key) : pd.DataFrame (dtype=np.float32)
+            Columns: 
+            0. raw_score
+            1. norm_score: scores after cell-wise and trait-wise normalization
+            2. mc_pval: p-values computed using only the control scores from the same cell 
+            3. pval
+            4. nlog10_pval: -log10(pval). Needed in case the single precision (np.float32) gives inaccurate p-values
+            5. zscore: one-side z-score converted from pval
             
     TODO
     -------
@@ -255,9 +261,9 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt, cov_list=None)
     if weight_opt=='uniform':
         v_score_weight = np.ones(len(gene_list))
     if weight_opt=='vs':
-        v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values + 1e-3)
+        v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values + 1e-2)
     if weight_opt=='inv_std':
-        v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values + 1e-3)
+        v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values + 1e-2)
         
     if gene_weight is not None:
         v_score_weight = v_score_weight*np.array(gene_weight)
