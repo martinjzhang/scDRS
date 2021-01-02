@@ -63,5 +63,9 @@ for method in ["gwas_maxabsz", "hess", "magma"]:
     print(method, todo_batch_list)
     for batch_i in todo_batch_list:
         cmd = f"sbatch --array={batch_i} compute_score.sh {method}"
+        print(cmd)
         subprocess.call(cmd, shell=True)   
 ```
+
+## Analyze the results
+See `gene_score_benchmark.ipynb` for the results analysis.
