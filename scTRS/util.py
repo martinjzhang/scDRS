@@ -5,6 +5,7 @@ import numbers
 import matplotlib.pyplot as plt
 import seaborn as sns
 from statsmodels.stats.multitest import multipletests
+import scanpy as sc
 
 def test_sctrs():
     print('# test_sctrs')
@@ -301,5 +302,42 @@ def plot_qq(pval_dict, num_cols=6):
         plt.title('%s\nFDR<0.2: %d cells'%(trait,(fdr_dict[trait]<0.2).sum()))
         plt.ylabel('%s\nObserved[-log10(P)]'%trait)
         plt.xlabel('Expected[-log10(P)]')
+    plt.tight_layout()
+    plt.show()
+    
+def plot_score_umap(score_dict, score_index, umap_adata, umap_color=['cell_ontology_class'], n_col=5):
+    """
+    Overlay score on UMAP
+    ---
+    Args
+    score_dict: label -> list of scores
+    score_index: index of the scores in `score_dict`
+    umap_adata: Anndata containing the umap
+    umap_color: which attributes to plot before hand
+    n_col: number of columns per row
+    """
+    umap_adata = umap_adata.copy()
+        
+    fig, ax = plt.subplots(figsize=(6, 6))
+    sc.pl.umap(umap_adata, color=umap_color, size=20, ax=ax)
+    df_plot = pd.DataFrame(index=umap_adata.obs.index)
+    df_plot['UMAP1'] = umap_adata.obsm['X_umap'][:,0]
+    df_plot['UMAP2'] = umap_adata.obsm['X_umap'][:,1]
+    df_plot = df_plot.join(pd.DataFrame(score_dict, index=score_index))
+    
+    # Trait TRS plot
+    plt.figure(figsize=[15, 2+3*len(score_dict)/n_col])
+
+    for trait_i, trait in enumerate(score_dict.keys()):
+        plt.subplot(int(np.ceil(len(score_dict) / n_col)), n_col, trait_i + 1)
+        # max_ = np.quantile(np.absolute(df_plot[trait].values), 0.99)
+        # min_ = np.quantile(np.absolute(df_plot[trait].values), 0.01)
+        plt.scatter(df_plot['UMAP1'], df_plot['UMAP2'], c=df_plot[trait],
+                    cmap='RdBu_r', s=4)
+        plt.colorbar()
+        plt.clim(-4,4)
+        plt.xlabel('UMAP1')
+        plt.ylabel('UMAP2')
+        plt.title('%s'%trait)
     plt.tight_layout()
     plt.show()
