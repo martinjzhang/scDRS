@@ -5,66 +5,10 @@
 ## Cell type association
 
 ## Cell type heterogeneity
+
 ### Assign the significance for group-level statistics
-```python
-import scTRS.util as util
-import scTRS.method as md
-import scTRS.data_loader as dl
-import submitit
-from anndata import read_h5ad
-import numpy as np
-import pandas as pd
-from os.path import join, exists
-import itertools
+- Run `python compute_group_stats.py`
 
-def wrapper(trait, tissue, out_prefix):
-    DATA_PATH = '/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data'
-    SCORE_FILE_DIR = join(DATA_PATH, "score_file")
-
-    adata = dl.load_tms_processed('/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data', data_name='facs', tissue=tissue)[tissue]
-    ctrl_zsc = pd.read_csv(join(SCORE_FILE_DIR, "score.facs.gwas_max_abs_z.top500", f"{trait}.full_score.gz"), sep='\t', index_col=0)
-    trait_col = "norm_score"
-    ctrl_cols = [col for col in ctrl_zsc.columns if col.startswith(f"ctrl_norm_score_")]
-
-    tissue_index = adata.obs.index[adata.obs.tissue == tissue]
-    tissue_ctrl_zsc = ctrl_zsc.loc[tissue_index, :]
-    zsc_dict = dict()
-    zsc_dict[trait_col] = tissue_ctrl_zsc[trait_col]
-    for col in ctrl_cols:
-        zsc_dict[col] = tissue_ctrl_zsc[col]
-
-    zsc_index = tissue_index
-    trs_stats = util.calculate_trs_stats(zsc_dict=zsc_dict, zsc_index=zsc_index, 
-                                    stats_dict = {"mean": np.mean, "sd": np.std, "gearysc": None},
-                                    adata=adata, stratify_by="cell_ontology_class")
-    for name in trs_stats:
-        trs_stats[name].to_csv(out_prefix + f".{name}.gz", index=True, sep='\t', compression='gzip')
-
-executor = submitit.AutoExecutor(folder="~/submitit_log/")
-executor.update_parameters(timeout_min=10, mem_gb=8, slurm_partition="serial_requeue")
-out_dir = "out/celltype_hetero/group_stats"
-tissue_list = ['Aorta', 'BAT', 'Bladder', 'Brain_Myeloid', 'Brain_Non-Myeloid',
-                'Diaphragm', 'GAT', 'Heart', 'Kidney', 'Large_Intestine',
-                'Limb_Muscle', 'Liver', 'Lung', 'MAT', 'Mammary_Gland', 'Marrow', 
-                'Pancreas', 'SCAT', 'Skin', 'Spleen', 'Thymus', 'Tongue', 'Trachea']
-trait_list = ['PASS_Schizophrenia_Ruderfer2018',
-              'PASS_BipolarDisorder_Ruderfer2018',
-              'PASS_Alzheimers_Jansen2019', 
-              'PASS_AdultOnsetAsthma_Ferreira2019',
-              'PASS_Coronary_Artery_Disease', 
-              'PASS_LargeArteryStroke_Malik2018', 
-              'PASS_HDL', 'PASS_LDL',
-              'PASS_Rheumatoid_Arthritis', 'PASS_Lupus', 
-              'PASS_FastingGlucose_Manning',
-              'PASS_IBD_deLange2017', 
-              'PASS_Type_1_Diabetes', 
-              'PASS_Type_2_Diabetes']
-
-submit_func = lambda trait_tissue: wrapper(trait_tissue[0], trait_tissue[1], join(out_dir, '.'.join(trait_tissue)))
-trait_tissue_list = list(itertools.product(trait_list, tissue_list))
-todo_trait_tissue_list = [trait_tissue for trait_tissue in trait_tissue_list if not exists(join(out_dir, '.'.join(trait_tissue) + ".mean.gz"))]
-jobs = executor.map_array(submit_func, todo_trait_tissue_list)
-```
 ### (Deprecated) Calculate the control z-score
 We first compute the z-score for all the control scores as well, using the following code
 ```python
