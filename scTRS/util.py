@@ -318,8 +318,7 @@ def plot_score_umap(score_dict, score_index, umap_adata, umap_color=['cell_ontol
     """
     umap_adata = umap_adata.copy()
         
-    fig, ax = plt.subplots(figsize=(6, 6))
-    sc.pl.umap(umap_adata, color=umap_color, size=20, ax=ax)
+    sc.pl.umap(umap_adata, color=umap_color, size=20, ncols=1)
     df_plot = pd.DataFrame(index=umap_adata.obs.index)
     df_plot['UMAP1'] = umap_adata.obsm['X_umap'][:,0]
     df_plot['UMAP2'] = umap_adata.obsm['X_umap'][:,1]
