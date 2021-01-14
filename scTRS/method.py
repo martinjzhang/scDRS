@@ -5,6 +5,7 @@ from skmisc.loess import loess
 from statsmodels.stats.multitest import multipletests
 from scipy.stats import rankdata
 import pandas as pd
+import statsmodels.api as sm
 import time
 
 

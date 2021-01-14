@@ -101,6 +101,9 @@ def main(args):
     # Compute score 
     for trait in df_gs.index:
         gene_list = df_gs.loc[trait,'GENESET'].split(',')
+        if len(gene_list)<10:
+            print('# n_gene=%d is too small for %s'%(len(gene_list), trait))
+            continue
         df_res = md.score_cell(adata, gene_list, n_ctrl=500, 
                                return_ctrl_raw_score=FLAG_RETURN_CTRL_RAW_SCORE, 
                                return_ctrl_norm_score=FLAG_RETURN_CTRL_NORM_SCORE,
