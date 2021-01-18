@@ -111,10 +111,10 @@ def load_tms_ct(file_path, data_name='facs', flag_size_factor=True,
 def load_aizarani_raw_data(opt='raw',
                            flag_size_factor=True,
                            total_ct_per_cell=1e4,
-                           flag_log1p=True,):
+                           flag_log1p=True):
     
     if opt=='raw':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/liver_atlas'
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/liver_atlas'
         adata = read_h5ad(DATA_PATH+'/obj_raw.h5ad')
         
         if flag_size_factor == True:
@@ -123,7 +123,28 @@ def load_aizarani_raw_data(opt='raw',
             sc.pp.log1p(adata)
         
     if opt=='processed':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/liver_atlas'
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/liver_atlas'
+        adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
+        
+    return adata
+
+
+def load_halpern_shenhav_raw_data(opt='raw',
+                                  flag_size_factor=True,
+                                  total_ct_per_cell=1e4,
+                                  flag_log1p=True):
+    
+    if opt=='raw':
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/mouse_liver_halpern_nature_2017'
+        adata = read_h5ad(DATA_PATH+'/obj_raw.h5ad')
+        
+        if flag_size_factor == True:
+            sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
+        if flag_log1p == True:
+            sc.pp.log1p(adata)
+        
+    if opt=='processed':
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/mouse_liver_halpern_nature_2017'
         adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
         
     return adata
