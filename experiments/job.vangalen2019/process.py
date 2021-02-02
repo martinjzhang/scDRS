@@ -1,3 +1,9 @@
+
+"""
+This script download the AML dataset from van Galen et al. 2019.
+It parses the dataset to be an h5ad file without any further processing.
+
+"""
 import scanpy as sc
 import numpy as np
 from os.path import join
