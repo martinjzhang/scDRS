@@ -148,3 +148,45 @@ def load_halpern_shenhav_raw_data(opt='raw',
         adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
         
     return adata
+
+
+def load_asp_st_raw_data(opt='raw',
+                         flag_size_factor=True,
+                         total_ct_per_cell=1e4,
+                         flag_log1p=True):
+    
+    if opt=='raw':
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/heart_asp_cell_2019'
+        adata = read_h5ad(DATA_PATH+'/obj_raw_st.h5ad')
+        
+        if flag_size_factor == True:
+            sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
+        if flag_log1p == True:
+            sc.pp.log1p(adata)
+        
+    if opt=='processed':
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/heart_asp_cell_2019'
+        adata = read_h5ad(DATA_PATH+'/obj_processed_st.h5ad')
+        
+    return adata
+
+
+def load_asp_sc_raw_data(opt='raw',
+                         flag_size_factor=True,
+                         total_ct_per_cell=1e4,
+                         flag_log1p=True):
+    
+    if opt=='raw':
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/heart_asp_cell_2019'
+        adata = read_h5ad(DATA_PATH+'/obj_raw_sc.h5ad')
+        
+        if flag_size_factor == True:
+            sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
+        if flag_log1p == True:
+            sc.pp.log1p(adata)
+        
+    if opt=='processed':
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/heart_asp_cell_2019'
+        adata = read_h5ad(DATA_PATH+'/obj_processed_sc.h5ad')
+        
+    return adata

@@ -16,7 +16,6 @@ def score_cell(data,
                n_ctrl=500,
                n_genebin=200,
                weight_opt='vs',
-               cov_list=None,
                copy=False,
                return_ctrl_raw_score=False,
                return_ctrl_norm_score=False,
@@ -46,10 +45,6 @@ def score_cell(data,
             'uniform': average over the genes in the gene_list
             'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct)
             'inv_std': weighted average with weights equal to 1/std
-        cov_list : list of str
-            Covariates to control for.
-            The covariates are first centered and then regressed out.
-            Elements in cov_list should be present in data.obs.columns
         copy : bool
             If to make copy of the AnnData object to avoid writing on the orignal data
         return_raw_ctrl_score : bool
@@ -74,11 +69,7 @@ def score_cell(data,
             
     TODO
     -------
-        1. What's the connection between covariates and background correction
-        2. Is it possible to do a theoretical cell-wise correction? 
-        3. In the current implementation, we added 0.01 to both var_tech and var. 
-            It seems we should use a smaller value, like 1e-4
-        4. What's a recommended value of n_ctrl
+        1. 
     """
     
     np.random.seed(random_seed)
@@ -100,25 +91,19 @@ def score_cell(data,
     if weight_opt not in weight_opt_list:
         raise ValueError('# score_cell: weight_opt not in [%s]'
                          %', '.join([str(x) for x in weight_opt_list]))
-    # TODO: check cov control
-    if cov_list is not None:
-        temp_list = list(set(cov_list) - set(adata.obs.columns))
-        if len(temp_list)>0:
-            raise ValueError('# score_cell: covariate %s not in data.obs.columns'
-                             %','.join(temp_list))
-        if (len(cov_list)>0) & ('mean' not in cov_list):
-            raise ValueError('# score_cell: mean needs to be in cov_list')
         
     if verbose:
         print('# score_cell: ctrl_match_key=%s, n_ctrl=%d, n_genebin=%d, weight_opt=%s'
               %(ctrl_match_key, n_ctrl, n_genebin, weight_opt))
         
     # Gene information
-    df_gene = pd.DataFrame(index = adata.var_names, 
-                           data={'gene':adata.var_names,
-                                 'mean':adata.var['mean'].values})
+    df_gene = pd.DataFrame(index = adata.var_names, data={'gene':adata.var_names,
+                                                          'mean':adata.var['mean'].values,
+                                                          'var':adata.var['var'].values})
+    if ctrl_match_key not in df_gene.columns:
+        df_gene[ctrl_match_key] = adata.var[ctrl_match_key].values
     df_gene.drop_duplicates(subset='gene', inplace=True)
-        
+            
     # Update gene_list and gene_weight
     n_gene_old = len(list(gene_list))
     if gene_weight is None:
@@ -129,30 +114,32 @@ def score_cell(data,
     
     if verbose: 
         print('# score_cell: %-15s %-15s %-20s'
-              %('trait  gene set,', '%d/%d genes,'%(len(gene_list),n_gene_old),
+              %('trait gene set,', '%d/%d genes,'%(len(gene_list),n_gene_old),
                 'mean=%0.2e'%df_gene.loc[gene_list, 'mean'].mean()))
     
     # Select control gene sets
     dic_ctrl_list,dic_ctrl_weight = _select_ctrl_geneset(df_gene, gene_list, gene_weight,
-                                                         ctrl_match_key, n_ctrl, n_genebin, 
-                                                         random_seed, verbose)
+                                                         ctrl_match_key, n_ctrl, n_genebin, random_seed)  
+
+    # Compute raw scores        
+    v_raw_score,v_score_weight = _compute_raw_score(adata, gene_list, gene_weight, weight_opt)
     
-    # Compute raw scores
-    v_raw_score = _compute_raw_score(adata, gene_list, gene_weight, weight_opt, cov_list=cov_list)
-    mat_ctrl_raw_score = np.zeros([n_cell,n_ctrl])
+    mat_ctrl_raw_score,mat_ctrl_weight = np.zeros([n_cell,n_ctrl]),np.zeros([len(gene_list),n_ctrl])
     for i_ctrl in range(n_ctrl): 
-        mat_ctrl_raw_score[:,i_ctrl] = _compute_raw_score(adata, dic_ctrl_list[i_ctrl],
-                                                          dic_ctrl_weight[i_ctrl],
-                                                          weight_opt, cov_list=cov_list)
-        
-    # TODO:Regress out covariates
-        
+        mat_ctrl_raw_score[:,i_ctrl],mat_ctrl_weight[:,i_ctrl] = \
+            _compute_raw_score(adata, dic_ctrl_list[i_ctrl], dic_ctrl_weight[i_ctrl], weight_opt)
+                
     # Compute normalized scores 
-    v_norm_score, mat_ctrl_norm_score = _correct_background(v_raw_score, mat_ctrl_raw_score)
+    v_var_ratio_c2t = np.zeros(n_ctrl) # variance ratio assuming independence 
+    for i_ctrl in range(n_ctrl):
+        v_var_ratio_c2t[i_ctrl] = (df_gene.loc[dic_ctrl_list[i_ctrl], 'var']*mat_ctrl_weight[:,i_ctrl]**2).sum()
+    v_var_ratio_c2t /= (df_gene.loc[gene_list, 'var']*v_score_weight**2).sum()
+    
+    v_norm_score, mat_ctrl_norm_score = _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t)
     
     # Get p-values 
     mc_p = (1+(mat_ctrl_norm_score.T>=v_norm_score).sum(axis=0))/(1+n_ctrl)
-    pooled_p = get_p_from_empi_null(v_norm_score, mat_ctrl_norm_score.flatten())  
+    pooled_p = _get_p_from_empi_null(v_norm_score, mat_ctrl_norm_score.flatten())  
     nlog10_pooled_p = -np.log10(pooled_p)
     pooled_z = -sp.stats.norm.ppf(pooled_p).clip(min=-10,max=10)
     
@@ -169,8 +156,8 @@ def score_cell(data,
     return df_res
 
 
-def _select_ctrl_geneset(input_df_gene, gene_list, gene_weight, ctrl_match_key,
-                         n_ctrl, n_genebin, random_seed, verbose):
+def _select_ctrl_geneset(input_df_gene, gene_list, gene_weight, 
+                         ctrl_match_key, n_ctrl, n_genebin, random_seed):
     
     """Subroutine for score_cell, select control genesets 
     
@@ -191,8 +178,6 @@ def _select_ctrl_geneset(input_df_gene, gene_list, gene_weight, ctrl_match_key,
             Number of bins for dividing genes by ctrl_match_key
         random_seed : int
             Random seed  
-        verbose : bool
-            If to output messages
     Returns
     -------
         dic_ctrl_list : dictionary of lists
@@ -208,32 +193,29 @@ def _select_ctrl_geneset(input_df_gene, gene_list, gene_weight, ctrl_match_key,
     dic_weight = {x:y for x,y in zip(gene_list,gene_weight)}
     
     # Divide genes into equal-sized bins based on ctrl_match_key
-    df_gene['qbin'] = pd.qcut(df_gene[ctrl_match_key], q=n_genebin,
-                              labels=False, duplicates='drop')
-    df_gene_bin = df_gene.groupby('qbin').agg({'gene':set})
+    if df_gene[ctrl_match_key].unique().shape[0] < df_gene.shape[0]/10:
+        df_gene_bin = df_gene.groupby(ctrl_match_key).agg({'gene':set})    
+    else:
+        df_gene['qbin'] = pd.qcut(df_gene[ctrl_match_key], q=n_genebin, 
+                                  labels=False, duplicates='drop')
+        df_gene_bin = df_gene.groupby('qbin').agg({'gene':set})        
     
     # Find ctrl_match_key matched control genes
     dic_ctrl_list = {x:[] for x in range(n_ctrl)}
     dic_ctrl_weight = {x:[] for x in range(n_ctrl)}
     for bin_ in df_gene_bin.index:
-        bin_gene = sorted(list(df_gene_bin.loc[bin_, 'gene']))
-        bin_trait_gene = sorted(list(df_gene_bin.loc[bin_,'gene'] & trait_gene_set))
+        bin_gene = sorted(df_gene_bin.loc[bin_, 'gene'])
+        bin_trait_gene = sorted(df_gene_bin.loc[bin_,'gene'] & trait_gene_set)
         if len(bin_trait_gene)>0:
             for i_list in np.arange(n_ctrl):
                 dic_ctrl_list[i_list].extend(np.random.choice(bin_gene, size=len(bin_trait_gene),
                                                               replace=False))
                 dic_ctrl_weight[i_list].extend([dic_weight[x] for x in bin_trait_gene])
-                    
-    if verbose:
-        for i_list in dic_ctrl_list.keys():
-            print('# score_cell: %-15s %-15s %-20s'
-                  %('ctrl_%d gene set,'%i_list, '%d genes,'%len(dic_ctrl_list[i_list]),
-                    'mean=%0.2e'%df_gene.loc[dic_ctrl_list[i_list], 'mean'].mean()))
-                    
+                
     return dic_ctrl_list,dic_ctrl_weight
 
 
-def _compute_raw_score(adata, gene_list, gene_weight, weight_opt, cov_list=None):
+def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
     """Compute raw score
         v_score_weight = gene_weight * {uniform/vs/inv_std}
     
@@ -247,18 +229,19 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt, cov_list=None)
             Gene weights for genes in the gene_list 
         weight_opt : str 
             Option for computing the raw score
-            'uniform': average over the genes in the gene_list
-            'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct)
-            'inv_std': weighted average with weights equal to 1/std
+            - 'uniform': average over the genes in the gene_list
+            - 'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct)
+            - 'inv_std': weighted average with weights equal to 1/std
             
     Returns
     -------
         v_raw_score (n_cell,) : np.ndarray
             Raw score
+        v_score_weight (n_trait_gene,) : np.ndarray
+            Gene weights score
     """
     
     # Compute raw score
-    # TODO: determine the best weight. 1e-2 seems too large
     if weight_opt=='uniform':
         v_score_weight = np.ones(len(gene_list))
     if weight_opt=='vs':
@@ -269,18 +252,184 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt, cov_list=None)
     if gene_weight is not None:
         v_score_weight = v_score_weight*np.array(gene_weight)
     v_score_weight = v_score_weight/v_score_weight.sum()
-    v_raw_score = adata[:, gene_list].X.dot(v_score_weight).reshape([-1])   
+    v_raw_score = adata[:, gene_list].X.dot(v_score_weight).reshape([-1])  
         
-    # # Regress out covariates
-    # if cov_list is not None:
-    #     mat_X = adata.obs[cov_list].values.copy()        
-    #     mat_X = mat_X - mat_X.mean(axis=0)
-    #     v_raw_score = _reg_out(v_raw_score, mat_X)
-        
-    return v_raw_score
+    return v_raw_score,v_score_weight
 
 
-def _reg_out(mat_Y, mat_X):
+def _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t):
+    """Cell-wise and gene-wise background correction
+    
+    Args
+    ----
+        v_raw_score (n_cell,n_ctrl) : np.ndarray
+            Trait raw score
+        mat_ctrl_raw_score (n_cell,n_ctrl) : np.ndarray
+            Control raw scores             
+    Returns
+    -------
+        v_norm_score (n_cell,n_ctrl) : np.ndarray
+            Trait normalized score
+        mat_ctrl_norm_score (n_cell,n_ctrl) : np.ndarray
+            Control normalized scores  
+    """
+    
+    # Calibrate gene-sets (mean 0 and same ind. var)
+    ind_zero_score = (v_raw_score==0)
+    ind_zero_ctrl_score = (mat_ctrl_raw_score==0)
+    
+    v_raw_score = v_raw_score - v_raw_score.mean()
+    mat_ctrl_raw_score = mat_ctrl_raw_score - mat_ctrl_raw_score.mean(axis=0)
+    mat_ctrl_raw_score = mat_ctrl_raw_score/np.sqrt(v_var_ratio_c2t)   
+    
+    # Cell-wise correction
+    v_mean = mat_ctrl_raw_score.mean(axis=1)
+    v_std = mat_ctrl_raw_score.std(axis=1)
+    v_norm_score = (v_raw_score - v_mean) / v_std
+    mat_ctrl_norm_score = ((mat_ctrl_raw_score.T - v_mean) / v_std).T
+            
+    # Gene-set-wise correction
+    v_norm_score = v_norm_score - v_norm_score.mean()
+    mat_ctrl_norm_score = mat_ctrl_norm_score - mat_ctrl_norm_score.mean(axis=0)
+    
+    # Set cells with raw_score=0 to the minimum norm_score value
+    norm_score_min = min(v_norm_score.min(), mat_ctrl_norm_score.min())
+    v_norm_score[ind_zero_score] = norm_score_min-1e-3
+    mat_ctrl_norm_score[ind_zero_ctrl_score] = norm_score_min
+    
+    return v_norm_score, mat_ctrl_norm_score
+
+
+def compute_stats(data, copy=False):
+    """
+    Precompute mean for each gene and mean&var for each cell
+    """
+    # Gene-wise statistics
+    adata = data.copy() if copy else data
+    adata.var['mean'],adata.var['var'] = _get_sparse_var(adata.X, axis=0)
+    
+    # Get the mean and var for the size-factor-normalized counts
+    # It is highly correlated to the non-size-factor-normalized counts
+    if sp.sparse.issparse(adata.X): # sp sparse matrix
+        temp_X = adata.X.copy().expm1() # exp(X)-1 to get ct matrix from logct
+    else:
+        temp_X = np.expm1(adata.X) # numpy ndarray
+    adata.var['ct_mean'],adata.var['ct_var'] = _get_sparse_var(temp_X, axis=0)
+    del temp_X
+    
+    # Borrowed from scanpy _highly_variable_genes_seurat_v3
+    not_const = adata.var['ct_var'].values>0
+    estimat_var = np.zeros(adata.shape[1], dtype=np.float64)
+    y = np.log10(adata.var['ct_var'].values[not_const])
+    x = np.log10(adata.var['ct_mean'].values[not_const])
+    model = loess(x, y, span=0.3, degree=2)
+    model.fit()
+    estimat_var[not_const] = model.outputs.fitted_values
+    adata.var['ct_var_tech'] = 10**estimat_var
+    # Recipe from Frost Nucleic Acids Research 2020
+    adata.var['var_tech'] = adata.var['var']*adata.var['ct_var_tech']/adata.var['ct_var']
+    adata.var.loc[adata.var['var_tech'].isna(),'var_tech'] = 0
+    
+    # Cell-wise statistics
+    adata.obs['mean'],adata.obs['var'] = _get_sparse_var(adata.X, axis=1)
+    
+    return adata if copy else None
+
+
+def _get_sparse_var(sparse_X, axis=0):
+    """
+    Compute mean and var of a sparse matrix. 
+    """   
+    
+    if sp.sparse.issparse(sparse_X):
+        v_mean = sparse_X.mean(axis=axis)
+        v_mean = np.array(v_mean).reshape([-1])
+        v_var = sparse_X.power(2).mean(axis=axis)
+        v_var = np.array(v_var).reshape([-1])
+        v_var = v_var - v_mean**2
+    else:
+        v_mean = np.mean(sparse_X, axis=axis)
+        v_var = np.var(sparse_X, axis=axis)
+    
+    return v_mean,v_var
+
+
+def _get_p_from_empi_null(v_t,v_t_null):
+    """Compute p-value from empirical null
+    For score T and a set of null score T_1,...T_N, the p-value is 
+        
+        p= [1 + \Sigma_{i=1}^N 1_{ (T_i \geq T) }] / (1+N)
+        
+    If T, T1, ..., T_N are i.i.d. variables following a null distritbuion, 
+    then p is super-uniform. 
+    
+    The naive algorithm is N^2. Here we provide an O(N log N) algorithm to 
+    compute the p-value for each of the N elements in v_t
+    
+    Args
+    ----
+        v_t (M,): np.ndarray
+            The observed score.
+        v_t_null (N,): np.ndarray
+            The null score.
+
+    Returns
+    -------
+        v_p: (M,): np.ndarray
+            P-value for each element in v_t
+    """
+    
+    v_t = np.array(v_t)
+    v_t_null = np.array(v_t_null)
+    
+    v_t_null = np.sort(v_t_null)    
+    v_pos = np.searchsorted(v_t_null, v_t, side='left')
+    v_p = (v_t_null.shape[0]-v_pos+1)/(v_t_null.shape[0]+1)
+    return v_p
+
+
+##############################################################################
+######################### Code for comparison methods ########################
+##############################################################################
+
+def score_cell_vision(adata, gene_list):
+    
+    """Score cells based on the trait gene set 
+    
+    Args
+    ----
+        data (n_cell, n_gene) : AnnData
+            data.X should contain size-normalized log1p transformed count data
+        gene_list (n_trait_gene) : list
+            Trait gene list  
+
+    Returns
+    -------
+        df_res (n_cell, n_key) : pd.DataFrame (dtype=np.float32)
+            Columns: 
+            1. score: Vision signature score
+            2. pval: p-value computed from the Vision score
+    """
+    
+    gene_list = sorted(set(gene_list) & set(adata.var_names))
+    v_mean,v_var = _get_sparse_var(adata.X, axis=1)
+    
+    v_score = adata[:, gene_list].X.mean(axis=1)
+    v_score = (v_score - v_mean) / np.sqrt(v_var/len(gene_list))
+    v_p = 1-sp.stats.norm.cdf(v_score)
+    
+    v_norm_score = (v_score - v_score.mean())/v_score.std()
+    v_norm_p = 1-sp.stats.norm.cdf(v_norm_score)
+    
+    dic_res = {'score':v_score, 'pval':v_p, 'norm_score':v_norm_score, 'norm_pval':v_norm_p}
+    df_res = pd.DataFrame(index=adata.obs.index,  data=dic_res, dtype=np.float32)
+    return df_res
+
+##############################################################################
+######################## Code for downstream analysis ########################
+##############################################################################
+
+def reg_out(mat_Y, mat_X):
     """Regress mat_X out of mat_Y
     
     Args
@@ -313,136 +462,7 @@ def _reg_out(mat_Y, mat_X):
         mat_Y_resid = mat_Y_resid.reshape([-1])
     
     return mat_Y_resid
-    
-    
-def _correct_background(v_raw_score, mat_ctrl_raw_score):
-    """Cell-wise and gene-wise background correction
-    
-    Args
-    ----
-        v_raw_score (n_cell,n_ctrl) : np.ndarray
-            Trait raw score
-        mat_ctrl_raw_score (n_cell,n_ctrl) : np.ndarray
-            Control raw scores             
-    Returns
-    -------
-        v_norm_score (n_cell,n_ctrl) : np.ndarray
-            Trait normalized score
-        mat_ctrl_norm_score (n_cell,n_ctrl) : np.ndarray
-            Control normalized scores  
-    """
-    
-    # Cell-wise correction
-    v_mean = mat_ctrl_raw_score.mean(axis=1)
-    v_std = mat_ctrl_raw_score.std(axis=1)
-    v_norm_score = (v_raw_score - v_mean) / v_std
-    mat_ctrl_norm_score = ((mat_ctrl_raw_score.T - v_mean) / v_std).T
-            
-    # Gene-set-wise correction
-    v_norm_score = v_norm_score - v_norm_score.mean()
-    mat_ctrl_norm_score = mat_ctrl_norm_score - mat_ctrl_norm_score.mean(axis=0)
-    
-    # Set cells with raw_score=0 to the minimum norm_score value
-    norm_score_min = min(v_norm_score.min(), mat_ctrl_norm_score.min())
-    v_norm_score[v_raw_score==0] = norm_score_min-1e-8
-    mat_ctrl_norm_score[mat_ctrl_raw_score==0] = norm_score_min
-    return v_norm_score, mat_ctrl_norm_score
 
-
-def compute_stats(data, copy=False):
-    """
-    Precompute mean for each gene and mean&var for each cell
-    """
-    # Gene-wise statistics
-    adata = data.copy() if copy else data
-    adata.var['mean'],adata.var['var'] = get_sparse_var(adata.X, axis=0)
-    
-    # Get the mean and var for the size-factor-normalized counts
-    # It is highly correlated to the non-size-factor-normalized counts
-    temp_X = adata.X.copy().expm1() # exp(X)-1 to get ct matrix from logct
-    adata.var['ct_mean'],adata.var['ct_var'] = get_sparse_var(temp_X, axis=0)
-    del temp_X
-    
-    # Borrowed from scanpy _highly_variable_genes_seurat_v3
-    not_const = adata.var['ct_var'].values>0
-    estimat_var = np.zeros(adata.shape[1], dtype=np.float64)
-    y = np.log10(adata.var['ct_var'].values[not_const])
-    x = np.log10(adata.var['ct_mean'].values[not_const])
-    model = loess(x, y, span=0.3, degree=2)
-    model.fit()
-    estimat_var[not_const] = model.outputs.fitted_values
-    adata.var['ct_var_tech'] = 10**estimat_var
-    # Recipe from Frost Nucleic Acids Research 2020
-    adata.var['var_tech'] = adata.var['var']*adata.var['ct_var_tech']/adata.var['ct_var']
-    adata.var.loc[adata.var['var_tech'].isna(),'var_tech'] = 0
-    
-    # Cell-wise statistics
-    adata.obs['mean'],adata.obs['var'] = get_sparse_var(adata.X, axis=1)
-    
-    return adata if copy else None
-
-
-def get_sparse_var(sparse_X, axis=0):
-    """
-    Compute mean and var of a sparse matrix. 
-    """   
-    
-    if sp.sparse.issparse(sparse_X):
-        v_mean = sparse_X.mean(axis=axis)
-        v_mean = np.array(v_mean).reshape([-1])
-        v_var = sparse_X.power(2).mean(axis=axis)
-        v_var = np.array(v_var).reshape([-1])
-        v_var = v_var - v_mean**2
-    else:
-        v_mean = np.mean(sparse_X, axis=axis)
-        v_var = np.var(sparse_X, axis=axis)
-    
-    return v_mean,v_var
-
-
-def get_p_from_empi_null(v_t,v_t_null):
-    """Compute p-value from empirical null
-    For score T and a set of null score T_1,...T_N, the p-value is 
-        
-        p=1/(N+1) * [1 + \Sigma_{i=1}^N 1_{ (T_i \geq T) }]
-        
-    If T, T1, ..., T_N are i.i.d. variables following a null distritbuion, 
-    then p is super-uniform. 
-    
-    The naive algorithm is N^2. Here we provide an O(N log N) algorithm to 
-    compute the p-value for each of the N elements in v_t
-    
-    Args
-    ----
-        v_t (M,): np.ndarray
-            The observed score.
-        v_t_null (N,): np.ndarray
-            The null score.
-
-    Returns
-    -------
-        v_p: (M,): np.ndarray
-            P-value for each element in v_t
-    """
-    
-    v_t = np.array(v_t)
-    v_t_null = np.array(v_t_null)
-    
-    v_t_null = np.sort(v_t_null)    
-    v_pos = np.searchsorted(v_t_null, v_t, side='left')
-    v_p = (v_t_null.shape[0]-v_pos+1)/(v_t_null.shape[0]+1)
-    return v_p
-
-
-##############################################################################
-###################### Experimental Code for score_cell ######################
-##############################################################################
-
-
-
-##############################################################################
-######################## Code for downstream analysis ########################
-##############################################################################
 
 def correlate_gene(data,
                    trs_name='trs_ez',
@@ -502,8 +522,8 @@ def correlate_gene(data,
     if cov_list is not None:
         mat_cov = adata.obs[cov_list].values.copy()        
         mat_cov = mat_cov - mat_cov.mean(axis=0)
-        v_trs = _reg_out(v_trs, mat_cov)
-        mat_X = _reg_out(mat_X, mat_cov)
+        v_trs = reg_out(v_trs, mat_cov)
+        mat_X = reg_out(mat_X, mat_cov)
     
     # Compute correlation
     if corr_opt=='pearson':
