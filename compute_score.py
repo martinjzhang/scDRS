@@ -151,7 +151,7 @@ def main(args):
         gene_list = df_gs.loc[trait,'GENESET'].split(',')
         gene_list = sorted(set(gene_list) & set(adata.var_names))
         if len(gene_list)<10:
-            print('# %s skipped due to small size (n_gene=%d)'%(len(gene_list), trait))
+            print('# %s skipped due to small size (n_gene=%d)'%(trait, len(gene_list)))
             continue
             
         df_res = md.score_cell(adata, gene_list, ctrl_match_key=CTRL_MATCH_OPT, n_ctrl=N_CTRL, 

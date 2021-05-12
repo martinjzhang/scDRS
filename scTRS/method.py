@@ -280,7 +280,7 @@ def _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t):
     
     v_raw_score = v_raw_score - v_raw_score.mean()
     mat_ctrl_raw_score = mat_ctrl_raw_score - mat_ctrl_raw_score.mean(axis=0)
-    mat_ctrl_raw_score = mat_ctrl_raw_score/np.sqrt(v_var_ratio_c2t)   
+    mat_ctrl_raw_score = mat_ctrl_raw_score/np.sqrt(v_var_ratio_c2t)
     
     # Cell-wise correction
     v_mean = mat_ctrl_raw_score.mean(axis=1)
@@ -415,6 +415,7 @@ def score_cell_vision(adata, gene_list):
     v_mean,v_var = _get_sparse_var(adata.X, axis=1)
     
     v_score = adata[:, gene_list].X.mean(axis=1)
+    v_score = np.array(v_score).reshape([-1])
     v_score = (v_score - v_mean) / np.sqrt(v_var/len(gene_list))
     v_p = 1-sp.stats.norm.cdf(v_score)
     
@@ -422,6 +423,37 @@ def score_cell_vision(adata, gene_list):
     v_norm_p = 1-sp.stats.norm.cdf(v_norm_score)
     
     dic_res = {'score':v_score, 'pval':v_p, 'norm_score':v_norm_score, 'norm_pval':v_norm_p}
+    df_res = pd.DataFrame(index=adata.obs.index,  data=dic_res, dtype=np.float32)
+    return df_res
+
+
+def score_cell_scanpy(adata, gene_list):
+    
+    """Score cells based on the trait gene set 
+    
+    Args
+    ----
+        data (n_cell, n_gene) : AnnData
+            data.X should contain size-normalized log1p transformed count data
+        gene_list (n_trait_gene) : list
+            Trait gene list  
+
+    Returns
+    -------
+        df_res (n_cell, n_key) : pd.DataFrame (dtype=np.float32)
+            Columns: 
+            1. score: Vision signature score
+            2. pval: p-value computed from the Vision score
+    """
+    
+    gene_list = sorted(set(gene_list) & set(adata.var_names))
+    sc.tl.score_genes(adata, gene_list=gene_list)
+    
+    v_score = adata.obs['score']
+    v_score_z = (v_score - v_score.mean()) / np.sqrt(v_score.var())
+    v_p = 1-sp.stats.norm.cdf(v_score_z)
+    
+    dic_res = {'score':v_score, 'score_z':v_score_z, 'pval':v_p}
     df_res = pd.DataFrame(index=adata.obs.index,  data=dic_res, dtype=np.float32)
     return df_res
 
@@ -634,6 +666,46 @@ def _get_rank(mat_X, axis=0):
     return mat_rank
     
     
+def compute_gene_contrib(data,
+                         gene_list,
+                         random_seed=0,
+                         copy=False,
+                         verbose=False):
+    
+    """Find the genes 
+    
+    Args
+    ----
+        data (n_cell, n_gene) : AnnData
+            adata.X should contain size-normalized log1p transformed count data
+        gene_list (n_trait_gene) : list
+            Trait gene list
+        copy : bool
+            If to make copy of the AnnData object
+            
+    Returns
+    -------
+        adata (AnnData): 
+            Add the columns 'trs_corr'+suffix to data.var
+    """
+    
+    np.random.seed(random_seed)
+    adata = data.copy() if copy else data
+    
+    # Pre-compute statistics
+    if 'var_tech' not in adata.var.columns:
+        if verbose: 
+            print('# score_cell: recompute statistics using method.compute_stats')
+        compute_stats(adata)
+        
+    # Compute contribution for each gene 
+    gene_list = sorted(set(gene_list) & set(adata.var_names))
+    v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values + 1e-2)
+    df_contrib = pd.DataFrame(index=adata.obs_names, columns=gene_list,
+                              data=adata[:,gene_list].X.toarray())
+    df_contrib = df_contrib * v_score_weight
+    
+    return df_contrib
 
 ##############################################################################
 ################################## Old code ##################################

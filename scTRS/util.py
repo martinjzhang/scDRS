@@ -21,6 +21,32 @@ def get_sparse_var(sparse_X, axis=0):
     
     return v_mean,v_var
 
+"""
+test overlap of two gene sets using Fisher's exact test
+"""
+def test_overlap(list1, list2, list_background):
+        
+    set1 = set(list1)
+    set2 = set(list2)
+    set_background = set(list_background)
+    
+    n1 = len(set1)
+    n2 = len(set2)
+    n_overlap = len(set1 & set2)
+    n_other = len(set_background - set1 - set2)
+    
+    oddsratio, pvalue = sp.stats.fisher_exact([[n_other, n1-n_overlap],
+                                               [n2-n_overlap, n_overlap]])
+    
+    if (n_overlap==0) | (n_other==0) | ((n2-n_overlap)==0) | ((n1-n_overlap)==0):
+        return pvalue,oddsratio,0,0
+    else:
+        se_log_or = np.sqrt(1/(n1-n_overlap) + 1/(n2-n_overlap) + 1/n_overlap + 1/n_other)
+        or_ub = np.exp(np.log(oddsratio) + 1.96*se_log_or)
+        or_lb = np.exp(np.log(oddsratio) - 1.96*se_log_or)
+        return pvalue,oddsratio,or_ub,or_lb
+
+
 # https://stats.stackexchange.com/questions/403652/two-sample-quantile-quantile-plot-in-python
 def qqplot(x, y, quantiles=None, interpolation='nearest', ax=None, **kwargs):
     """Draw a quantile-quantile plot for `x` versus `y`.
