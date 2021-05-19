@@ -248,6 +248,13 @@ def calculate_trs_stats(zsc_dict, zsc_index, stats_dict, adata, stratify_by):
 #             rls_dict.setdefault(f'{fun_name}', []).append(fun_rls)
 #             rls_dict.setdefault(f'{fun_name}_pval', []).append(fun_pval)
 
+
+def zsc2pval(zsc):
+    return 1 - sp.stats.norm.cdf(zsc)
+
+def pval2zsc(pval):
+    return -sp.stats.norm.ppf(pval)
+
 # ================================================================================
 # Plotting utilities
 # ================================================================================
