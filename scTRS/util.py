@@ -198,6 +198,104 @@ def gearys_c(adata, vals):
         
     return C
 
+def compute_gearysc_significance(
+    adata, df_score_full, groupby, opt="control_distribution_match"
+):
+    """
+    Compute significance level for Geary's C statistics
+    adata: AnnData, must contain `connectivities` to compute the Geary's C statistic
+    df_score_full: contains columns `zscore`, `norm_score`, `ctrl_norm_score_{i}`
+    groupby: stratify by what covariate in adata.obs
+    """
+
+    df_score_full = df_score_full.reindex(adata.obs.index).dropna()
+    zscore = df_score_full["zscore"]
+    norm_score = df_score_full["norm_score"]
+    ctrl_norm_score = df_score_full[
+        [col for col in df_score_full.columns if col.startswith(f"ctrl_norm_score_")]
+    ]
+    n_null = ctrl_norm_score.shape[1]
+    df_meta = adata.obs.copy()
+    df_stats = pd.DataFrame(
+        index=df_meta[groupby].unique(),
+        columns=["trait"] + [f"null_{i_null}" for i_null in range(n_null)],
+        data=np.nan,
+    )
+
+    for group, df_group in df_meta.groupby(groupby):
+        group_index = df_group.index
+        group_adata = adata[group_index]
+        group_zscore = zscore[group_index]
+        group_norm_score = norm_score[group_index]
+        group_ctrl_norm_score = ctrl_norm_score.loc[group_index, :]
+
+        if opt == "control_distribution_match":
+            # control distribution match
+            from scipy.stats import rankdata
+
+            def distribution_match(v, ref):
+                """
+                Use order in `v` to match the distribution of `ref`
+                """
+                return np.sort(ref)[rankdata(v, method="ordinal") - 1]
+
+            df_stats.loc[group, "trait"] = gearys_c(
+                group_adata, group_norm_score.values
+            )
+
+            for i_null in range(n_null):
+                df_stats.loc[group, f"null_{i_null}"] = gearys_c(
+                    group_adata,
+                    distribution_match(
+                        group_ctrl_norm_score.iloc[:, i_null].values,
+                        ref=group_norm_score,
+                    ),
+                )
+
+        elif opt == "permutation":
+            # permutation
+            dict_df_stats["permutation"].loc[group, "trait"] = gearys_c(
+                group_adata, group_zscore.values
+            )
+            for i_null in range(n_null):
+                dict_df_stats["permutation"].loc[group, f"null_{i_null}"] = gearys_c(
+                    group_adata, np.random.permutation(group_zscore.values)
+                )
+        elif opt == "control":
+            # control
+            dict_df_stats["control"].loc[group, "trait"] = gearys_c(
+                group_adata, group_norm_score.values
+            )
+            for i_null in range(n_null):
+                dict_df_stats["control"].loc[group, f"null_{i_null}"] = gearys_c(
+                    group_adata, group_ctrl_norm_score.iloc[:, i_null].values
+                )
+        else:
+            raise NotImplementedError
+
+    # Summarize
+    trait_col = "trait"
+    ctrl_cols = [col for col in df_stats.columns if col.startswith("null_")]
+    pval = (
+        (df_stats[trait_col].values > df_stats[ctrl_cols].values.T).sum(axis=0) + 1
+    ) / (len(ctrl_cols) + 1)
+    pval[np.isnan(df_stats[trait_col])] = np.nan
+
+    df_rls = pd.DataFrame(
+        {
+            "pval": pval,
+            "trait": df_stats[trait_col].values,
+            "ctrl_mean": df_stats[ctrl_cols].mean(axis=1).values,
+            "ctrl_std": df_stats[ctrl_cols].std(axis=1).values,
+        },
+        index=df_stats.index,
+    )
+
+    df_rls["zsc"] = (
+        -(df_rls[trait_col].values - df_rls["ctrl_mean"]) / df_rls["ctrl_std"]
+    )
+    return df_rls
+
 def calculate_trs_stats(zsc_dict, zsc_index, stats_dict, adata, stratify_by):
     """
     Calculate statistics of TRS stratified by covariate, e.g., celltype, 
