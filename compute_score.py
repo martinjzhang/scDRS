@@ -18,8 +18,10 @@ import scTRS.method as md
 # Fixit
 - 
 
+
 # Todo
 - Support other data formats in addition to h5ad
+- Add scdrs in front of compute_score
 
 # Finished
 - Add --n_ctrl (default value 500) 
