@@ -21,7 +21,9 @@ import scTRS.method as md
 
 # Todo
 - Support other data formats in addition to h5ad
+- Change name from scTRS to scdrs
 - Add scdrs in front of compute_score
+- Implement a memory efficient version
 
 # Finished
 - Add --n_ctrl (default value 500) 
