@@ -283,7 +283,7 @@ def load_nathan_raw_data(opt='raw',
     
     if opt=='raw':
         DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/nathan_ni_2021'
-        adata = read_h5ad(DATA_PATH+'/obj_raw.h5ad')
+        adata = read_h5ad(DATA_PATH+'/obj_raw.b0.h5ad')
         
         if flag_size_factor == True:
             sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)

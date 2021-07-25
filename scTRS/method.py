@@ -20,7 +20,8 @@ def score_cell(data,
                return_ctrl_raw_score=False,
                return_ctrl_norm_score=False,
                random_seed=0,
-               verbose=False):
+               verbose=False,
+               save_intermediate=None):
     
     """Score cells based on the trait gene set 
     
@@ -55,6 +56,8 @@ def score_cell(data,
             Random seed
         verbose : bool
             If to output messages 
+        save_intermediate : str
+            File path prefix for saving intermediate results
 
     Returns
     -------
@@ -87,7 +90,7 @@ def score_cell(data,
     # Check options
     if ctrl_match_key not in adata.var.columns:
         raise ValueError('# score_cell: %s not in data.var.columns'%ctrl_match_key)
-    weight_opt_list = ['uniform', 'vs', 'inv_std']
+    weight_opt_list = ['uniform', 'vs', 'inv_std', 'adapt']
     if weight_opt not in weight_opt_list:
         raise ValueError('# score_cell: weight_opt not in [%s]'
                          %', '.join([str(x) for x in weight_opt_list]))
@@ -135,7 +138,19 @@ def score_cell(data,
         v_var_ratio_c2t[i_ctrl] = (df_gene.loc[dic_ctrl_list[i_ctrl], 'var']*mat_ctrl_weight[:,i_ctrl]**2).sum()
     v_var_ratio_c2t /= (df_gene.loc[gene_list, 'var']*v_score_weight**2).sum()
     
-    v_norm_score, mat_ctrl_norm_score = _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t)
+    # print('disease gene', df_gene.loc[gene_list, 'mean'].sum(), df_gene.loc[gene_list, 'var'].sum())
+    # mean_list = []
+    # var_list = []
+    # for i_ctrl in dic_ctrl_list:
+    #     mean_list.append(df_gene.loc[dic_ctrl_list[i_ctrl], 'mean'].sum())
+    #     var_list.append(df_gene.loc[dic_ctrl_list[i_ctrl], 'var'].sum())
+    # print('ctrl gene', np.mean(mean_list), np.mean(var_list))
+    # print('v_score_weight', v_score_weight.sum(), (v_score_weight**2).sum())
+    # print('mat_ctrl_weight', mat_ctrl_weight.sum(axis=0).mean(), (mat_ctrl_weight**2).sum(axis=0).mean())
+    # print('v_var_ratio_c2t', v_var_ratio_c2t.mean(), v_var_ratio_c2t.std())
+    
+    v_norm_score, mat_ctrl_norm_score = _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t,
+                                                            save_intermediate=save_intermediate)
     
     # Get p-values 
     mc_p = (1+(mat_ctrl_norm_score.T>=v_norm_score).sum(axis=0))/(1+n_ctrl)
@@ -246,6 +261,10 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
         v_score_weight = np.ones(len(gene_list))
     if weight_opt=='vs':
         v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values + 1e-2)
+    if weight_opt=='adapt':
+        v_tvar = adata.var.loc[gene_list,'var_tech'].values
+        v_bvar = (adata.var.loc[gene_list,'var'].values - v_tvar).clip(min=0)
+        v_score_weight = np.sqrt(v_bvar + 1e-2) / (v_tvar + 1e-2)
     if weight_opt=='inv_std':
         v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values + 1e-2)
         
@@ -257,7 +276,10 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
     return v_raw_score,v_score_weight
 
 
-def _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t):
+def _correct_background(v_raw_score, 
+                        mat_ctrl_raw_score, 
+                        v_var_ratio_c2t, 
+                        save_intermediate=None):
     """Cell-wise and gene-wise background correction
     
     Args
@@ -265,7 +287,11 @@ def _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t):
         v_raw_score (n_cell,n_ctrl) : np.ndarray
             Trait raw score
         mat_ctrl_raw_score (n_cell,n_ctrl) : np.ndarray
-            Control raw scores             
+            Control raw scores 
+        v_var_ratio_c2t (n_cell) : np.ndarray
+            Variance ratio between control scores and disease score
+        save_intermediate : str
+            File path prefix for saving intermediate results 
     Returns
     -------
         v_norm_score (n_cell,n_ctrl) : np.ndarray
@@ -274,6 +300,12 @@ def _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t):
             Control normalized scores  
     """
     
+    if save_intermediate is not None:
+        np.savetxt(save_intermediate+'.raw_score.tsv.gz', 
+                   v_raw_score, fmt='%.9e', delimiter='\t')
+        np.savetxt(save_intermediate+'.ctrl_raw_score.tsv.gz', 
+                   mat_ctrl_raw_score, fmt='%.9e', delimiter='\t')
+    
     # Calibrate gene-sets (mean 0 and same ind. var)
     ind_zero_score = (v_raw_score==0)
     ind_zero_ctrl_score = (mat_ctrl_raw_score==0)
@@ -281,21 +313,41 @@ def _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t):
     v_raw_score = v_raw_score - v_raw_score.mean()
     mat_ctrl_raw_score = mat_ctrl_raw_score - mat_ctrl_raw_score.mean(axis=0)
     mat_ctrl_raw_score = mat_ctrl_raw_score/np.sqrt(v_var_ratio_c2t)
+    if save_intermediate is not None:
+        np.savetxt(save_intermediate+'.raw_score.1st_gs_alignment.tsv.gz', 
+                   v_raw_score, fmt='%.9e', delimiter='\t')
+        np.savetxt(save_intermediate+'.ctrl_raw_score.1st_gs_alignment.tsv.gz', 
+                   mat_ctrl_raw_score, fmt='%.9e', delimiter='\t')
     
     # Cell-wise correction
     v_mean = mat_ctrl_raw_score.mean(axis=1)
     v_std = mat_ctrl_raw_score.std(axis=1)
     v_norm_score = (v_raw_score - v_mean) / v_std
     mat_ctrl_norm_score = ((mat_ctrl_raw_score.T - v_mean) / v_std).T
+    if save_intermediate is not None:
+        np.savetxt(save_intermediate+'.raw_score.cellwise_standardization.tsv.gz', 
+                   v_norm_score, fmt='%.9e', delimiter='\t')
+        np.savetxt(save_intermediate+'.ctrl_raw_score.cellwise_standardization.tsv.gz', 
+                   mat_ctrl_norm_score, fmt='%.9e', delimiter='\t')
             
     # Gene-set-wise correction
     v_norm_score = v_norm_score - v_norm_score.mean()
     mat_ctrl_norm_score = mat_ctrl_norm_score - mat_ctrl_norm_score.mean(axis=0)
+    if save_intermediate is not None:
+        np.savetxt(save_intermediate+'.raw_score.2nd_gs_alignment.tsv.gz', 
+                   v_norm_score, fmt='%.9e', delimiter='\t')
+        np.savetxt(save_intermediate+'.ctrl_raw_score.2nd_gs_alignment.tsv.gz', 
+                   mat_ctrl_norm_score, fmt='%.9e', delimiter='\t')
     
     # Set cells with raw_score=0 to the minimum norm_score value
     norm_score_min = min(v_norm_score.min(), mat_ctrl_norm_score.min())
     v_norm_score[ind_zero_score] = norm_score_min-1e-3
     mat_ctrl_norm_score[ind_zero_ctrl_score] = norm_score_min
+    if save_intermediate is not None:
+        np.savetxt(save_intermediate+'.raw_score.final.tsv.gz', 
+                   v_norm_score, fmt='%.9e', delimiter='\t')
+        np.savetxt(save_intermediate+'.ctrl_raw_score.final.tsv.gz', 
+                   mat_ctrl_norm_score, fmt='%.9e', delimiter='\t')
     
     return v_norm_score, mat_ctrl_norm_score
 

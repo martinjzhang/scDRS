@@ -11,6 +11,7 @@ def test_sctrs():
     print('# test_sctrs')
     return 
 
+
 def get_sparse_var(sparse_X, axis=0):
     
     v_mean = sparse_X.mean(axis=axis)
@@ -20,6 +21,7 @@ def get_sparse_var(sparse_X, axis=0):
     v_var = v_var - v_mean**2
     
     return v_mean,v_var
+
 
 """
 test overlap of two gene sets using Fisher's exact test
@@ -91,6 +93,7 @@ def qqplot(x, y, quantiles=None, interpolation='nearest', ax=None, **kwargs):
 
     # Draw the q-q plot
     ax.scatter(x_quantiles, y_quantiles, **kwargs)
+    
     
 def empirical_zsc(score, null):
     """
@@ -198,6 +201,7 @@ def gearys_c(adata, vals):
         
     return C
 
+
 def compute_gearysc_significance(
     adata, df_score_full, groupby, opt="control_distribution_match"
 ):
@@ -295,6 +299,7 @@ def compute_gearysc_significance(
         -(df_rls[trait_col].values - df_rls["ctrl_mean"]) / df_rls["ctrl_std"]
     )
     return df_rls
+
 
 def calculate_trs_stats(zsc_dict, zsc_index, stats_dict, adata, stratify_by):
     """
@@ -406,6 +411,7 @@ def plot_assoc_matrix(pval_dict, pval_index, meta_df, stratify_by, fdr_level=0.2
     plt.xticks(np.arange(df_plot.shape[1])+0.5, df_plot.columns, rotation=45, ha='right')
     plt.show()
     
+    
 def plot_qq(pval_dict, num_cols=6):
     """
     plot quantile-quantile figures in batches
@@ -435,6 +441,7 @@ def plot_qq(pval_dict, num_cols=6):
         plt.xlabel('Expected[-log10(P)]')
     plt.tight_layout()
     plt.show()
+    
     
 def plot_score_umap(score_dict, score_index, umap_adata, umap_color=['cell_ontology_class'], n_col=5):
     """
@@ -471,3 +478,19 @@ def plot_score_umap(score_dict, score_index, umap_adata, umap_color=['cell_ontol
         plt.title('%s'%trait)
     plt.tight_layout()
     plt.show()
+    
+    
+def p_2_str(p_):
+    if p_>0.05:
+        return 'ns'
+    elif p_>0.005:
+        return '*'
+    else: 
+        return '**'
+    
+    
+def p_2_str_num(p_):
+    if p_>1/500.5:
+        return 'P=%0.3f'%p_
+    else:
+        return 'P<0.002'

@@ -80,7 +80,7 @@ def main(args):
         raise ValueError('# compute_score: CTRL_MATCH_OPT needs to be one of [mean, mean_var]')
             
     ###########################################################################################    
-    ######                                   Data Loading                                ######
+    ######                                     Load data                                 ######
     ###########################################################################################
     
     # Load .h5ad file 
