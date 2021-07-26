@@ -3,7 +3,7 @@ import numpy as np
 import time
 from anndata import read_h5ad
 from anndata import AnnData
-import scTRS.method as md
+import scdrs.method as md
 
 def load_tms_processed(file_path, data_name='facs', tissue='all'):
     

@@ -1,11 +1,11 @@
 from setuptools import setup
 
-setup(name='scTRS',
-      version='0.1',
-      description='Trait-relevance score informed scRNA-seq analysis',
-      url='https://github.com/martinjzhang/scTRS',
-      author='Martin Jinye Zhang',
-      author_email='martinjzhang@gmail.com',
+setup(name='scdrs',
+      version='0.9',
+      description='Single-cell disease-relevance score',
+      url='https://github.com/martinjzhang/scDRS',
+      author='Martin Jinye Zhang, Kangcheng Hou',
+      author_email='martinjzhang@gmail.com, kangchenghou@gmail.com',
       license='MIT',
-      packages=['scTRS'],
+      packages=['scdrs'],
       zip_safe=False)

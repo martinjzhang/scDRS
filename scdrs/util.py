@@ -7,8 +7,8 @@ import seaborn as sns
 from statsmodels.stats.multitest import multipletests
 import scanpy as sc
 
-def test_sctrs():
-    print('# test_sctrs')
+def test_scdrs():
+    print('# test: scdrs')
     return 
 
 

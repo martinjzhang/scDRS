@@ -9,9 +9,9 @@ import time
 import argparse
 
 # inhouse tools
-import scTRS.util as util
-import scTRS.data_loader as dl
-import scTRS.method as md
+import scdrs.util as util
+import scdrs.data_loader as dl
+import scdrs.method as md
 
 
 """
