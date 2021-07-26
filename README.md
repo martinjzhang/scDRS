@@ -1,5 +1,5 @@
 # scDRS
-Single-cell disease-relevance score
+Single-cell disease-relevance score.
 
 # Installation
 - Go to the scTRS directory
