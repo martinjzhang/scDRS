@@ -1,5 +1,5 @@
-# scTRS
-Trait-relevance score informed scRNA-seq analysis
+# scDRS
+Single-cell disease-relevance score
 
 # Installation
 - Go to the scTRS directory
