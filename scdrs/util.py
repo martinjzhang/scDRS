@@ -7,26 +7,16 @@ import seaborn as sns
 from statsmodels.stats.multitest import multipletests
 import scanpy as sc
 
-def test_scdrs():
+
+def check_import():
     print('# test: scdrs')
-    return 
+    return
 
 
-def get_sparse_var(sparse_X, axis=0):
-    
-    v_mean = sparse_X.mean(axis=axis)
-    v_mean = np.array(v_mean).reshape([-1])
-    v_var = sparse_X.power(2).mean(axis=axis)
-    v_var = np.array(v_var).reshape([-1])
-    v_var = v_var - v_mean**2
-    
-    return v_mean,v_var
-
-
-"""
-test overlap of two gene sets using Fisher's exact test
-"""
 def test_overlap(list1, list2, list_background):
+    """
+    Test overlap of two gene sets using Fisher's exact test
+    """
         
     set1 = set(list1)
     set2 = set(list2)
@@ -48,7 +38,7 @@ def test_overlap(list1, list2, list_background):
         or_lb = np.exp(np.log(oddsratio) - 1.96*se_log_or)
         return pvalue,oddsratio,or_ub,or_lb
 
-
+    
 # https://stats.stackexchange.com/questions/403652/two-sample-quantile-quantile-plot-in-python
 def qqplot(x, y, quantiles=None, interpolation='nearest', ax=None, **kwargs):
     """Draw a quantile-quantile plot for `x` versus `y`.
@@ -94,7 +84,8 @@ def qqplot(x, y, quantiles=None, interpolation='nearest', ax=None, **kwargs):
     # Draw the q-q plot
     ax.scatter(x_quantiles, y_quantiles, **kwargs)
     
-    
+
+# # Can we delete this one?
 def empirical_zsc(score, null):
     """
         Calculate the empirical p-value for two arrays. 
@@ -121,6 +112,7 @@ def empirical_zsc(score, null):
     return sp.stats.norm.ppf(df['cum_prop'].values)
 
 
+# Can we delete this one?
 # https://github.com/scikit-learn/scikit-learn/blob/0fb307bf3/sklearn/preprocessing/_data.py#L1092
 def sparse_robust_scale(X, quantile_range=(25.0, 75.0), copy=True):
     """
@@ -301,6 +293,7 @@ def compute_gearysc_significance(
     return df_rls
 
 
+# Can we delete this one?
 def calculate_trs_stats(zsc_dict, zsc_index, stats_dict, adata, stratify_by):
     """
     Calculate statistics of TRS stratified by covariate, e.g., celltype, 
@@ -357,6 +350,7 @@ def zsc2pval(zsc):
 
 def pval2zsc(pval):
     return -sp.stats.norm.ppf(pval)
+
 
 # ================================================================================
 # Plotting utilities

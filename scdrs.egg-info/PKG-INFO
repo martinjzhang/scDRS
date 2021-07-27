@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: scdrs
+Version: 0.9
+Summary: Single-cell disease-relevance score
+Home-page: https://github.com/martinjzhang/scDRS
+Author: Martin Jinye Zhang, Kangcheng Hou
+Author-email: martinjzhang@gmail.com, kangchenghou@gmail.com
+License: MIT
+Platform: UNKNOWN
+License-File: LICENSE
+
+UNKNOWN
+
