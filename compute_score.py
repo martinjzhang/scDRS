@@ -7,6 +7,7 @@ import os
 from os.path import join
 import time
 import argparse
+from statsmodels.stats.multitest import multipletests
 
 # inhouse tools
 import scdrs.util as util
@@ -16,7 +17,7 @@ import scdrs.method as md
 
 """
 # Fixit
-- 
+- Warning for compute_score: Trying to set attribute `.X` of view, copying.
 
 
 # Todo
@@ -42,6 +43,15 @@ def convert_species_name(species):
 
 def main(args):
     sys_start_time = time.time()
+    
+    # __version__ = '1.0.1'
+    MASTHEAD = "******************************************************************************\n"
+    MASTHEAD += "* Single-cell disease relevance score (scDRS)\n"
+    # MASTHEAD += "* Version {V}\n".format(V=__version__)
+    MASTHEAD += "* Martin Jinye Zhang and Kangcheng Hou\n"
+    MASTHEAD += "* HSPH / Broad Institute / UCLA\n"
+    # MASTHEAD += "* GNU General Public License v3\n"
+    MASTHEAD += "******************************************************************************\n"
         
     ###########################################################################################    
     ######                                    Parse Options                              ######
@@ -62,26 +72,38 @@ def main(args):
     if H5AD_SPECIES!=GS_SPECIES:
         H5AD_SPECIES=convert_species_name(H5AD_SPECIES)
         GS_SPECIES=convert_species_name(GS_SPECIES)
+        
+    header = MASTHEAD
+    header += 'Call: ./compute_score.py \\\n'
+    header += '--h5ad_file %s\\\n'%H5AD_FILE
+    header += '--h5ad_species %s\\\n'%H5AD_SPECIES
+    header += '--cov_file %s\\\n'%COV_FILE
+    header += '--gs_file %s\\\n'%GS_FILE
+    header += '--gs_species %s\\\n'%GS_SPECIES
+    header += '--ctrl_match_opt %s\\\n'%CTRL_MATCH_OPT
+    header += '--flag_filter %s\\\n'%FLAG_FILTER
+    header += '--flag_raw_count %s\\\n'%FLAG_RAW_COUNT
+    header += '--n_ctrl %s\\\n'%N_CTRL
+    header += '--flag_return_ctrl_raw_score %s\\\n'%FLAG_RETURN_CTRL_RAW_SCORE
+    header += '--flag_return_ctrl_norm_score %s\\\n'%FLAG_RETURN_CTRL_NORM_SCORE
+    header += '--out_folder %s\n'%OUT_FOLDER
+    print(header)
     
-    print('# compute_score: H5AD_FILE: ', H5AD_FILE)
-    print('# compute_score: H5AD_SPECIES: ', H5AD_SPECIES)
-    print('# compute_score: COV_FILE: ', COV_FILE)
-    print('# compute_score: GS_FILE: ', GS_FILE)
-    print('# compute_score: GS_SPECIES: ', GS_SPECIES)
-    print('# compute_score: CTRL_MATCH_OPT: ', CTRL_MATCH_OPT)
-    print('# compute_score: FLAG_FILTER: ', FLAG_FILTER)
-    print('# compute_score: FLAG_RAW_COUNT: ', FLAG_RAW_COUNT)
-    print('# compute_score: N_CTRL: ', N_CTRL)
-    print('# compute_score: FLAG_RETURN_CTRL_RAW_SCORE: ', FLAG_RETURN_CTRL_RAW_SCORE)
-    print('# compute_score: FLAG_RETURN_CTRL_NORM_SCORE: ', FLAG_RETURN_CTRL_NORM_SCORE)
-    print('# compute_score: OUT_FOLDER: ', OUT_FOLDER)
-    
+    # Check options 
+    if H5AD_SPECIES!=GS_SPECIES:
+        if H5AD_SPECIES not in ['mmusculus', 'hsapiens']:
+            raise ValueError('H5AD_SPECIES needs to be one of [mmusculus, hsapiens] '
+                             'unless H5AD_SPECIES==GS_SPECIES')
+        if GS_SPECIES not in ['mmusculus', 'hsapiens']:
+            raise ValueError('GS_SPECIES needs to be one of [mmusculus, hsapiens] '
+                             'unless H5AD_SPECIES==GS_SPECIES')
     if CTRL_MATCH_OPT not in ['mean', 'mean_var']:
-        raise ValueError('# compute_score: CTRL_MATCH_OPT needs to be one of [mean, mean_var]')
-            
+        raise ValueError('CTRL_MATCH_OPT needs to be one of [mean, mean_var]')
+    
     ###########################################################################################    
     ######                                     Load data                                 ######
     ###########################################################################################
+    print('Load data:')
     
     # Load .h5ad file 
     adata = read_h5ad(H5AD_FILE)
@@ -91,7 +113,8 @@ def main(args):
     if FLAG_RAW_COUNT:
         sc.pp.normalize_per_cell(adata, counts_per_cell_after=1e4)
         sc.pp.log1p(adata)
-    print('# compute_score: H5AD_FILE loaded: n_cell=%d, n_gene=%d'%adata.shape)
+    print('--h5ad_file loaded: n_cell=%d, n_gene=%d (sys_time=%0.1fs)'
+          %(adata.shape[0], adata.shape[1], time.time()-sys_start_time))
     
     # adata = adata[0:500,:].copy()
     
@@ -102,7 +125,8 @@ def main(args):
         adata.obs.drop([x for x in cov_list if x in adata.obs.columns], axis=1, inplace=True)
         adata.obs = adata.obs.join(df_cov)
         adata.obs.fillna(adata.obs[cov_list].mean(), inplace=True)
-        print('# compute_score: COV_FILE loaded, cov_list=%s'%cov_list)
+        print('--cov_file loaded: covariates=[%s] (sys_time=%0.1fs)'
+              %(', '.join(cov_list), time.time()-sys_start_time))
     
         adata.var['mean'] = adata.X.mean(axis=0).T
         if sp.sparse.issparse(adata.X):
@@ -110,12 +134,14 @@ def main(args):
         adata.X -= adata.var['mean'].values
         adata.X = md.reg_out(adata.X, adata.obs[cov_list].values)
         adata.X += adata.var['mean']
-        print('# compute_score: covariates regressed out from adata.X')
+        print('Regress out covariates from --h5ad_file (sys_time=%0.1fs)'
+              %(time.time()-sys_start_time))
     
     # Load .gs file 
     df_gs = pd.read_csv(GS_FILE, sep='\t')
     df_gs.index = df_gs['TRAIT']
-    print('# compute_score: GS_FILE loaded: ', df_gs.shape)
+    print('--gs_file loaded: n_geneset=%d (sys_time=%0.1fs)'
+          %(df_gs.shape[0], time.time()-sys_start_time))
     
     # Convert df_gs genes to H5AD_SPECIES genes
     if H5AD_SPECIES!=GS_SPECIES:
@@ -133,29 +159,24 @@ def main(args):
             gs_gene_list = df_gs.loc[trait, 'GENESET'].split(',')
             h5ad_gene_list = [dic_map[x] for x in set(gs_gene_list)&set(dic_map.keys())]
             df_gs.loc[trait, 'GENESET'] = ','.join(h5ad_gene_list)
-        print('# compute_score: GS_FILE converted from %s to %s genes'%(GS_SPECIES, H5AD_SPECIES))
-    print('# compute_score: sys_time=%0.1fs'%(time.time()-sys_start_time))
-    
+        print('--gs_file converted from %s to %s genes (sys_time=%0.1fs)'
+              %(GS_SPECIES, H5AD_SPECIES, time.time()-sys_start_time))
+    print('')
     ###########################################################################################    
     ######                                  Computation                                  ######
     ###########################################################################################
     
-    # Divide genes into mean-var bins
+    # Compute statistics, including the 20*20 mean-var bins
     md.compute_stats(adata)
-    if CTRL_MATCH_OPT=='mean_var':
-        v_mean_bin = pd.qcut(adata.var['mean'], 20, labels=False, duplicates='drop')
-        adata.var['mean_var'] = ''
-        for bin_ in set(v_mean_bin):
-            ind_select = (v_mean_bin==bin_)
-            v_var_bin = pd.qcut(adata.var.loc[ind_select, 'var'], 20, labels=False, duplicates='drop')
-            adata.var.loc[ind_select, 'mean_var'] = ['%s.%s'%(x,y) for x,y in zip(v_mean_bin[ind_select],v_var_bin)]
+    print('Compute basic statistics (sys_time=%0.1fs)'%(time.time()-sys_start_time))
     
     # Compute score 
     for trait in df_gs.index:
         gene_list = df_gs.loc[trait,'GENESET'].split(',')
         gene_list = sorted(set(gene_list) & set(adata.var_names))
         if len(gene_list)<10:
-            print('# %s skipped due to small size (n_gene=%d)'%(trait, len(gene_list)))
+            print('Gene set %s: skipped due to small size (n_gene=%d, sys_time=%0.1fs)'
+                  %(trait, len(gene_list), time.time()-sys_start_time))
             continue
             
         df_res = md.score_cell(adata, gene_list, ctrl_match_key=CTRL_MATCH_OPT, n_ctrl=N_CTRL, 
@@ -164,8 +185,12 @@ def main(args):
         df_res.iloc[:,0:6].to_csv(join(OUT_FOLDER, '%s.score.gz'%trait), sep='\t', index=True, compression='gzip')
         if FLAG_RETURN_CTRL_RAW_SCORE|FLAG_RETURN_CTRL_NORM_SCORE:
             df_res.to_csv(join(OUT_FOLDER, '%s.full_score.gz'%trait), sep='\t', index=True, compression='gzip')
-        print('# compute_score: score computed for %s (%d genes), sys_time=%0.1fs'
-              %(trait, len(gene_list), time.time()-sys_start_time))
+        v_fdr = multipletests(df_res['pval'].values, method='fdr_bh')[1]
+        n_rej_01 = (v_fdr<0.1).sum()
+        n_rej_02 = (v_fdr<0.2).sum()
+        print('Gene set %s (n_gene=%d): %d/%d FDR<0.1 cells, %d/%d FDR<0.2 cells (sys_time=%0.1fs)'
+              %(trait, len(gene_list), n_rej_01, df_res.shape[0],
+                n_rej_02, df_res.shape[0], time.time()-sys_start_time))
             
     
 if __name__ == '__main__':
@@ -185,4 +210,5 @@ if __name__ == '__main__':
     parser.add_argument('--out_folder', type=str, required=True)
     
     args = parser.parse_args()
+    
     main(args)

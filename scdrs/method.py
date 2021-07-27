@@ -352,7 +352,7 @@ def _correct_background(v_raw_score,
     return v_norm_score, mat_ctrl_norm_score
 
 
-def compute_stats(data, copy=False):
+def compute_stats(data, n_mean_bin=20, n_var_bin=20, copy=False):
     """
     Precompute mean for each gene and mean&var for each cell
     """
@@ -381,6 +381,14 @@ def compute_stats(data, copy=False):
     # Recipe from Frost Nucleic Acids Research 2020
     adata.var['var_tech'] = adata.var['var']*adata.var['ct_var_tech']/adata.var['ct_var']
     adata.var.loc[adata.var['var_tech'].isna(),'var_tech'] = 0
+    
+    # Add n_mean_bin*n_var_bin mean_var bins
+    v_mean_bin = pd.qcut(adata.var['mean'], n_mean_bin, labels=False, duplicates='drop')
+    adata.var['mean_var'] = ''
+    for bin_ in set(v_mean_bin):
+        ind_select = (v_mean_bin==bin_)
+        v_var_bin = pd.qcut(adata.var.loc[ind_select, 'var'], n_var_bin, labels=False, duplicates='drop')
+        adata.var.loc[ind_select, 'mean_var'] = ['%s.%s'%(x,y) for x,y in zip(v_mean_bin[ind_select],v_var_bin)]
     
     # Cell-wise statistics
     adata.obs['mean'],adata.obs['var'] = _get_sparse_var(adata.X, axis=1)
