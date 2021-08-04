@@ -8,6 +8,8 @@
 - TS FACS (`cov=const+n_genes+donor`; `n_ctrl=500`): `dir/score.ts_facs_with_cov.magma_10kb_1000.500_ctrl`
 - TMS droplet (`cov=const+n_genes+sex_male+age`; `n_ctrl=1,000`): `dir/score.tms_droplet_with_cov.magma_10kb_1000`
 - TMS droplet (`cov=const+n_genes+sex_male+age`; `n_ctrl=500`): `dir/score.tms_droplet_with_cov.magma_10kb_1000.500_ctrl`
+- Cano-Gamez & Sos-kic et al. (`cov=const+n_genes`; `n_ctrl=1,000`): `dir/score.canogamez_with_cov.magma_10kb_1000`
+- Cano-Gamez & Sos-kic et al. (`cov=const+n_genes`; `n_ctrl=500`): `dir/score.canogamez_with_cov.magma_10kb_1000.500_ctrl`
 
 ### Other score files
 - TMS FACS + MSigDB T cell signatures (`cov=const+n_genes+sex_male+age`; `n_ctrl=1,000`): `dir/score.tms_facs_with_cov.tcell_sig`
