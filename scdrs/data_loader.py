@@ -10,7 +10,7 @@ def load_tms_processed(file_path, data_name='facs', tissue='all'):
     """load processed tms data
     
     Args:
-        file_path (str): scTRS_data path
+        file_path (str): scDRS_data path
         data_name (str): one of 'facs', 'droplet'
         tissue (str): 'all' or one of the facs or droplet tissues
         
@@ -81,7 +81,6 @@ def load_tms_ct(file_path, data_name='facs', flag_size_factor=True,
             
     # Load filtered data
     adata = read_h5ad(file_path+'/'+file_name)
-    # adata.var['raw_mean'],adata.var['raw_var'] = md.get_sparse_var(adata.X, axis=0)
     
     if flag_filter_genes == True:
         sc.pp.filter_genes(adata, min_cells=3)
@@ -94,8 +93,8 @@ def load_tms_ct(file_path, data_name='facs', flag_size_factor=True,
     if flag_log1p == True:
         sc.pp.log1p(adata)
     
-    if flag_scale == True:
-        sc.pp.scale(adata, max_value=10, zero_center=False)
+    # if flag_scale == True:
+    #     sc.pp.scale(adata, max_value=10, zero_center=False)
     
     if 'facs' in data_name:
         ind_select = adata.obs['age'].isin(['3m', '18m', '24m'])
@@ -108,14 +107,13 @@ def load_tms_ct(file_path, data_name='facs', flag_size_factor=True,
     return adata
 
 
-def load_ts_facs_raw_data(opt='raw',
-                          flag_size_factor=True,
-                          total_ct_per_cell=1e4,
-                          flag_log1p=True):
+def load_ts_facs(file_path, opt='raw',
+                 flag_size_factor=True,
+                 total_ct_per_cell=1e4,
+                 flag_log1p=True):
     
     if opt=='raw':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/tabula_sapiens'
-        adata = read_h5ad(DATA_PATH+'/obj_facs_raw.h5ad')
+        adata = read_h5ad(file_path+'/single_cell_data/tabula_sapiens/obj_smartseq2_raw.h5ad')
         
         if flag_size_factor == True:
             sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
@@ -123,20 +121,18 @@ def load_ts_facs_raw_data(opt='raw',
             sc.pp.log1p(adata)
         
     if opt=='processed':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/liver_atlas'
-        adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
+        pass
         
     return adata
 
 
-def load_aizarani_raw_data(opt='raw',
-                           flag_size_factor=True,
-                           total_ct_per_cell=1e4,
-                           flag_log1p=True):
+def load_canogamez(file_path, opt='raw',
+                   flag_size_factor=True,
+                   total_ct_per_cell=1e4,
+                   flag_log1p=True):
     
     if opt=='raw':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/liver_atlas'
-        adata = read_h5ad(DATA_PATH+'/obj_raw.h5ad')
+        adata = read_h5ad(file_path+'/single_cell_data/tcell_canogamez_nc_2020/obj_raw.h5ad')
         
         if flag_size_factor == True:
             sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
@@ -144,20 +140,18 @@ def load_aizarani_raw_data(opt='raw',
             sc.pp.log1p(adata)
         
     if opt=='processed':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/liver_atlas'
-        adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
+        adata = read_h5ad(file_path+'/single_cell_data/tcell_canogamez_nc_2020/obj_processed.h5ad')
         
     return adata
 
 
-def load_halpern_shenhav_raw_data(opt='raw',
-                                  flag_size_factor=True,
-                                  total_ct_per_cell=1e4,
-                                  flag_log1p=True):
+def load_nathan(file_path, opt='raw',
+                flag_size_factor=True,
+                total_ct_per_cell=1e4,
+                flag_log1p=True):
     
     if opt=='raw':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/mouse_liver_halpern_nature_2017'
-        adata = read_h5ad(DATA_PATH+'/obj_raw.h5ad')
+        adata = read_h5ad(file_path+'/single_cell_data/nathan_ni_2021/obj_raw.h5ad')
         
         if flag_size_factor == True:
             sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
@@ -165,20 +159,18 @@ def load_halpern_shenhav_raw_data(opt='raw',
             sc.pp.log1p(adata)
         
     if opt=='processed':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/mouse_liver_halpern_nature_2017'
-        adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
+        adata = read_h5ad(file_path+'/single_cell_data/nathan_ni_2021/obj_processed.h5ad')
         
     return adata
 
 
-def load_richter_raw_data(opt='raw',
-                          flag_size_factor=True,
-                          total_ct_per_cell=1e4,
-                          flag_log1p=True):
+def load_aizarani(file_path, opt='raw',
+                  flag_size_factor=True,
+                  total_ct_per_cell=1e4,
+                  flag_log1p=True):
     
     if opt=='raw':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/richter_biorxiv_2020'
-        adata = read_h5ad(DATA_PATH+'/obj_raw.h5ad')
+        adata = read_h5ad(file_path+'/single_cell_data/liver_atlas/obj_raw.h5ad')
         
         if flag_size_factor == True:
             sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
@@ -186,20 +178,19 @@ def load_richter_raw_data(opt='raw',
             sc.pp.log1p(adata)
         
     if opt=='processed':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/richter_biorxiv_2020'
-        adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/single_cell_data/liver_atlas'
+        adata = read_h5ad(file_path+'/single_cell_data/liver_atlas/obj_processed.h5ad')
         
     return adata
 
 
-def load_rao_raw_data(opt='raw',
-                      flag_size_factor=True,
-                      total_ct_per_cell=1e4,
-                      flag_log1p=True):
+def load_halpern(file_path, opt='raw',
+                 flag_size_factor=True,
+                 total_ct_per_cell=1e4,
+                 flag_log1p=True):
     
     if opt=='raw':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/rao_wang_2021'
-        adata = read_h5ad(DATA_PATH+'/obj_raw.h5ad')
+        adata = read_h5ad(file_path+'/single_cell_data/mouse_liver_halpern_nature_2017/obj_raw.h5ad')
         
         if flag_size_factor == True:
             sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
@@ -207,8 +198,46 @@ def load_rao_raw_data(opt='raw',
             sc.pp.log1p(adata)
         
     if opt=='processed':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/rao_wang_2021'
-        adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
+        adata = read_h5ad(file_path+'/single_cell_data/mouse_liver_halpern_nature_2017/obj_processed.h5ad')
+        
+    return adata
+
+
+def load_richter(file_path, opt='raw',
+                 flag_size_factor=True,
+                 total_ct_per_cell=1e4,
+                 flag_log1p=True):
+    
+    if opt=='raw':
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/single_cell_data/richter_biorxiv_2020'
+        adata = read_h5ad(file_path+'/single_cell_data/richter_biorxiv_2020/obj_raw.h5ad')
+        
+        if flag_size_factor == True:
+            sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
+        if flag_log1p == True:
+            sc.pp.log1p(adata)
+        
+    if opt=='processed':
+        adata = read_h5ad(file_path+'/single_cell_data/richter_biorxiv_2020/obj_processed.h5ad')
+        
+    return adata
+
+
+def load_rao(file_path, opt='raw',
+             flag_size_factor=True,
+             total_ct_per_cell=1e4,
+             flag_log1p=True):
+    
+    if opt=='raw':
+        adata = read_h5ad(file_path+'/single_cell_data/rao_wang_2021/obj_raw.h5ad')
+        
+        if flag_size_factor == True:
+            sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
+        if flag_log1p == True:
+            sc.pp.log1p(adata)
+        
+    if opt=='processed':
+        adata = read_h5ad(file_path+'/single_cell_data/rao_wang_2021/obj_processed.h5ad')
         
     return adata
 
@@ -219,7 +248,7 @@ def load_asp_st_raw_data(opt='raw',
                          flag_log1p=True):
     
     if opt=='raw':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/heart_asp_cell_2019'
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/single_cell_data/heart_asp_cell_2019'
         adata = read_h5ad(DATA_PATH+'/obj_raw_st.h5ad')
         
         if flag_size_factor == True:
@@ -228,7 +257,7 @@ def load_asp_st_raw_data(opt='raw',
             sc.pp.log1p(adata)
         
     if opt=='processed':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/heart_asp_cell_2019'
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/single_cell_data/heart_asp_cell_2019'
         adata = read_h5ad(DATA_PATH+'/obj_processed_st.h5ad')
         
     return adata
@@ -240,7 +269,7 @@ def load_asp_sc_raw_data(opt='raw',
                          flag_log1p=True):
     
     if opt=='raw':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/heart_asp_cell_2019'
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/single_cell_data/heart_asp_cell_2019'
         adata = read_h5ad(DATA_PATH+'/obj_raw_sc.h5ad')
         
         if flag_size_factor == True:
@@ -249,50 +278,8 @@ def load_asp_sc_raw_data(opt='raw',
             sc.pp.log1p(adata)
         
     if opt=='processed':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/heart_asp_cell_2019'
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/single_cell_data/heart_asp_cell_2019'
         adata = read_h5ad(DATA_PATH+'/obj_processed_sc.h5ad')
-        
-    return adata
-
-
-def load_canogamez_raw_data(opt='raw',
-                            flag_size_factor=True,
-                            total_ct_per_cell=1e4,
-                            flag_log1p=True):
-    
-    if opt=='raw':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/tcell_canogamez_nc_2020'
-        adata = read_h5ad(DATA_PATH+'/obj_raw.h5ad')
-        
-        if flag_size_factor == True:
-            sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
-        if flag_log1p == True:
-            sc.pp.log1p(adata)
-        
-    if opt=='processed':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/tcell_canogamez_nc_2020'
-        adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
-        
-    return adata
-
-
-def load_nathan_raw_data(opt='raw',
-                      flag_size_factor=True,
-                      total_ct_per_cell=1e4,
-                      flag_log1p=True):
-    
-    if opt=='raw':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/nathan_ni_2021'
-        adata = read_h5ad(DATA_PATH+'/obj_raw.b0.h5ad')
-        
-        if flag_size_factor == True:
-            sc.pp.normalize_per_cell(adata, counts_per_cell_after=total_ct_per_cell)
-        if flag_log1p == True:
-            sc.pp.log1p(adata)
-        
-    if opt=='processed':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/nathan_ni_2021'
-        adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
         
     return adata
 
@@ -303,7 +290,7 @@ def load_xin_raw_data(opt='raw',
                       flag_log1p=True):
     
     if opt=='raw':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/xin_diabetes_2018'
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/single_cell_data/xin_diabetes_2018'
         adata = read_h5ad(DATA_PATH+'/obj_raw.h5ad')
         
         if flag_size_factor == True:
@@ -312,7 +299,7 @@ def load_xin_raw_data(opt='raw',
             sc.pp.log1p(adata)
         
     if opt=='processed':
-        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/xin_diabetes_2018'
+        DATA_PATH='/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/single_cell_data/xin_diabetes_2018'
         adata = read_h5ad(DATA_PATH+'/obj_processed.h5ad')
         
     return adata

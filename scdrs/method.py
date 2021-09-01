@@ -46,6 +46,7 @@ def score_cell(data,
             'uniform': average over the genes in the gene_list
             'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct)
             'inv_std': weighted average with weights equal to 1/std
+            'od': overdispersion score
         copy : bool
             If to make copy of the AnnData object to avoid writing on the orignal data
         return_raw_ctrl_score : bool
@@ -90,7 +91,7 @@ def score_cell(data,
     # Check options
     if ctrl_match_key not in adata.var.columns:
         raise ValueError('# score_cell: %s not in data.var.columns'%ctrl_match_key)
-    weight_opt_list = ['uniform', 'vs', 'inv_std', 'adapt']
+    weight_opt_list = ['uniform', 'vs', 'inv_std', 'adapt', 'od']
     if weight_opt not in weight_opt_list:
         raise ValueError('# score_cell: weight_opt not in [%s]'
                          %', '.join([str(x) for x in weight_opt_list]))
@@ -133,10 +134,16 @@ def score_cell(data,
             _compute_raw_score(adata, dic_ctrl_list[i_ctrl], dic_ctrl_weight[i_ctrl], weight_opt)
                 
     # Compute normalized scores 
-    v_var_ratio_c2t = np.zeros(n_ctrl) # variance ratio assuming independence 
-    for i_ctrl in range(n_ctrl):
-        v_var_ratio_c2t[i_ctrl] = (df_gene.loc[dic_ctrl_list[i_ctrl], 'var']*mat_ctrl_weight[:,i_ctrl]**2).sum()
-    v_var_ratio_c2t /= (df_gene.loc[gene_list, 'var']*v_score_weight**2).sum()
+    v_var_ratio_c2t = np.ones(n_ctrl) 
+    if weight_opt in ['uniform', 'vs', 'inv_std', 'adapt']: 
+        # For raw scores compuated as weighted average. estimate variance ratio assuming independence
+        for i_ctrl in range(n_ctrl):
+            v_var_ratio_c2t[i_ctrl] = (df_gene.loc[dic_ctrl_list[i_ctrl], 'var'] * 
+                                       mat_ctrl_weight[:,i_ctrl]**2).sum()
+        v_var_ratio_c2t /= (df_gene.loc[gene_list, 'var']*v_score_weight**2).sum()
+    
+    v_norm_score,mat_ctrl_norm_score = _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t,
+                                                           save_intermediate=save_intermediate)
     
     # print('disease gene', df_gene.loc[gene_list, 'mean'].sum(), df_gene.loc[gene_list, 'var'].sum())
     # mean_list = []
@@ -148,9 +155,6 @@ def score_cell(data,
     # print('v_score_weight', v_score_weight.sum(), (v_score_weight**2).sum())
     # print('mat_ctrl_weight', mat_ctrl_weight.sum(axis=0).mean(), (mat_ctrl_weight**2).sum(axis=0).mean())
     # print('v_var_ratio_c2t', v_var_ratio_c2t.mean(), v_var_ratio_c2t.std())
-    
-    v_norm_score, mat_ctrl_norm_score = _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t,
-                                                            save_intermediate=save_intermediate)
     
     # Get p-values 
     mc_p = (1+(mat_ctrl_norm_score.T>=v_norm_score).sum(axis=0))/(1+n_ctrl)
@@ -247,6 +251,7 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
             - 'uniform': average over the genes in the gene_list
             - 'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct)
             - 'inv_std': weighted average with weights equal to 1/std
+            - 'od': overdispersion score
             
     Returns
     -------
@@ -256,7 +261,11 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
             Gene weights score
     """
     
-    # Compute raw score
+    # Compute raw score (overdispersion)
+    if weight_opt=='od':
+        return _compute_overdispersion_score(adata, gene_list, gene_weight)
+    
+    # Compute raw score (weighted average)
     if weight_opt=='uniform':
         v_score_weight = np.ones(len(gene_list))
     if weight_opt=='vs':
@@ -274,6 +283,48 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
     v_raw_score = adata[:, gene_list].X.dot(v_score_weight).reshape([-1])  
         
     return v_raw_score,v_score_weight
+
+
+def _compute_overdispersion_score(adata, gene_list, gene_weight):
+    """Compute overdispersion score
+    
+        Let w_g_raw = gene_weight / \sigma_{tech,g}^2
+        Let w_g = w_g_raw / \sum_g w_g_raw
+        s_c = \sum_g w_g * [(X_cg - \mu_g)^2 - \sigma_{tech,g}^2]  
+    Args
+    ----
+        adata (n_cell, n_gene) : AnnData
+            adata.X should contain size-normalized log1p transformed count data
+        gene_list (n_trait_gene) : list
+            Trait gene list
+        gene_weight (n_trait_gene) : list/np.ndarray
+            Gene weights for genes in the gene_list 
+            
+    Returns
+    -------
+        v_raw_score (n_cell,) : np.ndarray
+            Raw score
+        v_score_weight (n_trait_gene,) : np.ndarray
+            Gene weights score
+    """
+    
+    v_mean = adata.var.loc[gene_list,'mean'].values
+    v_var_tech = adata.var.loc[gene_list,'var_tech'].values
+    
+    v_w = 1 / (v_var_tech + 1e-2)
+    if gene_weight is not None:
+        v_w = v_w*np.array(gene_weight)
+    v_w = v_w / v_w.sum()
+    
+    # Compute overdispersion score 
+    if sp.sparse.issparse(adata.X):
+        v_raw_score = adata[:, gene_list].X.power(2).dot(v_w).reshape([-1]) # Quadratic term 
+    else:
+        v_raw_score = (adata[:, gene_list].X**2).dot(v_w).reshape([-1]) # Quadratic term 
+    v_raw_score = v_raw_score - adata[:, gene_list].X.dot(2*v_w*v_mean).reshape([-1]) # Linear term
+    v_raw_score = v_raw_score + (v_w * (v_mean**2-v_var_tech)).sum() # Constant term
+    
+    return v_raw_score,np.ones(len(gene_list))
 
 
 def _correct_background(v_raw_score, 
@@ -588,7 +639,7 @@ def correlate_gene(data,
     Returns
     -------
         adata (AnnData): 
-            Add the columns 'trs_corr'+suffix to data.var
+            Add the columns 'scdrs_corr'+suffix to data.var
     """
     
     adata = data.copy() if copy else data
@@ -596,14 +647,14 @@ def correlate_gene(data,
     # Check options
     corr_opt_list = ['pearson', 'spearman']
     if corr_opt not in corr_opt_list:
-        raise ValueError('# compute_trs_corr: corr_opt not in [%s]'
+        raise ValueError('# compute_scdrs_corr: corr_opt not in [%s]'
                          %', '.join([str(x) for x in corr_opt_list]))
     if trs_name not in adata.obs.columns:
-        raise ValueError('# compute_trs_corr: %s not in data.obs.columns'%trs_name)
+        raise ValueError('# compute_scdrs_corr: %s not in data.obs.columns'%trs_name)
     if cov_list is not None:
         temp_list = list(set(cov_list) - set(adata.obs.columns))
         if len(temp_list)>0:
-            raise ValueError('# compute_trs_corr: covariates %s not in data.obs.columns'
+            raise ValueError('# compute_scdrs_corr: covariates %s not in data.obs.columns'
                              %','.join(temp_list))
     
     # Get data 
@@ -624,7 +675,7 @@ def correlate_gene(data,
     if corr_opt=='spearman':
         v_corr = _spearman_corr(mat_X, v_trs)
     
-    adata.var['trs_corr'+suffix] = v_corr
+    adata.var['scdrs_corr'+suffix] = v_corr
         
     return adata if copy else None 
     

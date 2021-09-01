@@ -50,7 +50,7 @@ def main(args):
     CTRL_MATCH_OPT=args.ctrl_match_opt
     FLAG_FILTER=args.flag_filter=='True'
     FLAG_RAW_COUNT=args.flag_raw_count=='True'
-    N_CTRL=args.n_ctrl
+    N_CTRL=int(args.n_ctrl)
     FLAG_RETURN_CTRL_RAW_SCORE=args.flag_return_ctrl_raw_score=='True'
     FLAG_RETURN_CTRL_NORM_SCORE=args.flag_return_ctrl_norm_score=='True'
     OUT_FOLDER=args.out_folder
@@ -116,7 +116,7 @@ def main(args):
     # Convert df_gs genes to H5AD_SPECIES genes
     if H5AD_SPECIES!=GS_SPECIES:
         # Load homolog file 
-        df_hom = pd.read_csv('/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/gene_annotation/'
+        df_hom = pd.read_csv('/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/gene_annotation/'
                              'mouse_human_homologs.txt', sep='\t')
         if (GS_SPECIES=='hsapiens') & (H5AD_SPECIES=='mmusculus'):
             dic_map = {x:y for x,y in zip(df_hom['HUMAN_GENE_SYM'], df_hom['MOUSE_GENE_SYM'])}
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     parser.add_argument('--ctrl_match_opt', type=str, required=False, default='mean_var')
     parser.add_argument('--flag_filter', type=str, required=False, default='True')
     parser.add_argument('--flag_raw_count', type=str, required=False, default='True')
-    parser.add_argument('--n_ctrl', type=int, required=False, default=500)
+    parser.add_argument('--n_ctrl', type=int, required=False, default=1000)
     parser.add_argument('--flag_return_ctrl_raw_score', type=str, required=False, default='False')
     parser.add_argument('--flag_return_ctrl_norm_score', type=str, required=False, default='False')
     parser.add_argument('--out_folder', type=str, required=True)

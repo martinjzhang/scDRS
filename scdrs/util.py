@@ -476,15 +476,15 @@ def plot_score_umap(score_dict, score_index, umap_adata, umap_color=['cell_ontol
     
 def p_2_str(p_):
     if p_>0.05:
-        return 'ns'
+        return ''
     elif p_>0.005:
         return '*'
     else: 
         return '**'
     
     
-def p_2_str_num(p_):
-    if p_>1/500.5:
+def p_2_str_num(p_,n_ctrl):
+    if p_>1/(n_ctrl+0.5):
         return 'P=%0.3f'%p_
     else:
-        return 'P<0.002'
+        return 'P<%0.3f'%(1/n_ctrl)

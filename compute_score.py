@@ -22,16 +22,18 @@ import scdrs.method as md
 
 # Todo
 - Support other data formats in addition to h5ad
-- Change name from scTRS to scdrs
-- Add scdrs in front of compute_score
 - Implement a memory efficient version
+- "gene_weight" argument needs to be tested 
 
 # Finished
 - Add --n_ctrl (default value 500) 
 - Add --cov_file option to regress out covariates stored in COV_FILE before feeding into the score function 
 - Add --ctrl_match_opt='mean_var': use mean- and var- matched control genes 
+- Change name from scTRS to scdrs (072721)
 
 """
+
+VERSION='0.0.1'
 
 def convert_species_name(species):
     if species in ['Mouse', 'mouse', 'Mus_musculus', 'mus_musculus', 'mmusculus']:
@@ -44,10 +46,9 @@ def convert_species_name(species):
 def main(args):
     sys_start_time = time.time()
     
-    # __version__ = '1.0.1'
     MASTHEAD = "******************************************************************************\n"
     MASTHEAD += "* Single-cell disease relevance score (scDRS)\n"
-    # MASTHEAD += "* Version {V}\n".format(V=__version__)
+    MASTHEAD += "* Version %s\n"%VERSION
     MASTHEAD += "* Martin Jinye Zhang and Kangcheng Hou\n"
     MASTHEAD += "* HSPH / Broad Institute / UCLA\n"
     # MASTHEAD += "* GNU General Public License v3\n"
@@ -62,9 +63,10 @@ def main(args):
     GS_FILE=args.gs_file
     GS_SPECIES=args.gs_species
     CTRL_MATCH_OPT=args.ctrl_match_opt
+    WEIGHT_OPT=args.weight_opt
     FLAG_FILTER=args.flag_filter=='True'
     FLAG_RAW_COUNT=args.flag_raw_count=='True'
-    N_CTRL=args.n_ctrl
+    N_CTRL=int(args.n_ctrl)
     FLAG_RETURN_CTRL_RAW_SCORE=args.flag_return_ctrl_raw_score=='True'
     FLAG_RETURN_CTRL_NORM_SCORE=args.flag_return_ctrl_norm_score=='True'
     OUT_FOLDER=args.out_folder
@@ -81,9 +83,10 @@ def main(args):
     header += '--gs_file %s\\\n'%GS_FILE
     header += '--gs_species %s\\\n'%GS_SPECIES
     header += '--ctrl_match_opt %s\\\n'%CTRL_MATCH_OPT
+    header += '--weight_opt %s\\\n'%WEIGHT_OPT
     header += '--flag_filter %s\\\n'%FLAG_FILTER
     header += '--flag_raw_count %s\\\n'%FLAG_RAW_COUNT
-    header += '--n_ctrl %s\\\n'%N_CTRL
+    header += '--n_ctrl %d\\\n'%N_CTRL
     header += '--flag_return_ctrl_raw_score %s\\\n'%FLAG_RETURN_CTRL_RAW_SCORE
     header += '--flag_return_ctrl_norm_score %s\\\n'%FLAG_RETURN_CTRL_NORM_SCORE
     header += '--out_folder %s\n'%OUT_FOLDER
@@ -99,6 +102,8 @@ def main(args):
                              'unless H5AD_SPECIES==GS_SPECIES')
     if CTRL_MATCH_OPT not in ['mean', 'mean_var']:
         raise ValueError('CTRL_MATCH_OPT needs to be one of [mean, mean_var]')
+    if WEIGHT_OPT not in ['uniform', 'vs', 'inv_std', 'adapt', 'od']:
+        raise ValueError('WEIGHT_OPT needs to be one of [uniform, vs, inv_std, adapt, od]')
     
     ###########################################################################################    
     ######                                     Load data                                 ######
@@ -146,14 +151,15 @@ def main(args):
     # Convert df_gs genes to H5AD_SPECIES genes
     if H5AD_SPECIES!=GS_SPECIES:
         # Load homolog file 
-        df_hom = pd.read_csv('/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/gene_annotation/'
-                             'mouse_human_homologs.txt', sep='\t')
+        df_hom = pd.read_csv('/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/'
+                             'gene_annotation/mouse_human_homologs.txt', sep='\t')
         if (GS_SPECIES=='hsapiens') & (H5AD_SPECIES=='mmusculus'):
             dic_map = {x:y for x,y in zip(df_hom['HUMAN_GENE_SYM'], df_hom['MOUSE_GENE_SYM'])}
         elif (GS_SPECIES=='mmusculus') & (H5AD_SPECIES=='hsapiens'):
             dic_map = {x:y for x,y in zip(df_hom['MOUSE_GENE_SYM'], df_hom['HUMAN_GENE_SYM'])}
         else:
-            raise ValueError('# compute_score: gene conversion from %s to %s is not supported'%(GS_SPECIES, H5AD_SPECIES))
+            raise ValueError('# compute_score: gene conversion from %s to %s is not supported'
+                             %(GS_SPECIES, H5AD_SPECIES))
     
         for trait in df_gs.index:
             gs_gene_list = df_gs.loc[trait, 'GENESET'].split(',')
@@ -179,18 +185,21 @@ def main(args):
                   %(trait, len(gene_list), time.time()-sys_start_time))
             continue
             
-        df_res = md.score_cell(adata, gene_list, ctrl_match_key=CTRL_MATCH_OPT, n_ctrl=N_CTRL, 
+        df_res = md.score_cell(adata, gene_list, ctrl_match_key=CTRL_MATCH_OPT, n_ctrl=N_CTRL,
+                               weight_opt=WEIGHT_OPT,
                                return_ctrl_raw_score=FLAG_RETURN_CTRL_RAW_SCORE, 
                                return_ctrl_norm_score=FLAG_RETURN_CTRL_NORM_SCORE, verbose=False)
-        df_res.iloc[:,0:6].to_csv(join(OUT_FOLDER, '%s.score.gz'%trait), sep='\t', index=True, compression='gzip')
+        df_res.iloc[:,0:6].to_csv(join(OUT_FOLDER, '%s.score.gz'%trait), sep='\t',
+                                  index=True, compression='gzip')
         if FLAG_RETURN_CTRL_RAW_SCORE|FLAG_RETURN_CTRL_NORM_SCORE:
-            df_res.to_csv(join(OUT_FOLDER, '%s.full_score.gz'%trait), sep='\t', index=True, compression='gzip')
+            df_res.to_csv(join(OUT_FOLDER, '%s.full_score.gz'%trait), sep='\t',
+                          index=True, compression='gzip')
         v_fdr = multipletests(df_res['pval'].values, method='fdr_bh')[1]
         n_rej_01 = (v_fdr<0.1).sum()
         n_rej_02 = (v_fdr<0.2).sum()
         print('Gene set %s (n_gene=%d): %d/%d FDR<0.1 cells, %d/%d FDR<0.2 cells (sys_time=%0.1fs)'
-              %(trait, len(gene_list), n_rej_01, df_res.shape[0],
-                n_rej_02, df_res.shape[0], time.time()-sys_start_time))
+              %(trait, len(gene_list), n_rej_01, df_res.shape[0], n_rej_02, df_res.shape[0],
+                time.time()-sys_start_time))
             
     
 if __name__ == '__main__':
@@ -202,9 +211,10 @@ if __name__ == '__main__':
     parser.add_argument('--gs_file', type=str, required=True)
     parser.add_argument('--gs_species', type=str, required=True, help='one of [hsapiens, mmusculus]')
     parser.add_argument('--ctrl_match_opt', type=str, required=False, default='mean_var')
+    parser.add_argument('--weight_opt', type=str, required=False, default='vs')
     parser.add_argument('--flag_filter', type=str, required=False, default='True')
     parser.add_argument('--flag_raw_count', type=str, required=False, default='True')
-    parser.add_argument('--n_ctrl', type=int, required=False, default=500)
+    parser.add_argument('--n_ctrl', type=int, required=False, default=1000)
     parser.add_argument('--flag_return_ctrl_raw_score', type=str, required=False, default='False')
     parser.add_argument('--flag_return_ctrl_norm_score', type=str, required=False, default='False')
     parser.add_argument('--out_folder', type=str, required=True)
