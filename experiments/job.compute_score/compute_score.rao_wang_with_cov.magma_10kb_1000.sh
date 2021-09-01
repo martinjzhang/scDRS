@@ -4,18 +4,18 @@
 #SBATCH -t 0-01:00          # Runtime in D-HH:MM, minimum of 10 minutes
 #SBATCH -p shared   # Partition to submit to
 #SBATCH --mem=32000           # Memory pool for all cores (see also --mem-per-cpu)
-#SBATCH --array=0-19          # Memory pool for all cores (see also --mem-per-cpu)
-#SBATCH -o /n/home11/mjzhang/gwas_informed_scRNAseq/scTRS/experiments/job_info/job_%A_%a.out # Standard output
-#SBATCH -e /n/home11/mjzhang/gwas_informed_scRNAseq/scTRS/experiments/job_info/job_%A_%a.err # Standard error
+#SBATCH --array=0-24          # Memory pool for all cores (see also --mem-per-cpu)
+#SBATCH -o /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/experiments/job_info/job_%A_%a.out # Standard output
+#SBATCH -e /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/experiments/job_info/job_%A_%a.err # Standard error
 
 BATCH_NUM=$SLURM_ARRAY_TASK_ID
 # BATCH_NUM=0
-H5AD_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/rao_wang_2021/obj_raw.h5ad
-COV_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/single_cell_data/rao_wang_2021/rao_wang_2021.cov
-GS_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/gs_file/magma_10kb_1000.60_traits.gs.batch/magma_10kb_1000.batch$BATCH_NUM.gs
-OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scTRS_data/score_file/score.rao_wang_with_cov.magma_10kb_1000 
+H5AD_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/single_cell_data/rao_wang_2021/obj_raw.h5ad
+COV_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/single_cell_data/rao_wang_2021/rao_wang_2021.cov
+GS_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/gs_file/magma_10kb_1000.74_traits.gs.batch/magma_10kb_1000.batch$BATCH_NUM.gs
+OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/score.rao_wang_with_cov.magma_10kb_1000 
 
-python3 /n/home11/mjzhang/gwas_informed_scRNAseq/scTRS/compute_score.py \
+python3 /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/compute_score.py \
     --h5ad_file $H5AD_FILE\
     --h5ad_species mouse\
     --gs_file $GS_FILE\
@@ -23,6 +23,7 @@ python3 /n/home11/mjzhang/gwas_informed_scRNAseq/scTRS/compute_score.py \
     --cov_file $COV_FILE\
     --flag_filter True\
     --flag_raw_count True\
+    --n_ctrl 1000\
     --flag_return_ctrl_raw_score False\
     --flag_return_ctrl_norm_score True\
     --out_folder $OUT_FOLDER
