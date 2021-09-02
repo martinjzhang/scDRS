@@ -3,10 +3,6 @@ import numpy as np
 import scipy as sp
 import pandas as pd
 from skmisc.loess import loess
-# from statsmodels.stats.multitest import multipletests
-# from scipy.stats import rankdata
-# import statsmodels.api as sm
-# import time
 
 
 def score_cell(data, 
@@ -91,7 +87,7 @@ def score_cell(data,
     # Check options
     if ctrl_match_key not in adata.var.columns:
         raise ValueError('# score_cell: %s not in data.var.columns'%ctrl_match_key)
-    weight_opt_list = ['uniform', 'vs', 'inv_std', 'adapt', 'od']
+    weight_opt_list = ['uniform', 'vs', 'inv_std', 'od']
     if weight_opt not in weight_opt_list:
         raise ValueError('# score_cell: weight_opt not in [%s]'
                          %', '.join([str(x) for x in weight_opt_list]))
@@ -107,7 +103,7 @@ def score_cell(data,
     if ctrl_match_key not in df_gene.columns:
         df_gene[ctrl_match_key] = adata.var[ctrl_match_key].values
     df_gene.drop_duplicates(subset='gene', inplace=True)
-            
+
     # Update gene_list and gene_weight
     n_gene_old = len(list(gene_list))
     if gene_weight is None:
@@ -120,7 +116,7 @@ def score_cell(data,
         print('# score_cell: %-15s %-15s %-20s'
               %('trait gene set,', '%d/%d genes,'%(len(gene_list),n_gene_old),
                 'mean=%0.2e'%df_gene.loc[gene_list, 'mean'].mean()))
-    
+
     # Select control gene sets
     dic_ctrl_list,dic_ctrl_weight = _select_ctrl_geneset(df_gene, gene_list, gene_weight,
                                                          ctrl_match_key, n_ctrl, n_genebin, random_seed)  
@@ -132,30 +128,19 @@ def score_cell(data,
     for i_ctrl in range(n_ctrl): 
         mat_ctrl_raw_score[:,i_ctrl],mat_ctrl_weight[:,i_ctrl] = \
             _compute_raw_score(adata, dic_ctrl_list[i_ctrl], dic_ctrl_weight[i_ctrl], weight_opt)
-                
+
     # Compute normalized scores 
     v_var_ratio_c2t = np.ones(n_ctrl) 
-    if weight_opt in ['uniform', 'vs', 'inv_std', 'adapt']: 
+    if weight_opt in ['uniform', 'vs', 'inv_std']: 
         # For raw scores compuated as weighted average. estimate variance ratio assuming independence
         for i_ctrl in range(n_ctrl):
             v_var_ratio_c2t[i_ctrl] = (df_gene.loc[dic_ctrl_list[i_ctrl], 'var'] * 
                                        mat_ctrl_weight[:,i_ctrl]**2).sum()
         v_var_ratio_c2t /= (df_gene.loc[gene_list, 'var']*v_score_weight**2).sum()
-    
+
     v_norm_score,mat_ctrl_norm_score = _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t,
                                                            save_intermediate=save_intermediate)
-    
-    # print('disease gene', df_gene.loc[gene_list, 'mean'].sum(), df_gene.loc[gene_list, 'var'].sum())
-    # mean_list = []
-    # var_list = []
-    # for i_ctrl in dic_ctrl_list:
-    #     mean_list.append(df_gene.loc[dic_ctrl_list[i_ctrl], 'mean'].sum())
-    #     var_list.append(df_gene.loc[dic_ctrl_list[i_ctrl], 'var'].sum())
-    # print('ctrl gene', np.mean(mean_list), np.mean(var_list))
-    # print('v_score_weight', v_score_weight.sum(), (v_score_weight**2).sum())
-    # print('mat_ctrl_weight', mat_ctrl_weight.sum(axis=0).mean(), (mat_ctrl_weight**2).sum(axis=0).mean())
-    # print('v_var_ratio_c2t', v_var_ratio_c2t.mean(), v_var_ratio_c2t.std())
-    
+
     # Get p-values 
     mc_p = (1+(mat_ctrl_norm_score.T>=v_norm_score).sum(axis=0))/(1+n_ctrl)
     pooled_p = _get_p_from_empi_null(v_norm_score, mat_ctrl_norm_score.flatten())  
@@ -270,10 +255,6 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
         v_score_weight = np.ones(len(gene_list))
     if weight_opt=='vs':
         v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values + 1e-2)
-    if weight_opt=='adapt':
-        v_tvar = adata.var.loc[gene_list,'var_tech'].values
-        v_bvar = (adata.var.loc[gene_list,'var'].values - v_tvar).clip(min=0)
-        v_score_weight = np.sqrt(v_bvar + 1e-2) / (v_tvar + 1e-2)
     if weight_opt=='inv_std':
         v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values + 1e-2)
         
@@ -356,7 +337,7 @@ def _correct_background(v_raw_score,
                    v_raw_score, fmt='%.9e', delimiter='\t')
         np.savetxt(save_intermediate+'.ctrl_raw_score.tsv.gz', 
                    mat_ctrl_raw_score, fmt='%.9e', delimiter='\t')
-    
+
     # Calibrate gene-sets (mean 0 and same ind. var)
     ind_zero_score = (v_raw_score==0)
     ind_zero_ctrl_score = (mat_ctrl_raw_score==0)
@@ -369,18 +350,19 @@ def _correct_background(v_raw_score,
                    v_raw_score, fmt='%.9e', delimiter='\t')
         np.savetxt(save_intermediate+'.ctrl_raw_score.1st_gs_alignment.tsv.gz', 
                    mat_ctrl_raw_score, fmt='%.9e', delimiter='\t')
-    
+
     # Cell-wise correction
     v_mean = mat_ctrl_raw_score.mean(axis=1)
     v_std = mat_ctrl_raw_score.std(axis=1)
-    v_norm_score = (v_raw_score - v_mean) / v_std
+    v_norm_score = v_raw_score.copy()
+    v_norm_score = (v_norm_score - v_mean) / v_std
     mat_ctrl_norm_score = ((mat_ctrl_raw_score.T - v_mean) / v_std).T
     if save_intermediate is not None:
         np.savetxt(save_intermediate+'.raw_score.cellwise_standardization.tsv.gz', 
                    v_norm_score, fmt='%.9e', delimiter='\t')
         np.savetxt(save_intermediate+'.ctrl_raw_score.cellwise_standardization.tsv.gz', 
                    mat_ctrl_norm_score, fmt='%.9e', delimiter='\t')
-            
+
     # Gene-set-wise correction
     v_norm_score = v_norm_score - v_norm_score.mean()
     mat_ctrl_norm_score = mat_ctrl_norm_score - mat_ctrl_norm_score.mean(axis=0)
@@ -389,7 +371,7 @@ def _correct_background(v_raw_score,
                    v_norm_score, fmt='%.9e', delimiter='\t')
         np.savetxt(save_intermediate+'.ctrl_raw_score.2nd_gs_alignment.tsv.gz', 
                    mat_ctrl_norm_score, fmt='%.9e', delimiter='\t')
-    
+
     # Set cells with raw_score=0 to the minimum norm_score value
     norm_score_min = min(v_norm_score.min(), mat_ctrl_norm_score.min())
     v_norm_score[ind_zero_score] = norm_score_min-1e-3
@@ -399,7 +381,6 @@ def _correct_background(v_raw_score,
                    v_norm_score, fmt='%.9e', delimiter='\t')
         np.savetxt(save_intermediate+'.ctrl_raw_score.final.tsv.gz', 
                    mat_ctrl_norm_score, fmt='%.9e', delimiter='\t')
-    
     return v_norm_score, mat_ctrl_norm_score
 
 
@@ -434,6 +415,10 @@ def compute_stats(data, n_mean_bin=20, n_var_bin=20, copy=False):
     adata.var.loc[adata.var['var_tech'].isna(),'var_tech'] = 0
     
     # Add n_mean_bin*n_var_bin mean_var bins
+    if adata.shape[1]<n_mean_bin*n_var_bin*10:
+        n_bin_max = np.floor(np.sqrt(adata.shape[1]/10)).astype(int)
+        n_mean_bin,n_var_bin = n_bin_max,n_bin_max
+        print('Too many gene bins, set n_mean_bin=n_var_bin=%d'%n_bin_max)
     v_mean_bin = pd.qcut(adata.var['mean'], n_mean_bin, labels=False, duplicates='drop')
     adata.var['mean_var'] = ''
     for bin_ in set(v_mean_bin):

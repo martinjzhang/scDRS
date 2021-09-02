@@ -9,7 +9,7 @@ import time
 import argparse
 from statsmodels.stats.multitest import multipletests
 
-# inhouse tools
+# Inhouse tools
 import scdrs.util as util
 import scdrs.data_loader as dl
 import scdrs.method as md
@@ -17,11 +17,9 @@ import scdrs.method as md
 
 """
 # Fixit
-- Warning for compute_score: Trying to set attribute `.X` of view, copying.
 
 
 # Todo
-- Support other data formats in addition to h5ad
 - Implement a memory efficient version
 - "gene_weight" argument needs to be tested 
 
@@ -30,6 +28,7 @@ import scdrs.method as md
 - Add --cov_file option to regress out covariates stored in COV_FILE before feeding into the score function 
 - Add --ctrl_match_opt='mean_var': use mean- and var- matched control genes 
 - Change name from scTRS to scdrs (072721)
+- Fixed: Warning for compute_score: Trying to set attribute `.X` of view, copying. (did: v_norm_score = v_raw_score.copy())
 
 """
 
@@ -51,7 +50,7 @@ def main(args):
     MASTHEAD += "* Version %s\n"%VERSION
     MASTHEAD += "* Martin Jinye Zhang and Kangcheng Hou\n"
     MASTHEAD += "* HSPH / Broad Institute / UCLA\n"
-    # MASTHEAD += "* GNU General Public License v3\n"
+    MASTHEAD += "* MIT License\n"
     MASTHEAD += "******************************************************************************\n"
         
     ###########################################################################################    
@@ -95,15 +94,15 @@ def main(args):
     # Check options 
     if H5AD_SPECIES!=GS_SPECIES:
         if H5AD_SPECIES not in ['mmusculus', 'hsapiens']:
-            raise ValueError('H5AD_SPECIES needs to be one of [mmusculus, hsapiens] '
-                             'unless H5AD_SPECIES==GS_SPECIES')
+            raise ValueError('--h5ad_species needs to be one of [mmusculus, hsapiens] '
+                             'unless --h5ad_species==--gs_species')
         if GS_SPECIES not in ['mmusculus', 'hsapiens']:
-            raise ValueError('GS_SPECIES needs to be one of [mmusculus, hsapiens] '
-                             'unless H5AD_SPECIES==GS_SPECIES')
+            raise ValueError('--gs_species needs to be one of [mmusculus, hsapiens] '
+                             'unless --h5ad_species==--gs_species')
     if CTRL_MATCH_OPT not in ['mean', 'mean_var']:
-        raise ValueError('CTRL_MATCH_OPT needs to be one of [mean, mean_var]')
-    if WEIGHT_OPT not in ['uniform', 'vs', 'inv_std', 'adapt', 'od']:
-        raise ValueError('WEIGHT_OPT needs to be one of [uniform, vs, inv_std, adapt, od]')
+        raise ValueError('--ctrl_match_opt needs to be one of [mean, mean_var]')
+    if WEIGHT_OPT not in ['uniform', 'vs', 'od']:
+        raise ValueError('--weight_opt needs to be one of [uniform, vs, inv_std, od]')
     
     ###########################################################################################    
     ######                                     Load data                                 ######
@@ -127,6 +126,8 @@ def main(args):
     if COV_FILE is not None:
         df_cov = pd.read_csv(COV_FILE, sep='\t', index_col=0)
         cov_list = list(df_cov.columns)
+        if len(set(df_cov.index) & set(adata.obs_names)) < 0.1*adata.shape[0]:
+            raise ValueError('--cov_file does not match the cells in --h5ad_file')
         adata.obs.drop([x for x in cov_list if x in adata.obs.columns], axis=1, inplace=True)
         adata.obs = adata.obs.join(df_cov)
         adata.obs.fillna(adata.obs[cov_list].mean(), inplace=True)
@@ -150,9 +151,7 @@ def main(args):
     
     # Convert df_gs genes to H5AD_SPECIES genes
     if H5AD_SPECIES!=GS_SPECIES:
-        # Load homolog file 
-        df_hom = pd.read_csv('/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/'
-                             'gene_annotation/mouse_human_homologs.txt', sep='\t')
+        df_hom = pd.read_csv('./scdrs/data/gene_annotation/mouse_human_homologs.txt', sep='\t')
         if (GS_SPECIES=='hsapiens') & (H5AD_SPECIES=='mmusculus'):
             dic_map = {x:y for x,y in zip(df_hom['HUMAN_GENE_SYM'], df_hom['MOUSE_GENE_SYM'])}
         elif (GS_SPECIES=='mmusculus') & (H5AD_SPECIES=='hsapiens'):
@@ -163,7 +162,7 @@ def main(args):
     
         for trait in df_gs.index:
             gs_gene_list = df_gs.loc[trait, 'GENESET'].split(',')
-            h5ad_gene_list = [dic_map[x] for x in set(gs_gene_list)&set(dic_map.keys())]
+            h5ad_gene_list = [dic_map[x] for x in set(gs_gene_list) & set(dic_map.keys())]
             df_gs.loc[trait, 'GENESET'] = ','.join(h5ad_gene_list)
         print('--gs_file converted from %s to %s genes (sys_time=%0.1fs)'
               %(GS_SPECIES, H5AD_SPECIES, time.time()-sys_start_time))
@@ -173,15 +172,17 @@ def main(args):
     ###########################################################################################
     
     # Compute statistics, including the 20*20 mean-var bins
+    print('Compute cell-level and gene-level statistics:')
     md.compute_stats(adata)
-    print('Compute basic statistics (sys_time=%0.1fs)'%(time.time()-sys_start_time))
+    print('')
     
     # Compute score 
+    print('Compute: score:')
     for trait in df_gs.index:
         gene_list = df_gs.loc[trait,'GENESET'].split(',')
         gene_list = sorted(set(gene_list) & set(adata.var_names))
         if len(gene_list)<10:
-            print('Gene set %s: skipped due to small size (n_gene=%d, sys_time=%0.1fs)'
+            print('trait=%s: skipped due to small size (n_gene=%d, sys_time=%0.1fs)'
                   %(trait, len(gene_list), time.time()-sys_start_time))
             continue
             
@@ -212,12 +213,17 @@ if __name__ == '__main__':
     parser.add_argument('--gs_species', type=str, required=True, help='one of [hsapiens, mmusculus]')
     parser.add_argument('--ctrl_match_opt', type=str, required=False, default='mean_var')
     parser.add_argument('--weight_opt', type=str, required=False, default='vs')
-    parser.add_argument('--flag_filter', type=str, required=False, default='True')
-    parser.add_argument('--flag_raw_count', type=str, required=False, default='True')
-    parser.add_argument('--n_ctrl', type=int, required=False, default=1000)
-    parser.add_argument('--flag_return_ctrl_raw_score', type=str, required=False, default='False')
-    parser.add_argument('--flag_return_ctrl_norm_score', type=str, required=False, default='False')
-    parser.add_argument('--out_folder', type=str, required=True)
+    parser.add_argument('--flag_filter', type=str, required=False, default='True', 
+                        help='If to apply cell and gene filters to the h5ad_file data')
+    parser.add_argument('--flag_raw_count', type=str, required=False, default='True',
+                        help='If True, apply size factor normalization and log1p transformation')
+    parser.add_argument('--n_ctrl', type=int, required=False, default=1000, help='Number of control genes')
+    parser.add_argument('--flag_return_ctrl_raw_score', type=str, required=False, default='False', 
+                        help='If True, return raw control scores')
+    parser.add_argument('--flag_return_ctrl_norm_score', type=str, required=False, default='False',
+                        help='If True, return normalized control scores')
+    parser.add_argument('--out_folder', type=str, required=True, 
+                        help='Save file at out_folder/trait.score.gz')
     
     args = parser.parse_args()
     
