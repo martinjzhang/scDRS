@@ -10,6 +10,8 @@ Single-cell disease-relevance score.
 Script for batch processing scores. 
 
 ## File formats
+- .h5ad file (compatible with [scanpy](https://scanpy.readthedocs.io/en/stable/index.html))
+
 - .gs file: .tsv file
 
     1. TRAIT: trait name
@@ -34,4 +36,18 @@ Script for batch processing scores.
         | A10_B000497_B009023_S10.mm10-plus-0-0 | 1 | 2706 | 1 | 18 |
         | A10_B000756_B007446_S10.mm10-plus-0-0 | 1 | 3212 | 1 | 18 |
   
-- .score file:
+- .score.gz file:
+ 
+    1. index: cell names, should be the same as adata.obs_names
+    2. raw_score: raw disease score
+    3. norm_score: normalized disease score
+    3. mc_pval: cell-level MC p-value
+    3. pval: cell-level scDRS p-value
+    3. nlog10_pval: -log10(pval)
+    3. zscore: z-score converted from pval
+
+        Example:
+        | index | raw_score | norm_score | mc_pval | pval | nlog10_pval | zscore | 
+        | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+        | A10_B000497_B009023_S10.mm10-plus-0-0 | 0.7298449 | 7.0396357 | 0.04761905 | 0.0016638935 | 2.7788744 | 2.9357162 |
+        | A10_B000756_B007446_S10.mm10-plus-0-0 | 0.72515404 | 7.300498 | 0.04761905 | 0.0016638935 | 2.7788744 | 2.9357162 |
