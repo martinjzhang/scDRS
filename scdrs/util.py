@@ -134,7 +134,7 @@ def gearys_c(adata, vals):
     return C
 
 
-def compute_gearysc_significance(
+def test_gearysc(
     adata, df_score_full, groupby, opt="control_distribution_match"
 ):
     """
@@ -145,7 +145,6 @@ def compute_gearysc_significance(
     """
 
     df_score_full = df_score_full.reindex(adata.obs.index).dropna()
-    zscore = df_score_full["zscore"]
     norm_score = df_score_full["norm_score"]
     ctrl_norm_score = df_score_full[
         [col for col in df_score_full.columns if col.startswith(f"ctrl_norm_score_")]
@@ -161,7 +160,6 @@ def compute_gearysc_significance(
     for group, df_group in df_meta.groupby(groupby):
         group_index = df_group.index
         group_adata = adata[group_index]
-        group_zscore = zscore[group_index]
         group_norm_score = norm_score[group_index]
         group_ctrl_norm_score = ctrl_norm_score.loc[group_index, :]
 
@@ -191,11 +189,11 @@ def compute_gearysc_significance(
         elif opt == "permutation":
             # permutation
             dict_df_stats["permutation"].loc[group, "trait"] = gearys_c(
-                group_adata, group_zscore.values
+                group_adata, group_norm_score.values
             )
             for i_null in range(n_null):
                 dict_df_stats["permutation"].loc[group, f"null_{i_null}"] = gearys_c(
-                    group_adata, np.random.permutation(group_zscore.values)
+                    group_adata, np.random.permutation(group_norm_score.values)
                 )
         elif opt == "control":
             # control
