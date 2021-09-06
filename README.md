@@ -3,7 +3,7 @@ Single-cell disease-relevance score.
 
 ### Explore results
 - Results for 74 diseases/traits and the TMS FACS data ([cellxgene visualization](https://scdrs-tms-facs.herokuapp.com/))
-- Demon results for 3 diseases/traits and 3 TMS FACS cell types ([cellxgene visualization](https://scdrs-demo.herokuapp.com/))
+- Demo for 3 diseases/traits and 3 TMS FACS cell types ([cellxgene visualization](https://scdrs-demo.herokuapp.com/))
 
 # Installation
 - Go to the scDRS directory
