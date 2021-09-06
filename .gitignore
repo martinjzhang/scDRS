@@ -2,3 +2,5 @@ __pycache__/
 scdrs.egg-info/
 .ipynb_checkpoints/
 vignettes/zeisel
+docs/_build/
+.DS_Store
