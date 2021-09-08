@@ -10,8 +10,22 @@ Single-cell disease-relevance score.
 - Run `pip install -r requirements.txt; pip install -e .`
 
 # Usage 
-- compute_score.py
-Script for batch processing scores. 
+- Compute scDRS results for a given scRNA-seq data set (.h5ad file) and multiple (GWAS) gene sets (.gs file): compute_score.py
+```
+python compute_score.py \
+    --h5ad_file $H5AD_FILE\ # 
+    --h5ad_species $SPECIES\
+    --gs_file $GS_FILE\
+    --gs_species $SPECIES\
+    --flag_filter True\
+    --flag_raw_count True\
+    --n_ctrl 1000\
+    --flag_return_ctrl_raw_score False\
+    --flag_return_ctrl_norm_score True\
+    --out_folder $OUT_FOLDER
+```
+
+- compute_downstream.py Script for scDRS-based downsteam analyses. 
 
 ## File formats
 - .h5ad file (compatible with [scanpy](https://scanpy.readthedocs.io/en/stable/index.html))
