@@ -191,7 +191,7 @@ def main(args):
         
         # Gene prioritization
         if FLAG_GENE is True:
-            mat_expr = adata[df_reg.index].X.toarray().copy()
+            mat_expr = adata[df_reg.index].X.copy()
             v_corr = md._pearson_corr(mat_expr, df_reg['norm_score'].values)
             df_res = pd.DataFrame(index=adata.var_names, columns=['CORR', 'RANK'], dtype=np.float32)
             df_res['CORR'] = v_corr
