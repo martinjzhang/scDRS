@@ -135,8 +135,8 @@ def main(args):
     
     # Compute connectivities if need to do cell type-level analysis
     if (len(CELLTYPE_LIST)>0) & ('connectivities' not in adata.obsp):
-        # @Kangcheng
-        pass
+        sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
+        print("Compute connectivities with `sc.pp.neighbors` because `connectivities` is not found in adata.obsp")
     
     # A separate file for each trait
     for trait in dic_score.keys():
@@ -164,8 +164,9 @@ def main(args):
                 mc_z = (score_q95 - v_ctrl_score_q95.mean()) / v_ctrl_score_q95.std()
                 df_res.loc[ct, ['assoc_mcp','assoc_mcz']] = [mc_p, mc_z]
             # Heterogeneity
+            df_rls = util.test_gearysc(adata, df_reg, groupby=ct_col)
             for ct in ct_list:
-                mc_p,mc_z = 1,1 # @Kangcheng
+                mc_p, mc_z = df_rls.loc[ct, ["pval", "zsc"]]
                 df_res.loc[ct, ['hetero_mcp','hetero_mcz']] = [mc_p, mc_z]
                 
             df_res.to_csv(os.path.join(OUT_FOLDER,'%s.scdrs_ct.%s'%(trait, ct_col.replace(' ','_'))),
