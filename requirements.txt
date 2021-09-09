@@ -1,0 +1,10 @@
+scikit-misc
+scanpy
+anndata
+matplotlib
+scipy
+numpy
+seaborn
+pandas
+statsmodels
+gprofiler

@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 import scipy as sp
 import os
-from os.path import join
 import time
 import argparse
 from statsmodels.stats.multitest import multipletests
@@ -13,6 +12,7 @@ from statsmodels.stats.multitest import multipletests
 import scdrs.util as util
 import scdrs.data_loader as dl
 import scdrs.method as md
+
 
 
 """
@@ -33,6 +33,7 @@ import scdrs.method as md
 """
 
 VERSION='0.0.1'
+VERSION='beta'
 
 def convert_species_name(species):
     if species in ['Mouse', 'mouse', 'Mus_musculus', 'mus_musculus', 'mmusculus']:
@@ -151,7 +152,8 @@ def main(args):
     
     # Convert df_gs genes to H5AD_SPECIES genes
     if H5AD_SPECIES!=GS_SPECIES:
-        df_hom = pd.read_csv('./scdrs/data/gene_annotation/mouse_human_homologs.txt', sep='\t')
+        dirname = os.path.dirname(__file__)
+        df_hom = pd.read_csv(os.path.join(dirname, 'scdrs/data/mouse_human_homologs.txt'), sep='\t')
         if (GS_SPECIES=='hsapiens') & (H5AD_SPECIES=='mmusculus'):
             dic_map = {x:y for x,y in zip(df_hom['HUMAN_GENE_SYM'], df_hom['MOUSE_GENE_SYM'])}
         elif (GS_SPECIES=='mmusculus') & (H5AD_SPECIES=='hsapiens'):
@@ -190,10 +192,10 @@ def main(args):
                                weight_opt=WEIGHT_OPT,
                                return_ctrl_raw_score=FLAG_RETURN_CTRL_RAW_SCORE, 
                                return_ctrl_norm_score=FLAG_RETURN_CTRL_NORM_SCORE, verbose=False)
-        df_res.iloc[:,0:6].to_csv(join(OUT_FOLDER, '%s.score.gz'%trait), sep='\t',
+        df_res.iloc[:,0:6].to_csv(os.path.join(OUT_FOLDER, '%s.score.gz'%trait), sep='\t',
                                   index=True, compression='gzip')
         if FLAG_RETURN_CTRL_RAW_SCORE|FLAG_RETURN_CTRL_NORM_SCORE:
-            df_res.to_csv(join(OUT_FOLDER, '%s.full_score.gz'%trait), sep='\t',
+            df_res.to_csv(os.path.join(OUT_FOLDER, '%s.full_score.gz'%trait), sep='\t',
                           index=True, compression='gzip')
         v_fdr = multipletests(df_res['pval'].values, method='fdr_bh')[1]
         n_rej_01 = (v_fdr<0.1).sum()

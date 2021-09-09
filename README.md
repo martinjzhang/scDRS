@@ -1,13 +1,31 @@
 # scDRS
 Single-cell disease-relevance score.
 
+### Explore results
+- Results for 74 diseases/traits and the TMS FACS data ([cellxgene visualization](https://scdrs-tms-facs.herokuapp.com/))
+- Demo for 3 diseases/traits and 3 TMS FACS cell types ([cellxgene visualization](https://scdrs-demo.herokuapp.com/))
+
 # Installation
-- Go to the scTRS directory
-- Run `pip install -e .`
+- Go to the scDRS directory
+- Run `pip install -r requirements.txt; pip install -e .`
 
 # Usage 
-- compute_score.py
-Script for batch processing scores. 
+- Compute scDRS results for a given scRNA-seq data set (.h5ad file) and multiple (GWAS) gene sets (.gs file): compute_score.py
+```
+python compute_score.py \
+    --h5ad_file $H5AD_FILE\ # 
+    --h5ad_species $SPECIES\
+    --gs_file $GS_FILE\
+    --gs_species $SPECIES\
+    --flag_filter True\
+    --flag_raw_count True\
+    --n_ctrl 1000\
+    --flag_return_ctrl_raw_score False\
+    --flag_return_ctrl_norm_score True\
+    --out_folder $OUT_FOLDER
+```
+
+- compute_downstream.py Script for scDRS-based downsteam analyses. 
 
 ## File formats
 - .h5ad file (compatible with [scanpy](https://scanpy.readthedocs.io/en/stable/index.html))
@@ -19,9 +37,9 @@ Script for batch processing scores.
 
         Example:
     
-        | TRAIT | GENESET |
-        | :---: | :---: |
-        | PASS_HbA1C | FN3KRP,FN3K,HK1,GCK |
+        |           TRAIT           |         GENESET          |
+        | :-----------------------: | :----------------------: |
+        |        PASS_HbA1C         |   FN3KRP,FN3K,HK1,GCK    |
         | PASS_MedicationUse_Wu2019 | FTO,SEC16B,ADCY3,DNAJC27 |
             
 - .cov file: .tsv file
@@ -31,10 +49,10 @@ Script for batch processing scores.
     3. cov2: numerical-values covariate
 
         Example:
-        | index | const | n_genes | sex_male | age |
-        | :---: | :---: | :---: | :---: | :---: |
-        | A10_B000497_B009023_S10.mm10-plus-0-0 | 1 | 2706 | 1 | 18 |
-        | A10_B000756_B007446_S10.mm10-plus-0-0 | 1 | 3212 | 1 | 18 |
+        |                 index                 | const | n_genes | sex_male |  age  |
+        | :-----------------------------------: | :---: | :-----: | :------: | :---: |
+        | A10_B000497_B009023_S10.mm10-plus-0-0 |   1   |  2706   |    1     |  18   |
+        | A10_B000756_B007446_S10.mm10-plus-0-0 |   1   |  3212   |    1     |  18   |
   
 - .score.gz file:
  
@@ -47,7 +65,7 @@ Script for batch processing scores.
     3. zscore: z-score converted from pval
 
         Example:
-        | index | raw_score | norm_score | mc_pval | pval | nlog10_pval | zscore | 
-        | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-        | A10_B000497_B009023_S10.mm10-plus-0-0 | 0.7298449 | 7.0396357 | 0.04761905 | 0.0016638935 | 2.7788744 | 2.9357162 |
-        | A10_B000756_B007446_S10.mm10-plus-0-0 | 0.72515404 | 7.300498 | 0.04761905 | 0.0016638935 | 2.7788744 | 2.9357162 |
+        |                 index                 | raw_score  | norm_score |  mc_pval   |     pval     | nlog10_pval |  zscore   |
+        | :-----------------------------------: | :--------: | :--------: | :--------: | :----------: | :---------: | :-------: |
+        | A10_B000497_B009023_S10.mm10-plus-0-0 | 0.7298449  | 7.0396357  | 0.04761905 | 0.0016638935 |  2.7788744  | 2.9357162 |
+        | A10_B000756_B007446_S10.mm10-plus-0-0 | 0.72515404 |  7.300498  | 0.04761905 | 0.0016638935 |  2.7788744  | 2.9357162 |
