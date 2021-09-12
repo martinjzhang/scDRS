@@ -3,11 +3,6 @@ import numpy as np
 import scipy as sp
 import pandas as pd
 from skmisc.loess import loess
-# from statsmodels.stats.multitest import multipletests
-# from scipy.stats import rankdata
-# import statsmodels.api as sm
-# import time
-
 
 def score_cell(data, 
                gene_list, 
@@ -91,7 +86,7 @@ def score_cell(data,
     # Check options
     if ctrl_match_key not in adata.var.columns:
         raise ValueError('# score_cell: %s not in data.var.columns'%ctrl_match_key)
-    weight_opt_list = ['uniform', 'vs', 'inv_std', 'adapt', 'od']
+    weight_opt_list = ['uniform', 'vs', 'inv_std', 'od']
     if weight_opt not in weight_opt_list:
         raise ValueError('# score_cell: weight_opt not in [%s]'
                          %', '.join([str(x) for x in weight_opt_list]))
@@ -135,7 +130,7 @@ def score_cell(data,
                 
     # Compute normalized scores 
     v_var_ratio_c2t = np.ones(n_ctrl) 
-    if weight_opt in ['uniform', 'vs', 'inv_std', 'adapt']: 
+    if weight_opt in ['uniform', 'vs', 'inv_std']: 
         # For raw scores compuated as weighted average. estimate variance ratio assuming independence
         for i_ctrl in range(n_ctrl):
             v_var_ratio_c2t[i_ctrl] = (df_gene.loc[dic_ctrl_list[i_ctrl], 'var'] * 
@@ -144,17 +139,6 @@ def score_cell(data,
     
     v_norm_score,mat_ctrl_norm_score = _correct_background(v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t,
                                                            save_intermediate=save_intermediate)
-    
-    # print('disease gene', df_gene.loc[gene_list, 'mean'].sum(), df_gene.loc[gene_list, 'var'].sum())
-    # mean_list = []
-    # var_list = []
-    # for i_ctrl in dic_ctrl_list:
-    #     mean_list.append(df_gene.loc[dic_ctrl_list[i_ctrl], 'mean'].sum())
-    #     var_list.append(df_gene.loc[dic_ctrl_list[i_ctrl], 'var'].sum())
-    # print('ctrl gene', np.mean(mean_list), np.mean(var_list))
-    # print('v_score_weight', v_score_weight.sum(), (v_score_weight**2).sum())
-    # print('mat_ctrl_weight', mat_ctrl_weight.sum(axis=0).mean(), (mat_ctrl_weight**2).sum(axis=0).mean())
-    # print('v_var_ratio_c2t', v_var_ratio_c2t.mean(), v_var_ratio_c2t.std())
     
     # Get p-values 
     mc_p = (1+(mat_ctrl_norm_score.T>=v_norm_score).sum(axis=0))/(1+n_ctrl)
@@ -270,10 +254,6 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
         v_score_weight = np.ones(len(gene_list))
     if weight_opt=='vs':
         v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var_tech'].values + 1e-2)
-    if weight_opt=='adapt':
-        v_tvar = adata.var.loc[gene_list,'var_tech'].values
-        v_bvar = (adata.var.loc[gene_list,'var'].values - v_tvar).clip(min=0)
-        v_score_weight = np.sqrt(v_bvar + 1e-2) / (v_tvar + 1e-2)
     if weight_opt=='inv_std':
         v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list,'var'].values + 1e-2)
         
