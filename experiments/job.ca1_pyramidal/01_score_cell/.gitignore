@@ -1,0 +1,6 @@
+job_out*
+data/
+regression_file/
+gs_file/
+score_file/
+submitit_log/
