@@ -21,7 +21,7 @@ aaa
 ```
 
 ## Usage 
-- Compute scDRS results for a given scRNA-seq data set (.h5ad file) and multiple (GWAS) gene sets (.gs file)
+- Compute scDRS scores (requiring scRNA-seq .h5ad file and gene set .gs file)
 ```
 python compute_score.py \
     --h5ad_file $H5AD_FILE\
@@ -36,7 +36,7 @@ python compute_score.py \
     --out_folder $OUT_FOLDER
 ```
 
-- Downsteam analyses. 
+- Compute scDRS downsteam analyses (requiring scRNA-seq .h5ad file, gene set .gs file, and scDRS score files). 
 ```
 python compute_score.py \
     --h5ad_file $H5AD_FILE\
