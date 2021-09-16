@@ -7,7 +7,7 @@ Single-cell disease-relevance score.
 
 ## Installation
 - Install locally 
-```
+```sh
 git clone https://github.com/martinjzhang/scDRS.git
 cd scDRS
 pip install -r requirements.txt
@@ -16,13 +16,14 @@ pip install -e .
 - Install from PyPI (coming soon)
 
 - Quick test:
-```
+```sh
 aaa
 ```
 
 ## Usage 
+### Using scripts 
 - Compute scDRS scores (requiring scRNA-seq .h5ad file and gene set .gs file)
-```
+```sh
 python compute_score.py \
     --h5ad_file $H5AD_FILE\
     --h5ad_species $SPECIES\
@@ -37,7 +38,7 @@ python compute_score.py \
 ```
 
 - Compute scDRS downsteam analyses (requiring scRNA-seq .h5ad file, gene set .gs file, and scDRS score files). 
-```
+```sh
 python compute_score.py \
     --h5ad_file $H5AD_FILE\
     --h5ad_species $SPECIES\
@@ -51,9 +52,9 @@ python compute_score.py \
     --out_folder $OUT_FOLDER
 ```
 
-- API
-```
-aaa
+### Inside Python
+```python
+import scdrs.method as md
 ```
 
 ## File formats
