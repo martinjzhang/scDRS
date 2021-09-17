@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import scipy as sp
 
-import scdrs.method as md
+import scdrs
 
 
 """
