@@ -1,5 +1,6 @@
 # Experiments
 
+- Data curation: `job.curate_data`
 - Compute scDRS scores: `job.compute_score`
 - Scehma (Fig. 1): `job.schema`
 - Simulation (Fig. 2): `job.simulation`
