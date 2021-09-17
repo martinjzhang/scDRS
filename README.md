@@ -1,30 +1,38 @@
 # scDRS
-Single-cell disease-relevance score.
 
-### Explore scDRS results
-- Results for 74 diseases/traits and the TMS FACS data ([cellxgene visualization](https://scdrs-tms-facs.herokuapp.com/))
-- Demo for 3 diseases/traits and 3 TMS FACS cell types ([cellxgene visualization](https://scdrs-demo.herokuapp.com/))
+[scDRS](XXX) (single-cell disease-relevance score) is a method for associating individual cells in scRNA-seq data with disease GWASs, built on top of [AnnData](https://anndata.readthedocs.io/en/latest/) and [Scanpy](https://scanpy.readthedocs.io/en/stable/).
 
-## Installation
-### Install locally 
-- Installation
+Check out the bioRxiv manuscript [Zhang*, Hou*, et al. "Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](XXX).
+
+**Explore scDRS results**
+- Results for [74 diseases/traits and the TMS FACS data](https://scdrs-tms-facs.herokuapp.com/)
+- Demo for [3 diseases/traits and 3 TMS FACS cell types](https://scdrs-demo.herokuapp.com/)
+
+**Data access**
+- [Gene set (.gs) files](XXX) for 74 diseases and complex traits
+- [scDRS results](XXX) for 74 diseases/traits and the [TMS FACS data](https://tabula-muris-senis.ds.czbiohub.org/)
+- Data to reproduce results of the paper [figshare](XXX)
+
+
+# Installation
+Install from github:
 ```sh
 git clone https://github.com/martinjzhang/scDRS.git
 cd scDRS
 pip install -e .
 ```
-
-- Quick test:
+Quick test:
 ```sh
 python -m pytest tests/test_scdrs.py -p no:warnings
 ```
 
-### Install from PyPI (coming soon)
+Install from PyPI (coming soon)
 
 
 
-## Usage 
-### Using scripts 
+# Usage/Demos
+## Quick start
+## Computing scDRS results using bash scripts 
 - Compute scDRS scores (requiring scRNA-seq .h5ad file and gene set .gs file)
 ```sh
 python compute_score.py \
@@ -55,7 +63,7 @@ python compute_score.py \
     --out_folder $OUT_FOLDER
 ```
 
-### Inside Python
+## Use scDRS functions in Python
 ```python
 import scdrs.method as md
 ```
@@ -102,3 +110,7 @@ import scdrs.method as md
         | :-----------------------------------: | :--------: | :--------: | :--------: | :----------: | :---------: | :-------: |
         | A10_B000497_B009023_S10.mm10-plus-0-0 | 0.7298449  | 7.0396357  | 0.04761905 | 0.0016638935 |  2.7788744  | 2.9357162 |
         | A10_B000756_B007446_S10.mm10-plus-0-0 | 0.72515404 |  7.300498  | 0.04761905 | 0.0016638935 |  2.7788744  | 2.9357162 |
+
+
+# Reproducing results from manuscript
+See `./experiments` for details
