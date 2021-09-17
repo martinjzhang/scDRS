@@ -6,19 +6,22 @@ Single-cell disease-relevance score.
 - Demo for 3 diseases/traits and 3 TMS FACS cell types ([cellxgene visualization](https://scdrs-demo.herokuapp.com/))
 
 ## Installation
-- Install locally 
+### Install locally 
+- Installation
 ```sh
 git clone https://github.com/martinjzhang/scDRS.git
 cd scDRS
-pip install -r requirements.txt
 pip install -e .
 ```
-- Install from PyPI (coming soon)
 
 - Quick test:
 ```sh
-aaa
+python -m pytest tests/test_scdrs.py -p no:warnings
 ```
+
+### Install from PyPI (coming soon)
+
+
 
 ## Usage 
 ### Using scripts 
