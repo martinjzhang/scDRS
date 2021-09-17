@@ -27,6 +27,7 @@ setuptools.setup(name="scdrs",
                      "scipy", 
                      "numpy", 
                      "pandas", 
-                     "statsmodels"
+                     "statsmodels",
+                     "pytest"
                  ]
                  )
