@@ -46,7 +46,7 @@ def test_get_sparse_var():
 def test_get_p_from_empi_null():
     v_t = [0,1]
     v_t_null = [0.5, 0.6, 0.7]
-    v_p = md._get_p_from_empi_null(v_t,v_t_null)
+    v_p = scdrs.method._get_p_from_empi_null(v_t,v_t_null)
     assert np.absolute(v_p[0]-1)<0.001, "First MC-p should be 1"
     assert np.absolute(v_p[1]-0.25)<0.001, "Second MC-p should be 1/(3+1)=0.25"
     return
