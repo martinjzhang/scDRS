@@ -50,16 +50,14 @@ python compute_score.py \
 
 - Compute scDRS downsteam analyses (requiring scRNA-seq .h5ad file, gene set .gs file, and scDRS score files). 
 ```sh
-python compute_score.py \
-    --h5ad_file $H5AD_FILE\
-    --h5ad_species $SPECIES\
-    --gs_file $GS_FILE\
-    --gs_species $SPECIES\
-    --flag_filter True\
-    --flag_raw_count True\
-    --n_ctrl 1000\
-    --flag_return_ctrl_raw_score False\
-    --flag_return_ctrl_norm_score True\
+python compute_downstream.py \
+    --h5ad_file $H5AD_FILE \
+    --score_file $SCORE_FILE \
+    --cell_type $CELL_TYPE \
+    --cell_variable $CELL_VARIABLE \
+    --flag_gene $FLAG_GENE \
+    --flag_filter $FLAG_FILTER \
+    --flag_raw_count $FLAG_RAW_COUNT \
     --out_folder $OUT_FOLDER
 ```
 
