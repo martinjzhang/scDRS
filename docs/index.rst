@@ -1,6 +1,6 @@
 scDRS
 =====
-scDRS is a Python package for evaluating disease association at each single cell.
+scDRS (single-cell disease-relevance score) is a method for associating individual cells in scRNA-seq data with disease GWASs, built on top of AnnData and Scanpy.
 
 .. TODO: texts describing features of scDRS
 
