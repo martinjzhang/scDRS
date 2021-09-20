@@ -6,6 +6,11 @@ scDRS is a Python package for evaluating disease association at each single cell
 
 .. TODO: vignettes demonstraing functions of scDRS
 
+Results for 74 diseases/traits and the TMS FACS data `(cellxgene visualization) <https://scdrs-tms-facs.herokuapp.com/>`_.
+
+Demo for 3 diseases/traits and 3 TMS FACS cell types `(cellxgene visualization) <https://scdrs-demo.herokuapp.com/>`_. 
+
+
 Installation
 ============
 
@@ -38,7 +43,9 @@ If you use scDRS for published work, please cite our manuscript:
    :maxdepth: 2
    :hidden:
 
-   quickstart
+   notebooks/quickstart.ipynb
    reference
-   tutorials
+   examples
+   downloads
+   
 

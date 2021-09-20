@@ -1,0 +1,41 @@
+name: docs
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - black
+  - coverage
+  - flake8
+  - graphviz
+  - heapdict
+  - ipykernel
+  - ipython
+  - multipledispatch
+  - mypy
+  - nbsphinx
+  - nomkl
+  - nose
+  - numba
+  - numpy
+  - numpydoc
+  - pandas
+  - pandoc
+  - psutil
+  - pytest
+  - pytest-cov
+  - pytest-mock
+  - python=3.8
+  - sortedcontainers
+  - scikit-learn>=0.23.1
+  - scipy
+  - sparse
+  - sphinx
+  - sphinx_rtd_theme
+  - sphinx-gallery
+  - tornado
+  - toolz
+  - zict
+  - pip
+  - pip:
+    - sphinx-copybutton
+    - pydata-sphinx-theme
