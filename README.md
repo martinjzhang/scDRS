@@ -8,10 +8,10 @@ Check out the bioRxiv manuscript [Zhang*, Hou*, et al. "Polygenic enrichment dis
 - Results for [74 diseases/traits and the TMS FACS data](https://scdrs-tms-facs.herokuapp.com/)
 - Demo for [3 diseases/traits and 3 TMS FACS cell types](https://scdrs-demo.herokuapp.com/)
 
-**Data access**
+**Code and data to reproduce results of the paper:** 
+- Details in `./experiments/readme.md`
 - [Gene set (.gs) files](XXX) for 74 diseases and complex traits
-- [scDRS results](XXX) for 74 diseases/traits and the [TMS FACS data](https://tabula-muris-senis.ds.czbiohub.org/)
-- Data to reproduce results of the paper [figshare](XXX)
+- [scDRS results](XXX) for TMS FACS + 74 diseases/traits
 
 
 # Installation
