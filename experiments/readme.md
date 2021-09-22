@@ -33,20 +33,20 @@ Curate gene set (.gs) files:
 - .gs file for metabolic pathways: `job.curate_data/curate_gs.metabolic.ipynb`
 
 Curate scRNA-seq data sets:
-- TS FACS: 'job.curate_data/curate_ts_data.ipynb'
-- Cano-Gamez & Soskic et al.: 'job.curate_data/curate_canogamez_tcell_data.ipynb'
-- Nathan et al.: 'job.curate_data/curate_nathan_tcell_data.ipynb'
-- Aizarani et al.: 'job.curate_data/curate_aizarani_liver_atlas_data.ipynb'
-- Halpern & Shenhav et al.: 'job.curate_data/curate_halpern_mouse_liver_data.ipynb'
-- Richter & Deligiannis et al.: 'job.curate_data/curate_richter_hepatocyte_data.ipynb'
+- TS FACS: `job.curate_data/curate_ts_data.ipynb`
+- Cano-Gamez & Soskic et al.: `job.curate_data/curate_canogamez_tcell_data.ipynb`
+- Nathan et al.: `job.curate_data/curate_nathan_tcell_data.ipynb`
+- Aizarani et al.: `job.curate_data/curate_aizarani_liver_atlas_data.ipynb`
+- Halpern & Shenhav et al.: `job.curate_data/curate_halpern_mouse_liver_data.ipynb`
+- Richter & Deligiannis et al.: `job.curate_data/curate_richter_hepatocyte_data.ipynb`
 
 
 ## Compute scDRS scores: `job.compute_score`
-- TMS FACS + 74 diseases: 'job.compute_score/compute_score.tms_facs_with_cov.magma_10kb_1000.sh'
-- TMS FACS + T cell signatures: 'job.compute_score/compute_score.tms_facs_with_cov.tcell_sig.sh'
-- TMS FACS + metabolic: 'job.compute_score/compute_score.tms_facs_with_cov.hep_metabolic.sh'
-- TMS droplet + 74 diseases: 'job.compute_score/compute_score.tms_droplet_with_cov.magma_10kb_1000.sh'
-- TS FACS + 74 diseases: 'job.compute_score/compute_score.ts_facs_with_cov.magma_10kb_1000.sh'
+- TMS FACS + 74 diseases: `job.compute_score/compute_score.tms_facs_with_cov.magma_10kb_1000.sh`
+- TMS FACS + T cell signatures: `job.compute_score/compute_score.tms_facs_with_cov.tcell_sig.sh`
+- TMS FACS + metabolic: `job.compute_score/compute_score.tms_facs_with_cov.hep_metabolic.sh`
+- TMS droplet + 74 diseases: `job.compute_score/compute_score.tms_droplet_with_cov.magma_10kb_1000.sh`
+- TS FACS + 74 diseases: `job.compute_score/compute_score.ts_facs_with_cov.magma_10kb_1000.sh`
 
 
 ## Scehma (Fig. 1): `job.schema`
@@ -72,7 +72,12 @@ Make figures:
 
 
 ## Cell type-level results (Fig. 3): `job.celltype_association`
-See details in `job.celltype_association/README.md`
+- Summary of the cell-type association results: `job.celltype_association/summary_ct.ipynb`
+- Main analysis: `job.celltype_association/main_figure.ipynb`
+- Comparison of cell-type association for three atlas datasets: TMS FACS, TMS droplet, TS FACS: `job.celltype_association/atlas_compare.ipynb`
+- Relationship between scDRS power and heritability, polygenicity: `job.celltype_association/optim_param.ipynb`
+- Comparison of cell-type association to LDSC-SEG: `job.celltype_association/ldsc_compare.ipynb`
+- Effects of gene sets for scDRS power: `job.celltype_association/vary_geneset.ipynb`
 
 ## T cell example (Fig. 4): `job.case_tcell`
 - Reprocess TMS T cells and assign effectorness gradients: `job.case_tcell/s1_reprocess_tms_tcell.ipynb`
@@ -82,7 +87,10 @@ See details in `job.celltype_association/README.md`
 - Disease gene prioritization: `job.case_tcell/s6_gene_prioritization.ipynb`
 
 ## Neuron example (Fig. 5AB):  `job.ca1_pyramidal`
-See details in `job.ca1_pyramidal/README.md`
+- Main analysis (Fig. 5AB): `job.ca1_pyramidal/main_figure.ipynb`
+- Analysis of neurons in TMS FACS dataset: `job.ca1_pyramidal/tms.ipynb` 
+- Analysis of Zeisel et al. 2015 dataset: `job.ca1_pyramidal/zeisel.ipynb`
+- Verification of the inferred spatial coordinates: `job.ca1_pyramidal/spatial_verify.ipynb`
 
 ## Hepatocyte example (Fig. 5CD): `job.case_hepatocyte`
 - Reprocess TMS hepatocytes: `job.case_hepatocyte/s1_reprocess_tms_hep.ipynb`
