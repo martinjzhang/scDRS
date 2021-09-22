@@ -1,9 +1,9 @@
-# Data and code for reproducing main results of the paper
+# Subset of code and data to reproduce main results of the paper
 
-Download data at [scDRS_data_release_092121](XXX).  
+First download the data [scDRS_data_release_092121](XXX).  
 
-### Compute scDRS scores for TMS FACS + 74 diseases
-- Score files already included in `scDRS_data_release_092121/score_file/score.tms_facs_with_cov.magma_10kb_1000`.
+### Compute scDRS scores for TMS FACS + 74 diseases/traits
+- Score files were already included in `scDRS_data_release_092121/score_file/score.tms_facs_with_cov.magma_10kb_1000`.
 - You can also compute them yourself by setting `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_compute_score.tms_facs_with_cov.magma_10kb_1000.sh`.
 
 ### Cell type-level analysis (Fig. 3)
@@ -22,8 +22,8 @@ Set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job
 
 # Complete code
 
-## Data curation: `job.curate_data`score_file/score.tms_facs_with_cov.magma_10kb_1000
-C.urate disease information: 
+## Data curation: `job.curate_data`
+Curate information for 74 diseases/traits: 
 - Curate information for the 74 diseases: `job.curate_data/get_trait_list.ipynb`
 
 Curate gene set (.gs) files:
@@ -59,25 +59,26 @@ Data generation:
 - Generate causal gene sets and perturbation configurations: `job.simulation/generate_causal_simulation_data.ipynb`
 
 Compute results: 
-- Compute scDRS scores for null simulation: `job.simulation/compute_simu_score.sh`
-- Compute Seurat scores for null simulation: `job.simulation/compute_simu_score_scanpy.sh`
-- Compute Vision scores for null simulation: `job.simulation/compute_simu_score_vision.sh`
-- Compute VAM scores for null simulation: `job.simulation/call_R_vam.sh`
-- Compute scores (scDRS/Seurat/Vision) for causal simulation (500 random causal cells): `job.simulation/compute_perturb_simu_score.sh`
-- Compute scores (scDRS/Seurat/Vision) for causal simulation (B cell causal): `job.simulation/compute_perturb_simu_score_Bcell.sh`
+- Compute scDRS scores for null simulations: `job.simulation/compute_simu_score.sh`
+- Compute Seurat scores for null simulations: `job.simulation/compute_simu_score_scanpy.sh`
+- Compute Vision scores for null simulations: `job.simulation/compute_simu_score_vision.sh`
+- Compute VAM scores for null simulations: `job.simulation/call_R_vam.sh`
+- Compute scores (scDRS/Seurat/Vision) for causal simulations (500 random causal cells): `job.simulation/compute_perturb_simu_score.sh`
+- Compute scores (scDRS/Seurat/Vision) for causal simulations (B cells causal): `job.simulation/compute_perturb_simu_score_Bcell.sh`
 
 Make figures:
 - Make figures for null simulations: `job.simulation/make_figure.null_simulation.ipynb`
-- Make figures for causal simulations with 500 random causal cells: `job.simulation/make_figure.causal_simulation.ipynb`
-- Make figures for causal simulations with 528 B cells as causal cells: `job.simulation/make_figure.causal_simulation_Bcell.ipynb`
+- Make figures for causal simulations (500 random causal cells): `job.simulation/make_figure.causal_simulation.ipynb`
+- Make figures for causal simulations (B cells causal): `job.simulation/make_figure.causal_simulation_Bcell.ipynb`
 
 
 ## Cell type-level results (Fig. 3): `job.celltype_association`
+XXX
 
 ## T cell example (Fig. 4): `job.case_tcell`
-- Reprocess TMS T cell and assign effectorness gradients: `job.case_tcell/s1_reprocess_tms_tcell.ipynb`
+- Reprocess TMS T cells and assign effectorness gradients: `job.case_tcell/s1_reprocess_tms_tcell.ipynb`
 - Main analysis: `job.case_tcell/s3_analysis_tcell.ipynb`
-- Replication in Cano-Gamez & Soskic et al. and Nathan et al.: `job.case_tcell/s4_analysis_tcell.replication.ipynb`
+- Replication in Cano-Gamez & Soskic et al. and Nathan et al. data: `job.case_tcell/s4_analysis_tcell.replication.ipynb`
 - Cluster-level LDSC-SEG analysis: `job.case_tcell/s5_compare_ldsc_cluster_4res.ipynb`
 - Disease gene prioritization: `job.case_tcell/s6_gene_prioritization.ipynb`
 
