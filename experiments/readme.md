@@ -1,7 +1,29 @@
-# Experiments
+# Data and code for reproducing main results of the paper
 
-## Data curation: `job.curate_data`
-Curate disease information: 
+Download data at [scDRS_data_release_092121](XXX).  
+
+### Compute scDRS scores for TMS FACS + 74 diseases
+- Score files already included in `scDRS_data_release_092121/score_file/score.tms_facs_with_cov.magma_10kb_1000`.
+- You can also compute them yourself by setting `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_compute_score.tms_facs_with_cov.magma_10kb_1000.sh`.
+
+### Cell type-level analysis (Fig. 3)
+XXX
+
+### T cell analysis (Fig. 4): 
+- Fig. 4A,B,C: set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_tcell.ipynb`.
+- Fig. 4D: set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_tcell_gene.ipynb`. 
+
+### Neuron analysis (Fig. 5A,B):
+XXX
+
+### Hepatocyte analysis (Fig. 5C,D): 
+Set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_hep.ipynb`.
+
+
+# Complete code
+
+## Data curation: `job.curate_data`score_file/score.tms_facs_with_cov.magma_10kb_1000
+C.urate disease information: 
 - Curate information for the 74 diseases: `job.curate_data/get_trait_list.ipynb`
 
 Curate gene set (.gs) files:
