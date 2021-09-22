@@ -1,12 +1,29 @@
 # Experiments
 
 ## Data curation: `job.curate_data`
-Curate scRNA-seq data sets:
-
-Curate other files: 
+Curate disease information: 
 - Curate information for the 74 diseases: `job.curate_data/get_trait_list.ipynb`
 
+Curate gene set (.gs) files:
+- .gs file for 74 diseases: `job.curate_data/curate_gs_file.ipynb`
+- .gs file for T cell signatures: `job.curate_data/curate_gs.tcell_signature.ipynb`
+- .gs file for ploidy signatures: `job.curate_data/curate_ploidy_gs.ipynb`
+- .gs file for zonation signatures: `job.curate_data/curate_zonation_gs.ipynb`
+- .gs file for metabolic pathways: `job.curate_data/curate_gs.metabolic.ipynb`
+
+Curate scRNA-seq data sets:
+- TS FACS: 'job.curate_data/curate_ts_data.ipynb'
+- Cano-Gamez & Soskic et al.: 'job.curate_data/curate_canogamez_tcell_data.ipynb'
+- Nathan et al.: 'job.curate_data/curate_nathan_tcell_data.ipynb'
+- Aizarani et al.: 'job.curate_data/curate_aizarani_liver_atlas_data.ipynb'
+- Halpern & Shenhav et al.: 'job.curate_data/curate_halpern_mouse_liver_data.ipynb'
+- Richter & Deligiannis et al.: 'job.curate_data/curate_richter_hepatocyte_data.ipynb'
+
+
 ## Compute scDRS scores: `job.compute_score`
+See `./job.compute_score/readme.md` for details.
+
+
 ## Scehma (Fig. 1): `job.schema`
 
 ## Simulation (Fig. 2): `job.simulation`
