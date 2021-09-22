@@ -7,18 +7,17 @@ First download the data [scDRS_data_release_092121](XXX).
 - You can also compute them yourself by setting `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_compute_score.tms_facs_with_cov.magma_10kb_1000.sh`.
 
 ### Cell type-level analysis (Fig. 3)
-XXX
+Set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_celltype.ipynb`.
 
 ### T cell analysis (Fig. 4): 
 - Fig. 4A,B,C: set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_tcell.ipynb`.
 - Fig. 4D: set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_tcell_gene.ipynb`. 
 
 ### Neuron analysis (Fig. 5A,B):
-XXX
+Set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_neuron.ipynb`.
 
 ### Hepatocyte analysis (Fig. 5C,D): 
 Set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_hep.ipynb`.
-
 
 # Complete code
 
