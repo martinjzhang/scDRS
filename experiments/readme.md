@@ -73,7 +73,7 @@ Make figures:
 
 
 ## Cell type-level results (Fig. 3): `job.celltype_association`
-XXX
+See details in `job.celltype_association/README.md`
 
 ## T cell example (Fig. 4): `job.case_tcell`
 - Reprocess TMS T cells and assign effectorness gradients: `job.case_tcell/s1_reprocess_tms_tcell.ipynb`
