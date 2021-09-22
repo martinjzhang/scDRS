@@ -21,10 +21,15 @@ Curate scRNA-seq data sets:
 
 
 ## Compute scDRS scores: `job.compute_score`
-See `./job.compute_score/readme.md` for details.
+- TMS FACS + 74 diseases: 'job.compute_score/compute_score.tms_facs_with_cov.magma_10kb_1000.sh'
+- TMS FACS + T cell signatures: 'job.compute_score/compute_score.tms_facs_with_cov.tcell_sig.sh'
+- TMS FACS + metabolic: 'job.compute_score/compute_score.tms_facs_with_cov.hep_metabolic.sh'
+- TMS droplet + 74 diseases: 'job.compute_score/compute_score.tms_droplet_with_cov.magma_10kb_1000.sh'
+- TS FACS + 74 diseases: 'job.compute_score/compute_score.ts_facs_with_cov.magma_10kb_1000.sh'
 
 
 ## Scehma (Fig. 1): `job.schema`
+Make schematic figures.
 
 ## Simulation (Fig. 2): `job.simulation`
 Data generation:
@@ -48,7 +53,15 @@ Make figures:
 ## Cell type-level results (Fig. 3): `job.celltype_association`
 
 ## T cell example (Fig. 4): `job.case_tcell`
-- 
+- Reprocess TMS T cell and assign effectorness gradients: `job.case_tcell/s1_reprocess_tms_tcell.ipynb`
+- Main analysis: `job.case_tcell/s3_analysis_tcell.ipynb`
+- Replication in Cano-Gamez & Soskic et al. and Nathan et al.: `job.case_tcell/s4_analysis_tcell.replication.ipynb`
+- Cluster-level LDSC-SEG analysis: `job.case_tcell/s5_compare_ldsc_cluster_4res.ipynb`
+- Disease gene prioritization: `job.case_tcell/s6_gene_prioritization.ipynb`
 
 ## Neuron example (Fig. 5AB):  `job.ca1_pyramidal`
+See details in `job.ca1_pyramidal/README.md`
+
 ## Hepatocyte example (Fig. 5CD): `job.case_hepatocyte`
+- Reprocess TMS hepatocytes: `job.case_hepatocyte/s1_reprocess_tms_hep.ipynb`
+- Main analysis: `job.case_hepatocyte/s3_analysis_hep.ipynb`
