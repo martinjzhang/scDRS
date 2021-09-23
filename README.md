@@ -1,6 +1,6 @@
 # scDRS
 
-[scDRS](martinjzhang.github.io/scdrs/) (single-cell disease-relevance score) is a method for associating individual cells in scRNA-seq data with disease GWASs, built on top of [AnnData](https://anndata.readthedocs.io/en/latest/) and [Scanpy](https://scanpy.readthedocs.io/en/stable/).
+[scDRS](https://martinjzhang.github.io/scDRS/) (single-cell disease-relevance score) is a method for associating individual cells in scRNA-seq data with disease GWASs, built on top of [AnnData](https://anndata.readthedocs.io/en/latest/) and [Scanpy](https://scanpy.readthedocs.io/en/stable/).
 
 Check out the bioRxiv manuscript [Zhang*, Hou*, et al. "Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](XXX).
 
@@ -8,8 +8,8 @@ Check out the bioRxiv manuscript [Zhang*, Hou*, et al. "Polygenic enrichment dis
 - Results for [74 diseases/traits and the TMS FACS data](https://scdrs-tms-facs.herokuapp.com/)
 - Demo for [3 diseases/traits and 3 TMS FACS cell types](https://scdrs-demo.herokuapp.com/)
 
-**Code and data to reproduce results of the paper:** 
-- Details in `./experiments/readme.md`
+**Code and data to reproduce results of the paper** 
+- Details in [experiments folder](./experiments)
 - [Gene set (.gs) files](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080?file=30853708) for 74 diseases and complex traits
 - [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_092121_score_file_tmsfacs/16664077) for TMS FACS + 74 diseases/traits
 
@@ -18,9 +18,9 @@ Check out the bioRxiv manuscript [Zhang*, Hou*, et al. "Polygenic enrichment dis
 Install from github:
 ```sh
 git clone https://github.com/martinjzhang/scDRS.git
-cd scDRS
-pip install -e .
+cd scDRS; pip install -e .
 ```
+
 Quick test:
 ```sh
 python -m pytest tests/test_scdrs.py -p no:warnings
@@ -38,18 +38,39 @@ import os
 import pandas as pd
 from anndata import read_h5ad
 import scdrs
+
 # Load data
-DATA_PATH=scdrs.__path__[0]
-adata = read_h5ad(os.path.join(DATA_PATH,'data/toydata_mouse.h5ad'))
-df_gs = pd.read_csv(os.path.join(DATA_PATH,'data/toydata_mouse.gs'), sep='\t')
+DATA_PATH = scdrs.__path__[0]
+adata = read_h5ad(os.path.join(DATA_PATH, "data/toydata_mouse.h5ad"))
+df_gs = pd.read_csv(os.path.join(DATA_PATH, "data/toydata_mouse.gs"), sep="\t")
 
 # Compute scDRS gene-level and cell-level statistics
 scdrs.method.compute_stats(adata)
+
 # Compute scDRS results
-gene_list = df_gs['GENESET'].values[0].split(',')
+gene_list = df_gs["GENESET"].values[0].split(",")
 df_res = scdrs.method.score_cell(adata, gene_list)
 print(df_res.iloc[:4])
 ```
+
+You should get
+ |                 index                 | raw_score | norm_score | mc_pval  |   pval   | nlog10_pval |  zscore  |
+ | :-----------------------------------: | :-------: | :--------: | :------: | :------: | :---------: | :------: |
+ |      N1.MAA000586.3_8_M.1.1-1-1       | 5.495287  |  4.136498  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
+ |       F10.D041911.3_8_M.1.1-1-1       | 5.507245  |  4.878401  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
+ | A17_B002755_B007347_S17.mm10-plus-7-0 | 5.379276  |  3.338063  | 0.003992 | 0.000800 |  3.096939   | 3.155926 |
+ |    C22_B003856_S298_L004.mus-2-0-1    | 5.443514  |  4.537418  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
+
+where the columns are:
+  1. index: cell names, should be the same as adata.obs_names
+  2. raw_score: raw disease score
+  3. norm_score: normalized disease score
+  4. mc_pval: cell-level MC p-value
+  5. pval: cell-level scDRS p-value
+  6. nlog10_pval: -log10(pval)
+  7. zscore: z-score converted from pval
+
+----------------
 
 ## Computing scDRS results using bash scripts 
 ### Compute scDRS score files 
@@ -57,18 +78,23 @@ print(df_res.iloc[:4])
 - Output: `{trait}.score.gz` and `{trait}.full_score.gz` for traits in the .gs file
 
 ```sh
+h5ad_file=your_scrnaseq_data
+cov_file=your_covariate_file
+gs_file=your_gene_set_file
+out_dir=your_output_folder
+
 python compute_score.py \
-    --h5ad_file your_scrnaseq_data.h5ad\
+    --h5ad_file ${h5ad_file}.h5ad\
     --h5ad_species mouse\
-    --cov_file your_covariate_file.cov\
-    --gs_file your_gene_set_file.gs\
+    --cov_file ${cov_file}.cov\
+    --gs_file ${gs_file}.gs\
     --gs_species human\
     --flag_filter True\
     --flag_raw_count True\
     --n_ctrl 1000\
     --flag_return_ctrl_raw_score False\
     --flag_return_ctrl_norm_score True\
-    --out_folder your_output_folder
+    --out_folder ${out_dir}
 ```
 
     --h5ad_file (.h5ad file) : scRNA-seq data
@@ -150,7 +176,3 @@ python compute_downstream.py \
         | :-----------------------------------: | :--------: | :--------: | :--------: | :----------: | :---------: | :-------: |
         | A10_B000497_B009023_S10.mm10-plus-0-0 | 0.7298449  | 7.0396357  | 0.04761905 | 0.0016638935 |  2.7788744  | 2.9357162 |
         | A10_B000756_B007446_S10.mm10-plus-0-0 | 0.72515404 |  7.300498  | 0.04761905 | 0.0016638935 |  2.7788744  | 2.9357162 |
-
-
-# Reproducing results from manuscript
-See `./experiments` for details
