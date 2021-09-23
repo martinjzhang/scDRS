@@ -10,8 +10,8 @@ Check out the bioRxiv manuscript [Zhang*, Hou*, et al. "Polygenic enrichment dis
 
 **Code and data to reproduce results of the paper:** 
 - Details in `./experiments/readme.md`
-- [Gene set (.gs) files](XXX) for 74 diseases and complex traits
-- [scDRS results](XXX) for TMS FACS + 74 diseases/traits
+- [Gene set (.gs) files](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080?file=30853708) for 74 diseases and complex traits
+- [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_092121_score_file_tmsfacs/16664077) for TMS FACS + 74 diseases/traits
 
 
 # Installation
