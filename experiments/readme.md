@@ -1,8 +1,8 @@
 # Subset of code and data to reproduce main results of the paper
 
-Download the main data [scDRS_data_release_092121](XXX) (XXGB) and scDRS score files for TMS FACS + 74 diseases/traits [scDRS_data_release_092121.score_file_tmsfacs](XXX) (XXGB).  
+Download the main data [scDRS_data_release_092121](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080) (3.6 GB) and scDRS score files for TMS FACS + 74 diseases/traits [scDRS_data_release_092121.score_file_tmsfacs](https://figshare.com/articles/dataset/scDRS_data_release_092121_score_file_tmsfacs/16664077) (XX GB).  
 
-Codes are in `./job.reproduce`
+Codes are at `./job.reproduce`
 
 ### Compute scDRS scores for TMS FACS + 74 diseases/traits
 - Score files were already included in `scDRS_data_release_092121.score_file_tmsfacs`.
