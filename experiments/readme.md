@@ -1,23 +1,33 @@
 # Subset of code and data to reproduce main results of the paper
 
-First download the data [scDRS_data_release_092121](XXX).  
+Download the main data [scDRS_data_release_092121](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080) (3.6 GB) and scDRS score files for TMS FACS + 74 diseases/traits [scDRS_data_release_092121.score_file_tmsfacs](https://figshare.com/articles/dataset/scDRS_data_release_092121_score_file_tmsfacs/16664077) (XX GB).  
+
+Codes are at `./job.reproduce`
 
 ### Compute scDRS scores for TMS FACS + 74 diseases/traits
-- Score files were already included in `scDRS_data_release_092121/score_file/score.tms_facs_with_cov.magma_10kb_1000`.
-- You can also compute them yourself by setting `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_compute_score.tms_facs_with_cov.magma_10kb_1000.sh`.
+- Score files were already included in `scDRS_data_release_092121.score_file_tmsfacs`.
+- You can also compute them yourself by the bash sript `reproduce_compute_score.tms_facs_with_cov.magma_10kb_1000.sh`
+- Set `DATA_PATH` to your local folder of `scDRS_data_release_092121` (containing TMS FACS data and .gs files) and run the script.
 
-### Cell type-level analysis (Fig. 3)
-Set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_celltype.ipynb`.
+### Cell type-level analysis (Fig. 3): 
+- You can reproduce the results using `reproduce_celltype.ipynb`
+- Set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run the notebook.
 
-### T cell analysis (Fig. 4): 
-- Fig. 4A,B,C: set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_tcell.ipynb`.
-- Fig. 4D: set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_tcell_gene.ipynb`. 
+### T cell analysis (Fig. 4A-C):
+- You can reproduce the results using `reproduce_tcell.ipynb`
+- Set `DATA_PATH` to your local folder of `scDRS_data_release_092121`, set `SCORE_FILE_PATH` to your local folder of `scDRS_data_release_092121.score_file_tmsfacs` and run the notebook.
+
+### T cell gene prioritization (Fig. 4D): 
+- You can reproduce the results using `reproduce_tcell_gene.ipynb`
+- Set `DATA_PATH` to your local folder of `scDRS_data_release_092121`, set `SCORE_FILE_PATH` to your local folder of `scDRS_data_release_092121.score_file_tmsfacs` and run the notebook.
 
 ### Neuron analysis (Fig. 5A,B):
-Set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_neuron.ipynb`.
+- You can reproduce the results using `reproduce_neuron.ipynb`
+- Set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run the notebook.
 
 ### Hepatocyte analysis (Fig. 5C,D): 
-Set `DATA_PATH` to your local folder of `scDRS_data_release_092121` and run `job.reproduce/reproduce_hep.ipynb`.
+- You can reproduce the results using `reproduce_neuron.ipynb` 
+- Set `DATA_PATH` to your local folder of `scDRS_data_release_092121`, set `SCORE_FILE_PATH` to your local folder of `scDRS_data_release_092121.score_file_tmsfacs` and run the notebook.
 
 # Complete code
 
