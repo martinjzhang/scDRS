@@ -65,12 +65,12 @@ print(df_res.iloc[:4])
 ```
 
 The expected output is:
- |                 index                 | raw_score | norm_score | mc_pval  |   pval   | nlog10_pval |  zscore  |
- | :-----------------------------------: | :-------: | :--------: | :------: | :------: | :---------: | :------: |
- |      N1.MAA000586.3_8_M.1.1-1-1       | 5.495287  |  4.136498  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
- |       F10.D041911.3_8_M.1.1-1-1       | 5.507245  |  4.878401  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
- | A17_B002755_B007347_S17.mm10-plus-7-0 | 5.379276  |  3.338063  | 0.003992 | 0.000800 |  3.096939   | 3.155926 |
- |    C22_B003856_S298_L004.mus-2-0-1    | 5.443514  |  4.537418  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
+  |                 index                 | raw_score | norm_score | mc_pval  |   pval   | nlog10_pval |  zscore  |
+  | :-----------------------------------: | :-------: | :--------: | :------: | :------: | :---------: | :------: |
+  |      N1.MAA000586.3_8_M.1.1-1-1       | 5.495287  |  4.136498  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
+  |       F10.D041911.3_8_M.1.1-1-1       | 5.507245  |  4.878401  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
+  | A17_B002755_B007347_S17.mm10-plus-7-0 | 5.379276  |  3.338063  | 0.003992 | 0.000800 |  3.096939   | 3.155926 |
+  |    C22_B003856_S298_L004.mus-2-0-1    | 5.443514  |  4.537418  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
 
 where the columns are:
 - index: cell names, corresponding to adata.obs_names
@@ -156,22 +156,21 @@ python compute_downstream.py \
 - cov1: numerical-values covariate
 - cov2: numerical-values covariate
 
-    Example:
-    |          index          | const | n_genes | sex_male |  age  |
-    | :---------------------: | :---: | :-----: | :------: | :---: |
-    | A10_B000497_B009023_S10 |   1   |  2706   |    1     |  18   |
-    | A10_B000756_B007446_S10 |   1   |  3212   |    1     |  18   |
+  Example:
+  |          index          | const | n_genes | sex_male |  age  |
+  | :---------------------: | :---: | :-----: | :------: | :---: |
+  | A10_B000497_B009023_S10 |   1   |  2706   |    1     |  18   |
+  | A10_B000756_B007446_S10 |   1   |  3212   |    1     |  18   |
         
 **.gs** file : .tsv file
 - TRAIT: trait name
 - GENESET: a comma-separated string of genes 
 
-    Example:
-
-    |           TRAIT           |         GENESET          |
-    | :-----------------------: | :----------------------: |
-    |        PASS_HbA1C         |   FN3KRP,FN3K,HK1,GCK    |
-    | PASS_MedicationUse_Wu2019 | FTO,SEC16B,ADCY3,DNAJC27 |
+  Example:
+  |           TRAIT           |         GENESET          |
+  | :-----------------------: | :----------------------: |
+  |        PASS_HbA1C         |   FN3KRP,FN3K,HK1,GCK    |
+  | PASS_MedicationUse_Wu2019 | FTO,SEC16B,ADCY3,DNAJC27 |
 
 ### Output files
 **{trait}.score.gz** file : scDRS score file
@@ -183,19 +182,56 @@ python compute_downstream.py \
 - nlog10_pval: -log10(pval)
 - zscore: z-score converted from pval
 
-    Example:
-    |           index         | raw_score  | norm_score |  mc_pval | pval | nlog10_pval |  zscore |
-    | :---------------------: | :--------: | :--------: | :------: | :--: | :---------: | :-----: |
-    | A10_B000497_B009023_S10 | 0.730  | 7.04  | 0.0476 | 0.00166 |  2.78  | 2.94 |
-    | A10_B000756_B007446_S10 | 0.725  | 7.30  | 0.0476 | 0.00166 |  2.78  | 2.94 |
+  Example:
+  |           index         | raw_score  | norm_score |  mc_pval | pval | nlog10_pval |  zscore |
+  | :---------------------: | :--------: | :--------: | :------: | :--: | :---------: | :-----: |
+  | A10_B000497_B009023_S10 | 0.730  | 7.04  | 0.0476 | 0.00166 |  2.78  | 2.94 |
+  | A10_B000756_B007446_S10 | 0.725  | 7.30  | 0.0476 | 0.00166 |  2.78  | 2.94 |
         
 **{trait}.full_score.gz** file : scDRS full score file
 - All contents of **{trait}.score.gz** file
 - ctrl_norm_score_{i_ctrl} : raw control scores (specifying `--flag_return_ctrl_raw_score True`) 
 - ctrl_norm_score_{i_ctrl} : normalized control scores (specifying `--flag_return_ctrl_norm_score True`) .
 
-**{trait}.scdrs_ct.{cell_type}** file
+**{trait}.scdrs_ct.{cell_type}** file : cell type-level analysis (association and heterogeneity)
+- {trait} : trait name consistent with **{trait}.full_score.gz** file
+- {cell_type} : the cell type column in adata.obs.columns 
+- first column: cell types in the `adata.obs` `cell_type` column
+- n_cell: number of cells from the cell type
+- n_ctrl: number of control gene sets
+- assoc_mcp: MC p-value for cell type-disease association
+- assoc_mcz: MC z-score for cell type-disease association
+- hetero_mcp:  MC p-value for within-cell type heterogeneity in association with disease
+- hetero_mcz:  MC z-score for within-cell type heterogeneity in association with disease
 
-**{trait}.scdrs_var** file
+  Example: 
+  |       | n_cell | n_ctrl	| assoc_mcp	| assoc_mcz	| hetero_mcp | hetero_mcz |
+  | :---: | :----: | :----: | :-------: | :-------: | :--------: | :-------: |
+  | causal_cell	| 10.0 | 20.0	| 0.04761905 | 12.297529 | 1.0 | 1.0 |
+  | non_causal_cell	| 20.0 | 20.0	| 0.9047619 | -1.1364214 | 1.0 | 1.0 |
 
-**{trait}.scdrs_gene** file
+**{trait}.scdrs_var** file : cell-level variable analysis (association to disease)
+- {trait} : trait name consistent with **{trait}.full_score.gz** file
+- first column: all cell-level variables (specified in `--cell_variable`)
+- n_ctrl: number of control gene sets
+- corr_mcp: MC p-value for cell-level variable association with disease
+- corr_mcz: MC z-score for cell-level variable association with disease
+
+  Example: 
+  |      	| n_ctrl | corr_mcp | corr_mcz |
+  | :---: | :----: | :----: | :------: |
+  | causal_variable | 20.0 | 0.04761905 | 3.4574268 |
+  | non_causal_variable | 20.0 | 0.23809524 | 0.8974108 |
+  | covariate | 20.0 | 0.1904762 | 1.1220891 |
+
+**{trait}.scdrs_gene** file : correlation of gene expression with scDRS disease score
+- {trait} : trait name consistent with **{trait}.full_score.gz** file
+- first column: genes in `adata.var_names`
+- CORR: correlation with scDRS disease score across all cells in adata
+- RANK: correlation of correlation across genes
+
+  Example: 
+  | index | CORR | RANK |
+  | :---: | :----: | :----: | :------: |
+  | Serping1 | 0.314 | 0 |
+  | Lmna | 0.278 | 1 |
