@@ -53,7 +53,7 @@ df_res = scdrs.method.score_cell(adata, gene_list)
 print(df_res.iloc[:4])
 ```
 
-You should get
+The expected output is:
  |                 index                 | raw_score | norm_score | mc_pval  |   pval   | nlog10_pval |  zscore  |
  | :-----------------------------------: | :-------: | :--------: | :------: | :------: | :---------: | :------: |
  |      N1.MAA000586.3_8_M.1.1-1-1       | 5.495287  |  4.136498  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
