@@ -9,9 +9,9 @@ Check out the bioRxiv manuscript [Zhang*, Hou*, et al. "Polygenic enrichment dis
 - Demo for [3 diseases/traits and 3 TMS FACS cell types](https://scdrs-demo.herokuapp.com/) -->
 
 **Code and data to reproduce results of the paper** 
-- Details in [experiments folder](./experiments)
-- [GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080?file=30853708) (**.gs** files) for 74 diseases and complex traits
-- [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_092121_score_file_tmsfacs/16664077) (**.score.gz** and **.full_score.gz** files) for TMS FACS + 74 diseases/traits
+- Data are at [figshare](https://figshare.com/projects/Single-cell_Disease_Relevance_Score_scDRS_/118902) with details in [the experiments folder](./experiments)
+- Download [GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080?file=30853708) (**.gs** files) for 74 diseases and complex traits
+- Download [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_092121_score_file_tmsfacs/16664077) (**.score.gz** and **.full_score.gz** files) for TMS FACS + 74 diseases/traits
 
 **Explore scDRS results via [cellxgene](https://chanzuckerberg.github.io/cellxgene/)**
 - Demo for [3 TMS FACS cell types and 3 diseases/traits](https://scdrs-demo.herokuapp.com/)
