@@ -280,7 +280,7 @@ def gearys_c(adata, vals):
 
 def test_gearysc(
     adata: anndata.AnnData,
-    df_score_full: pd.DateFrame,
+    df_score_full: pd.DataFrame,
     groupby: str,
     opt="control_distribution_match",
 ) -> pd.DataFrame:
