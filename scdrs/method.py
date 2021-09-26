@@ -25,49 +25,51 @@ def score_cell(
 
     Args
     ----
-        data (n_cell, n_gene) : AnnData
-            data.X should contain size-normalized log1p transformed count data
-        gene_list (n_trait_gene) : list
-            Trait gene list
-        gene_weight (n_trait_gene) : list/np.ndarray
-            Gene weights for genes in the gene_list.
-            If gene_weight=None, the weigts are set to be one.
-        ctrl_match_key : str
-            The quantity for matching control and trait genes.
-            ctrl_match_key should appear in data.obs.columns
-        n_ctrl : int
-            Number of control genesets
-        n_genebin : int
-            Number of bins for dividing genes by ctrl_match_key
-        weight_opt : str
-            Option for computing the raw score
-            'uniform': average over the genes in the gene_list
-            'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct)
-            'inv_std': weighted average with weights equal to 1/std
-            'od': overdispersion score
-        copy : bool
-            If to make copy of the AnnData object to avoid writing on the orignal data
-        return_raw_ctrl_score : bool
-            If to return control scores
-        return_norm_ctrl_score : bool
-            If to return control scores
-        random_seed : int
-            Random seed
-        verbose : bool
-            If to output messages
-        save_intermediate : str
-            File path prefix for saving intermediate results
+    data (n_cell, n_gene) : AnnData
+        data.X should contain size-normalized log1p transformed count data
+    gene_list (n_trait_gene) : list
+        Trait gene list
+    gene_weight (n_trait_gene) : list/np.ndarray
+        Gene weights for genes in the gene_list.
+        If gene_weight=None, the weigts are set to be one.
+    ctrl_match_key : str
+        The quantity for matching control and trait genes.
+        ctrl_match_key should appear in data.obs.columns
+    n_ctrl : int
+        Number of control genesets
+    n_genebin : int
+        Number of bins for dividing genes by ctrl_match_key
+    weight_opt : str
+        Option for computing the raw score
+        'uniform': average over the genes in the gene_list
+        'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct)
+        'inv_std': weighted average with weights equal to 1/std
+        'od': overdispersion score
+    copy : bool
+        If to make copy of the AnnData object to avoid writing on the orignal data
+    return_raw_ctrl_score : bool
+        If to return control scores
+    return_norm_ctrl_score : bool
+        If to return control scores
+    random_seed : int
+        Random seed
+    verbose : bool
+        If to output messages
+    save_intermediate : str
+        File path prefix for saving intermediate results
 
     Returns
     -------
-        df_res (n_cell, n_key) : pd.DataFrame (dtype=np.float32)
-            Columns:
-            0. raw_score
-            1. norm_score: scores after cell-wise and trait-wise normalization
-            2. mc_pval: p-values computed using only the control scores from the same cell
-            3. pval
-            4. nlog10_pval: -log10(pval). Needed in case the single precision (np.float32) gives inaccurate p-values
-            5. zscore: one-side z-score converted from pval
+    df_res (n_cell, n_key) : pd.DataFrame (dtype=np.float32) with columns
+    
+        0. raw_score
+        1. norm_score: scores after cell-wise and trait-wise normalization
+        2. mc_pval: p-values computed using only the control scores from the same cell
+        3. pval
+        4. nlog10_pval: -log10(pval). Needed in case the single precision (np.float32) gives inaccurate p-values
+        5. zscore: one-side z-score converted from pval
+
+
 
     TODO
     -------
