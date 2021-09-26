@@ -4,10 +4,6 @@
 
 Check out the bioRxiv manuscript [Zhang*, Hou*, et al. "Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](XXX).
 
-<!-- **Explore scDRS results**
-- Results for [74 diseases/traits and the TMS FACS data](https://scdrs-tms-facs.herokuapp.com/)
-- Demo for [3 diseases/traits and 3 TMS FACS cell types](https://scdrs-demo.herokuapp.com/) -->
-
 **Code and data to reproduce results of the paper** 
 - Data are at [figshare](https://figshare.com/projects/Single-cell_Disease_Relevance_Score_scDRS_/118902) with details in [the experiments folder](./experiments)
 - Download [GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080?file=30853708) (**.gs** files) for 74 diseases and complex traits

@@ -278,12 +278,38 @@ def gearys_c(adata, vals):
     return C
 
 
-def test_gearysc(adata, df_score_full, groupby, opt="control_distribution_match"):
+def test_gearysc(
+    adata: anndata.AnnData,
+    df_score_full: pd.DateFrame,
+    groupby: str,
+    opt="control_distribution_match",
+) -> pd.DataFrame:
     """
     Compute significance level for Geary's C statistics
-    adata: AnnData, must contain `connectivities` to compute the Geary's C statistic
-    df_score_full: contains columns `zscore`, `norm_score`, `ctrl_norm_score_{i}`
-    groupby: stratify by what covariate in adata.obs
+
+    Args
+    ----
+    adata: anndata.AnnData
+        must contain `connectivities` to compute the Geary's C statistic
+    df_score_full: DataFrame
+        DataFrame with the scores of the cells, contains
+        columns `zscore`, `norm_score`, `ctrl_norm_score_{i}`
+    groupby: str
+        Column name of the groupby variable.
+    opt: str
+        Options:
+            - "control_distribution_match":
+                The distribution of the scores of the control scores is similar to
+                the distribution of the scores of the disease scores.
+
+    Returns
+    -------
+    df_rls: DataFrame
+        DataFrame with the results of the test with `n_group` rows and 4 columns:
+            - `pval`: significance level of Geary's C
+            - `trait`: Geary's C test statistic of the trait scores
+            - `ctrl_mean`: mean of the control scores
+            - `ctrl_sd`: standard deviation of the control scores
     """
 
     df_score_full = df_score_full.reindex(adata.obs.index).dropna()
