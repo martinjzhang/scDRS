@@ -60,20 +60,13 @@ def score_cell(
 
     Returns
     -------
-    df_res (n_cell, n_key) : pd.DataFrame (dtype=np.float32) with columns
-    
-        0. raw_score
-        1. norm_score: scores after cell-wise and trait-wise normalization
-        2. mc_pval: p-values computed using only the control scores from the same cell
-        3. pval
-        4. nlog10_pval: -log10(pval). Needed in case the single precision (np.float32) gives inaccurate p-values
-        5. zscore: one-side z-score converted from pval
-
-
-
-    TODO
-    -------
-        1.
+    df_res (n_cell, n_key) : pd.DataFrame (dtype=np.float32) with columns:
+        - raw_score
+        - norm_score: scores after cell-wise and trait-wise normalization
+        - mc_pval: p-values computed using only the control scores from the same cell
+        - pval
+        - nlog10_pval: -log10(pval). Needed in case the single precision (np.float32) gives inaccurate p-values
+        - zscore: one-side z-score converted from pval
     """
 
     np.random.seed(random_seed)
@@ -212,27 +205,28 @@ def _select_ctrl_geneset(
 
     Args
     ----
-        input_df_gene (adata.shape[1], n_statistic) : pd.DataFrame
-            Gene-wise statistics
-        gene_list (n_trait_gene) : list
-            Trait gene list
-        gene_weight (n_trait_gene) : list/np.ndarray
-            Gene weights for genes in the gene_list.
-        ctrl_match_key : str
-            The quantity for matching control and trait genes.
-            ctrl_match_key should appear in input_df_gene.columns
-        n_ctrl : int
-            Number of control gene sets
-        n_genebin : int
-            Number of bins for dividing genes by ctrl_match_key
-        random_seed : int
-            Random seed
+    input_df_gene (adata.shape[1], n_statistic) : pd.DataFrame
+        Gene-wise statistics
+    gene_list (n_trait_gene) : list
+        Trait gene list
+    gene_weight (n_trait_gene) : list/np.ndarray
+        Gene weights for genes in the gene_list.
+    ctrl_match_key : str
+        The quantity for matching control and trait genes.
+        ctrl_match_key should appear in input_df_gene.columns
+    n_ctrl : int
+        Number of control gene sets
+    n_genebin : int
+        Number of bins for dividing genes by ctrl_match_key
+    random_seed : int
+        Random seed
+
     Returns
     -------
-        dic_ctrl_list : dictionary of lists
-            dic_ctrl_list[i]: the i-th control gene list
-        dic_ctrl_weight : dictionary of lists
-            dic_ctrl_weight[i]: weights for the i-th control gene list
+    dic_ctrl_list : dictionary of lists
+        dic_ctrl_list[i]: the i-th control gene list
+    dic_ctrl_weight : dictionary of lists
+        dic_ctrl_weight[i]: weights for the i-th control gene list
 
     """
 
@@ -272,25 +266,25 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
 
     Args
     ----
-        adata (n_cell, n_gene) : AnnData
-            adata.X should contain size-normalized log1p transformed count data
-        gene_list (n_trait_gene) : list
-            Trait gene list
-        gene_weight (n_trait_gene) : list/np.ndarray
-            Gene weights for genes in the gene_list
-        weight_opt : str
-            Option for computing the raw score
-            - 'uniform': average over the genes in the gene_list
-            - 'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct)
-            - 'inv_std': weighted average with weights equal to 1/std
-            - 'od': overdispersion score
+    adata (n_cell, n_gene) : AnnData
+        adata.X should contain size-normalized log1p transformed count data
+    gene_list (n_trait_gene) : list
+        Trait gene list
+    gene_weight (n_trait_gene) : list/np.ndarray
+        Gene weights for genes in the gene_list
+    weight_opt : str
+        Option for computing the raw score
+        - 'uniform': average over the genes in the gene_list
+        - 'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct)
+        - 'inv_std': weighted average with weights equal to 1/std
+        - 'od': overdispersion score
 
     Returns
     -------
-        v_raw_score (n_cell,) : np.ndarray
-            Raw score
-        v_score_weight (n_trait_gene,) : np.ndarray
-            Gene weights score
+    v_raw_score (n_cell,) : np.ndarray
+        Raw score
+    v_score_weight (n_trait_gene,) : np.ndarray
+        Gene weights score
     """
 
     # Compute raw score (overdispersion)
@@ -319,21 +313,22 @@ def _compute_overdispersion_score(adata, gene_list, gene_weight):
         Let w_g_raw = gene_weight / \sigma_{tech,g}^2
         Let w_g = w_g_raw / \sum_g w_g_raw
         s_c = \sum_g w_g * [(X_cg - \mu_g)^2 - \sigma_{tech,g}^2]
+
     Args
     ----
-        adata (n_cell, n_gene) : AnnData
-            adata.X should contain size-normalized log1p transformed count data
-        gene_list (n_trait_gene) : list
-            Trait gene list
-        gene_weight (n_trait_gene) : list/np.ndarray
-            Gene weights for genes in the gene_list
+    adata (n_cell, n_gene) : AnnData
+        adata.X should contain size-normalized log1p transformed count data
+    gene_list (n_trait_gene) : list
+        Trait gene list
+    gene_weight (n_trait_gene) : list/np.ndarray
+        Gene weights for genes in the gene_list
 
     Returns
     -------
-        v_raw_score (n_cell,) : np.ndarray
-            Raw score
-        v_score_weight (n_trait_gene,) : np.ndarray
-            Gene weights score
+    v_raw_score (n_cell,) : np.ndarray
+        Raw score
+    v_score_weight (n_trait_gene,) : np.ndarray
+        Gene weights score
     """
 
     v_mean = adata.var.loc[gene_list, "mean"].values
@@ -370,20 +365,21 @@ def _correct_background(
 
     Args
     ----
-        v_raw_score (n_cell,n_ctrl) : np.ndarray
-            Trait raw score
-        mat_ctrl_raw_score (n_cell,n_ctrl) : np.ndarray
-            Control raw scores
-        v_var_ratio_c2t (n_cell) : np.ndarray
-            Variance ratio between control scores and disease score
-        save_intermediate : str
-            File path prefix for saving intermediate results
+    v_raw_score (n_cell,n_ctrl) : np.ndarray
+        Trait raw score
+    mat_ctrl_raw_score (n_cell,n_ctrl) : np.ndarray
+        Control raw scores
+    v_var_ratio_c2t (n_cell) : np.ndarray
+        Variance ratio between control scores and disease score
+    save_intermediate : str
+        File path prefix for saving intermediate results
+
     Returns
     -------
-        v_norm_score (n_cell,n_ctrl) : np.ndarray
-            Trait normalized score
-        mat_ctrl_norm_score (n_cell,n_ctrl) : np.ndarray
-            Control normalized scores
+    v_norm_score (n_cell,n_ctrl) : np.ndarray
+        Trait normalized score
+    mat_ctrl_norm_score (n_cell,n_ctrl) : np.ndarray
+        Control normalized scores
     """
 
     if save_intermediate is not None:
@@ -568,15 +564,15 @@ def _get_p_from_empi_null(v_t, v_t_null):
 
     Args
     ----
-        v_t (M,): np.ndarray
-            The observed score.
-        v_t_null (N,): np.ndarray
-            The null score.
+    v_t (M,): np.ndarray
+        The observed score.
+    v_t_null (N,): np.ndarray
+        The null score.
 
     Returns
     -------
-        v_p: (M,): np.ndarray
-            P-value for each element in v_t
+    v_p: (M,): np.ndarray
+        P-value for each element in v_t
     """
 
     v_t = np.array(v_t)
@@ -599,17 +595,17 @@ def score_cell_vision(adata, gene_list):
 
     Args
     ----
-        data (n_cell, n_gene) : AnnData
-            data.X should contain size-normalized log1p transformed count data
-        gene_list (n_trait_gene) : list
-            Trait gene list
+    data (n_cell, n_gene) : AnnData
+        data.X should contain size-normalized log1p transformed count data
+    gene_list (n_trait_gene) : list
+        Trait gene list
 
     Returns
     -------
-        df_res (n_cell, n_key) : pd.DataFrame (dtype=np.float32)
-            Columns:
-            1. score: Vision signature score
-            2. pval: p-value computed from the Vision score
+    df_res (n_cell, n_key) : pd.DataFrame (dtype=np.float32)
+        Columns:
+        1. score: Vision signature score
+        2. pval: p-value computed from the Vision score
     """
 
     gene_list = sorted(set(gene_list) & set(adata.var_names))
@@ -674,15 +670,15 @@ def reg_out(mat_Y, mat_X):
 
     Args
     ----
-        mat_Y (n_sample, n_response) : np.ndarray
-            Response variable
-        mat_X (n_sample, n_covariates) : np.ndarray
-            Covariates
+    mat_Y (n_sample, n_response) : np.ndarray
+        Response variable
+    mat_X (n_sample, n_covariates) : np.ndarray
+        Covariates
 
     Returns
     -------
-        mat_Y_resid (n_sample, n_response) : np.ndarray
-            Response variable residual
+    mat_Y_resid (n_sample, n_response) : np.ndarray
+        Response variable residual
     """
 
     mat_X = np.array(mat_X)
@@ -712,28 +708,28 @@ def correlate_gene(
 
     Args
     ----
-        data (n_cell, n_gene) : AnnData
-            adata.X should contain size-normalized log1p transformed count data
-        trs_name : str
-            The variable to correlate gene expression with. Should be one column in data.obs.
-        suffix : str
-            The name of the added gene-wise correlation would be 'trs_corr'+suffix.
-        corr_opt : str
-            Option for computing the correlation
-            'pearson': Pearson's correlation
-            'spearman': Spearman's correlation
-        cov_list : list of str
-            Covariates to control for.
-            The covariates are first centered and then regressed out from
-                both trs_name and the gene expression before computing the correlation.
-            Elements in cov_list should be present in data.obs.columns
-        copy : bool
-            If to make copy of the AnnData object
+    data (n_cell, n_gene) : AnnData
+        adata.X should contain size-normalized log1p transformed count data
+    trs_name : str
+        The variable to correlate gene expression with. Should be one column in data.obs.
+    suffix : str
+        The name of the added gene-wise correlation would be 'trs_corr'+suffix.
+    corr_opt : str
+        Option for computing the correlation
+        'pearson': Pearson's correlation
+        'spearman': Spearman's correlation
+    cov_list : list of str
+        Covariates to control for.
+        The covariates are first centered and then regressed out from
+            both trs_name and the gene expression before computing the correlation.
+        Elements in cov_list should be present in data.obs.columns
+    copy : bool
+        If to make copy of the AnnData object
 
     Returns
     -------
-        adata (AnnData):
-            Add the columns 'scdrs_corr'+suffix to data.var
+    adata (AnnData):
+        Add the columns 'scdrs_corr'+suffix to data.var
     """
 
     adata = data.copy() if copy else data
@@ -783,14 +779,13 @@ def _pearson_corr(mat_X, mat_Y):
 
     Args
     ----
-        mat_X (N,M1): np.ndarray
-
-        mat_Y (N,M2): np.ndarray
+    mat_X (N,M1): np.ndarray
+    mat_Y (N,M2): np.ndarray
 
     Returns
     -------
-        mat_corr: (M1,M2): np.ndarray
-            Correlation matrix
+    mat_corr: (M1,M2): np.ndarray
+        Correlation matrix
     """
 
     # If sparse, use _pearson_corr_sparse
@@ -819,14 +814,13 @@ def _pearson_corr_sparse(mat_X, mat_Y):
 
     Args
     ----
-        mat_X (N,M1): sp.sparse
-
-        mat_Y (N,M2): sp.sparse
+    mat_X (N,M1): sp.sparse
+    mat_Y (N,M2): sp.sparse
 
     Returns
     -------
-        mat_corr: (M1,M2): np.ndarray
-            Correlation matrix
+    mat_corr: (M1,M2): np.ndarray
+        Correlation matrix
     """
 
     # Reshape
@@ -863,14 +857,13 @@ def _spearman_corr(mat_X, mat_Y):
 
     Args
     ----
-        mat_X (N,M1): np.ndarray
-
-        mat_Y (N,M2): np.ndarray
+    mat_X (N,M1): np.ndarray
+    mat_Y (N,M2): np.ndarray
 
     Returns
     -------
-        mat_corr (M1,M2): np.ndarray
-            Correlation matrix
+    mat_corr (M1,M2): np.ndarray
+        Correlation matrix
     """
 
     # Reshape
@@ -897,14 +890,14 @@ def _get_rank(mat_X, axis=0):
 
     Args
     ----
-        mat_X (N,M): np.ndarray
-        axis: int
-            axis=0: column-wise rank (across rows)
-            axis=1: row-wise rank (across columns)
+    mat_X (N,M): np.ndarray
+    axis: int
+        axis=0: column-wise rank (across rows)
+        axis=1: row-wise rank (across columns)
     Returns
     -------
-        mat_rank  (N,M): np.ndarray
-            Rank matrix
+    mat_rank  (N,M): np.ndarray
+        Rank matrix
     """
 
     if axis == 0:
@@ -926,21 +919,21 @@ def _get_rank(mat_X, axis=0):
 
 def compute_gene_contrib(data, gene_list, random_seed=0, copy=False, verbose=False):
 
-    """Find the genes
+    """Find the contribution of each gene to the scDRS score
 
     Args
     ----
-        data (n_cell, n_gene) : AnnData
-            adata.X should contain size-normalized log1p transformed count data
-        gene_list (n_trait_gene) : list
-            Trait gene list
-        copy : bool
-            If to make copy of the AnnData object
+    data (n_cell, n_gene) : AnnData
+        adata.X should contain size-normalized log1p transformed count data
+    gene_list (n_trait_gene) : list
+        Trait gene list
+    copy : bool
+        If to make copy of the AnnData object
 
     Returns
     -------
-        adata (AnnData):
-            Add the columns 'trs_corr'+suffix to data.var
+    adata (AnnData):
+        Add the columns 'trs_corr'+suffix to data.var
     """
 
     np.random.seed(random_seed)

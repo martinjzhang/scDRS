@@ -240,14 +240,17 @@ def gearys_c(adata, vals):
             2W \sum_i (x_i - \bar{x})^2
         }
 
-    Args:
-        adata (AnnData): AnnData object
-            adata.obsp["Connectivities] should contain the connectivity graph,
-            with shape `(n_obs, n_obs)`
-        vals (Array-like):
-            Values to calculate Geary's C for. If one dimensional, should have
-            shape `(n_obs,)`.
-    Returns:
+    Args
+    ----
+    adata (AnnData): AnnData object
+        adata.obsp["Connectivities] should contain the connectivity graph,
+        with shape `(n_obs, n_obs)`
+    vals (Array-like):
+        Values to calculate Geary's C for. If one dimensional, should have
+        shape `(n_obs,)`.
+
+    Returns
+    -------
         C: the Geary's C statistics
     """
     graph = adata.obsp["connectivities"]
@@ -644,7 +647,8 @@ def plot_assoc_matrix(pval_dict, pval_index, meta_df, stratify_by, fdr_level=0.2
 def plot_qq(pval_dict, num_cols=6):
     """
     plot quantile-quantile figures in batches
-    # Arguments:
+    Arguments
+    ---------
     - pval_dict: dictionary of the p-value: trait -> array
     - num_cols: number of columns per row
     """
