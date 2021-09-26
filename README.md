@@ -1,4 +1,4 @@
-# scDRS
+# scDRS <!-- omit in toc -->
 
 [scDRS](https://martinjzhang.github.io/scDRS/) (single-cell disease-relevance score) is a method for associating individual cells in scRNA-seq data with disease GWASs, built on top of [AnnData](https://anndata.readthedocs.io/en/latest/) and [Scanpy](https://scanpy.readthedocs.io/en/stable/). 
 
@@ -17,15 +17,24 @@ Check out the bioRxiv manuscript [Zhang*, Hou*, et al. "Polygenic enrichment dis
 - Demo for [3 TMS FACS cell types and 3 diseases/traits](https://scdrs-demo.herokuapp.com/)
 - Results for [110,096 TMS FACS cells and 74 diseases/traits](https://scdrs-tms-facs.herokuapp.com/)
 
-| <img src="./docs/images/cellxgene.tmsfacs.png" alt="cellxgene" style="width:100%">  | <img src="./docs/images/cellxgene.tmsfacs_ibd.png" alt="cellxgene" style="width:100%"> |
-|:---:|:---:|
-| 110,096 cells from 120 cell types in TMS FACS | IBD-associated cells |
+| <img src="./docs/images/cellxgene.tmsfacs.png" alt="cellxgene" style="width:100%"> | <img src="./docs/images/cellxgene.tmsfacs_ibd.png" alt="cellxgene" style="width:100%"> |
+| :--------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------: |
+|                   110,096 cells from 120 cell types in TMS FACS                    |                                  IBD-associated cells                                  |
   
   
 <!--   Example: showing all cells associated with IBD
   <img src="./docs/images/cellxgene.png" alt="cellxgene" width="600"/> -->
 
 
+
+# Table of contents <!-- omit in toc -->
+- [Installation](#installation)
+- [Within python scDRS demo](#within-python-scdrs-demo)
+- [Command line interface for scDRS score calculation](#command-line-interface-for-scdrs-score-calculation)
+- [Command line interface for scDRS downsteam applications](#command-line-interface-for-scdrs-downsteam-applications)
+- [File formats](#file-formats)
+  - [scDRS input files](#scdrs-input-files)
+  - [scDRS output files](#scdrs-output-files)
 
 # Installation
 Install from github:
@@ -42,11 +51,10 @@ python -m pytest tests/test_scdrs.py -p no:warnings
 Install from PyPI (coming soon)
 
 
+# Within python scDRS demo 
 
-# Usage/Demos
-See [Documentation](https://martinjzhang.github.io/scDRS/reference.html).
+We attach a toy example as follows, see [Documentation](https://martinjzhang.github.io/scDRS/reference.html) for detailed information.
 
-## Toy python example
 ```python
 import os
 import pandas as pd
@@ -67,16 +75,16 @@ df_res = scdrs.method.score_cell(adata, gene_list)
 print(df_res.iloc[:4])
 ```
 
-The expected output is (see below for format if **.score.gz** file):
-  |                 index                 | raw_score | norm_score | mc_pval  |  pval | nlog10_pval | zscore |
-  | :-----------------------------------: | :-------: | :--------: | :------: | :---: | :---------: | :----: |
-  |      N1.MAA000586.3_8_M.1.1-1-1       | 5.495287 | 4.136498 | 0.001996 | 0.000067 | 4.176120 | 3.820235 |
-  |       F10.D041911.3_8_M.1.1-1-1       | 5.507245 | 4.878401 | 0.001996 | 0.000067 | 4.176120 | 3.820235 |
-  | A17_B002755_B007347_S17.mm10-plus-7-0 | 5.379276 | 3.338063 | 0.003992 | 0.000800 | 3.096939 | 3.155926 |
-  |    C22_B003856_S298_L004.mus-2-0-1    | 5.443514 | 4.537418 | 0.001996 | 0.000067 | 4.176120 | 3.820235 |
+The expected output is (see below for format of **.score.gz** file):
+  |                 index                 | raw_score | norm_score | mc_pval  |   pval   | nlog10_pval |  zscore  |
+  | :-----------------------------------: | :-------: | :--------: | :------: | :------: | :---------: | :------: |
+  |      N1.MAA000586.3_8_M.1.1-1-1       | 5.495287  |  4.136498  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
+  |       F10.D041911.3_8_M.1.1-1-1       | 5.507245  |  4.878401  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
+  | A17_B002755_B007347_S17.mm10-plus-7-0 | 5.379276  |  3.338063  | 0.003992 | 0.000800 |  3.096939   | 3.155926 |
+  |    C22_B003856_S298_L004.mus-2-0-1    | 5.443514  |  4.537418  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
 
 
-## Python script for computing scDRS score files 
+# Command line interface for scDRS score calculation 
 - Input: scRNA-seq data (**.h5ad** file) and gene set file (**.gs** file)
 - Output: scDRS score file (**{trait}.score.gz** file) and full score file (**{trait}.full_score.gz** file) for each trait in the **.gs** file
   ```sh
@@ -111,7 +119,7 @@ The expected output is (see below for format if **.score.gz** file):
   - `--flag_return_ctrl_norm_score` ("True"/"False") : if to return normalized control scores
   - `--out_folder` : output folder. Score files will be saved as `{out_folder}/{trait}.score.gz` (see below for file format)
 
-## Python script for performing scDRS downsteam applications 
+# Command line interface for scDRS downsteam applications 
 - Input: scRNA-seq data (**.h5ad** file), gene set file (**.gs** file), and scDRS full score files (**.full_score.gz** files)
 - Output: **{trait}.scdrs_ct.{cell_type}** file for cell type-level analyses (association and heterogeneity); **{trait}.scdrs_var** file for cell variable-disease association; **{trait}.scdrs_gene** file for disease gene prioritization.
   ```sh
@@ -139,8 +147,8 @@ The expected output is (see below for format if **.score.gz** file):
   - --`out_folder` : output folder. Score files will be saved as `{out_folder}/{trait}.score.gz` (see below for file format)
     
 
-## File formats
-### scDRS input files
+# File formats
+## scDRS input files
 **.h5ad** file (scRNA-seq data, compatible with [scanpy](https://scanpy.readthedocs.io/en/stable/index.html))
             
 **.cov** file (.tsv file) : covariate file for the scRNA-seq data
@@ -161,7 +169,7 @@ The expected output is (see below for format if **.score.gz** file):
   |        PASS_HbA1C         |   FN3KRP,FN3K,HK1,GCK    |
   | PASS_MedicationUse_Wu2019 | FTO,SEC16B,ADCY3,DNAJC27 |
 
-### scDRS output files
+## scDRS output files
 **{trait}.score.gz** file : scDRS score file
 - index: cell names, should be the same as adata.obs_names
 - raw_score: raw disease score
@@ -171,10 +179,10 @@ The expected output is (see below for format if **.score.gz** file):
 - nlog10_pval: -log10(pval)
 - zscore: z-score converted from pval
 
-  |           index         | raw_score  | norm_score |  mc_pval | pval | nlog10_pval |  zscore |
-  | :---------------------: | :--------: | :--------: | :------: | :--: | :---------: | :-----: |
-  | A10_B000497_B009023_S10 | 0.730  | 7.04  | 0.0476 | 0.00166 |  2.78  | 2.94 |
-  | A10_B000756_B007446_S10 | 0.725  | 7.30  | 0.0476 | 0.00166 |  2.78  | 2.94 |
+  |          index          | raw_score | norm_score | mc_pval |  pval   | nlog10_pval | zscore |
+  | :---------------------: | :-------: | :--------: | :-----: | :-----: | :---------: | :----: |
+  | A10_B000497_B009023_S10 |   0.730   |    7.04    | 0.0476  | 0.00166 |    2.78     |  2.94  |
+  | A10_B000756_B007446_S10 |   0.725   |    7.30    | 0.0476  | 0.00166 |    2.78     |  2.94  |
         
 **{trait}.full_score.gz** file : scDRS full score file
 - All contents of **{trait}.score.gz** file
@@ -192,10 +200,10 @@ The expected output is (see below for format if **.score.gz** file):
 - hetero_mcp:  MC p-value for within-cell type heterogeneity in association with disease
 - hetero_mcz:  MC z-score for within-cell type heterogeneity in association with disease
 
-  |       | n_cell | n_ctrl	| assoc_mcp	| assoc_mcz	| hetero_mcp | hetero_mcz |
-  | :---: | :----: | :----: | :-------: | :-------: | :--------: | :-------: |
-  | causal_cell	| 10.0 | 20.0	| 0.04761905 | 12.297529 | 1.0 | 1.0 |
-  | non_causal_cell	| 20.0 | 20.0	| 0.9047619 | -1.1364214 | 1.0 | 1.0 |
+  |                 | n_cell | n_ctrl | assoc_mcp  | assoc_mcz  | hetero_mcp | hetero_mcz |
+  | :-------------: | :----: | :----: | :--------: | :--------: | :--------: | :--------: |
+  |   causal_cell   |  10.0  |  20.0  | 0.04761905 | 12.297529  |    1.0     |    1.0     |
+  | non_causal_cell |  20.0  |  20.0  | 0.9047619  | -1.1364214 |    1.0     |    1.0     |
 
 **{trait}.scdrs_var** file : cell-level variable analysis (association to disease)
 - {trait} : trait name consistent with **{trait}.full_score.gz** file
@@ -204,11 +212,11 @@ The expected output is (see below for format if **.score.gz** file):
 - corr_mcp: MC p-value for cell-level variable association with disease
 - corr_mcz: MC z-score for cell-level variable association with disease
 
-  |      	| n_ctrl | corr_mcp | corr_mcz |
-  | :---: | :----: | :----: | :------: |
-  | causal_variable | 20.0 | 0.04761905 | 3.4574268 |
-  | non_causal_variable | 20.0 | 0.23809524 | 0.8974108 |
-  | covariate | 20.0 | 0.1904762 | 1.1220891 |
+  |                     | n_ctrl |  corr_mcp  | corr_mcz  |
+  | :-----------------: | :----: | :--------: | :-------: |
+  |   causal_variable   |  20.0  | 0.04761905 | 3.4574268 |
+  | non_causal_variable |  20.0  | 0.23809524 | 0.8974108 |
+  |      covariate      |  20.0  | 0.1904762  | 1.1220891 |
 
 **{trait}.scdrs_gene** file : correlation of gene expression with scDRS disease score
 - {trait} : trait name consistent with **{trait}.full_score.gz** file
@@ -216,7 +224,7 @@ The expected output is (see below for format if **.score.gz** file):
 - CORR: correlation with scDRS disease score across all cells in adata
 - RANK: correlation of correlation across genes
 
-  | index | CORR | RANK |
-  | :---: | :----: | :----: |
-  | Serping1 | 0.314 | 0 |
-  | Lmna | 0.278 | 1 |
+  |  index   | CORR  | RANK  |
+  | :------: | :---: | :---: |
+  | Serping1 | 0.314 |   0   |
+  |   Lmna   | 0.278 |   1   |
