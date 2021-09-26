@@ -16,11 +16,6 @@ Check out the bioRxiv manuscript [Zhang*, Hou*, et al. "Polygenic enrichment dis
 | <img src="./docs/images/cellxgene.tmsfacs.png" alt="cellxgene" style="width:100%"> | <img src="./docs/images/cellxgene.tmsfacs_ibd.png" alt="cellxgene" style="width:100%"> |
 | :--------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------: |
 |                   110,096 cells from 120 cell types in TMS FACS                    |                                  IBD-associated cells                                  |
-  
-  
-<!--   Example: showing all cells associated with IBD
-  <img src="./docs/images/cellxgene.png" alt="cellxgene" width="600"/> -->
-
 
 
 # Table of contents <!-- omit in toc -->
