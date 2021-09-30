@@ -151,7 +151,7 @@ The expected output is (see below for format of **.score.gz** file):
   | A10_B000497_B009023_S10 |   1   |  2706   |    1     |  18   |
   | A10_B000756_B007446_S10 |   1   |  3212   |    1     |  18   |
         
-**.gs** file (.tsv file) : gene set file
+**.gs** file (.tsv file) : one can use [precomputed GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080?file=30853708) for 74 diseases and complex traits or [compute gene sets directly from GWAS](docs/compute_magma_gs.md).
 - TRAIT: trait name
 - GENESET: a comma-separated string of genes 
 
