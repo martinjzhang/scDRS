@@ -135,7 +135,7 @@ The expected output is (see below for format of **.score.gz** file):
   - --`flag_gene` ("True"/"False") : if to correlate scDRS disease scores with gene expression
   - --`flag_filter` ("True"/"False") : if to perform minimum filtering of cells and genes
   - --`flag_raw_count` ("True"/"False") : if to perform normalization (size-factor + log1p)
-  - --`out_folder` : output folder. Score files will be saved as `{out_folder}/{trait}.score.gz` (see below for file format)
+  - --`out_folder` : output folder. Score files will be saved as `{out_folder}/{trait}.scdrs_ct.{cell_type}` for cell type-level analyses (association and heterogeneity); `{out_folder}/{trait}.scdrs_var` file for cell variable-disease association; `{out_folder}/{trait}.scdrs_var.{trait}.scdrs_gene` file for disease gene prioritization. (see below for file format)
     
 
 # File formats
