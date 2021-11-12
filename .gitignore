@@ -4,3 +4,4 @@ scdrs.egg-info/
 vignettes/zeisel
 docs/_build/
 .DS_Store
+.mypy_cache/

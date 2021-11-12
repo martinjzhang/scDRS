@@ -12,7 +12,7 @@ from statsmodels.stats.multitest import multipletests
 import scdrs.util as util
 import scdrs.data_loader as dl
 import scdrs.method as md
-
+import scdrs.sparse_util as sparse_util
 
 """
 # Fixit
@@ -69,6 +69,7 @@ def main(args):
     N_CTRL = int(args.n_ctrl)
     FLAG_RETURN_CTRL_RAW_SCORE = args.flag_return_ctrl_raw_score == "True"
     FLAG_RETURN_CTRL_NORM_SCORE = args.flag_return_ctrl_norm_score == "True"
+    FLAG_SPARSE = args.flag_sparse == "True"
     OUT_FOLDER = args.out_folder
 
     if H5AD_SPECIES != GS_SPECIES:
@@ -145,17 +146,34 @@ def main(args):
             % (", ".join(cov_list), time.time() - sys_start_time)
         )
 
-        adata.var["mean"] = adata.X.mean(axis=0).T
-        if sp.sparse.issparse(adata.X):
-            adata.X = adata.X.toarray()
-        adata.X -= adata.var["mean"].values
-        adata.X = md.reg_out(adata.X, adata.obs[cov_list].values)
-        adata.X += adata.var["mean"]
-        print(
-            "Regress out covariates from --h5ad_file (sys_time=%0.1fs)"
-            % (time.time() - sys_start_time)
-        )
+        if FLAG_SPARSE:
+            # if adata not csr_matrix, enforce adata.X to be csr_matrix
+            if not isinstance(adata.X, sp.sparse.csr_matrix):
+                adata.X = sp.sparse.csr_matrix(adata.X)
+                print("FLAG_SPARSE=True, enforcing adata.X to be sp.sparse.csr_matrix")
 
+        if FLAG_SPARSE == False:
+            adata.var["mean"] = adata.X.mean(axis=0).T
+            if sp.sparse.issparse(adata.X):
+                adata.X = adata.X.toarray()
+            adata.X -= adata.var["mean"].values
+            adata.X = md.reg_out(adata.X, adata.obs[cov_list].values)
+            adata.X += adata.var["mean"]
+            print(
+                "Regress out covariates from --h5ad_file (sys_time=%0.1fs)"
+                % (time.time() - sys_start_time)
+            )
+        else:
+            # assert first column of covariates must be all 1s
+            cov_values = adata.obs[cov_list].values
+            assert np.all(
+                cov_values[:, 0] == 1
+            ), "FLAG_SPARSE=True, First column of covariates must be all 1s, insert an intercept if there isn't one"
+            sparse_util.sparse_reg_out(adata, cov_values)
+            print(
+                "FLAG_SPARSE=True, regress out covariates from --h5ad_file (sys_time=%0.1fs)"
+                % (time.time() - sys_start_time)
+            )
     # Load .gs file
     df_gs = pd.read_csv(GS_FILE, sep="\t")
     df_gs.index = df_gs["TRAIT"]
@@ -201,7 +219,10 @@ def main(args):
 
     # Compute statistics, including the 20*20 mean-var bins
     print("Compute cell-level and gene-level statistics:")
-    md.compute_stats(adata)
+    if FLAG_SPARSE == False:
+        md.compute_stats(adata)
+    else:
+        sparse_util.sparse_compute_stats(adata)
     print("")
 
     # Compute score
@@ -225,6 +246,7 @@ def main(args):
             return_ctrl_raw_score=FLAG_RETURN_CTRL_RAW_SCORE,
             return_ctrl_norm_score=FLAG_RETURN_CTRL_NORM_SCORE,
             verbose=False,
+            sparse=FLAG_SPARSE,
         )
         df_res.iloc[:, 0:6].to_csv(
             os.path.join(OUT_FOLDER, "%s.score.gz" % trait),
@@ -272,6 +294,14 @@ if __name__ == "__main__":
         "--ctrl_match_opt", type=str, required=False, default="mean_var"
     )
     parser.add_argument("--weight_opt", type=str, required=False, default="vs")
+    parser.add_argument(
+        "--flag_sparse",
+        type=str,
+        required=False,
+        default="False",
+        help="If to use a sparse implementation, which leverages the sparsity of the data."
+        "The appropriate usage place would be a highly sparse count matrix in adata, and one need to correct for covarates",
+    )
     parser.add_argument(
         "--flag_filter",
         type=str,

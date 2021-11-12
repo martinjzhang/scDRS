@@ -3,6 +3,8 @@ import numpy as np
 import scipy as sp
 import pandas as pd
 from skmisc.loess import loess
+import scdrs.sparse_util as sparse_util
+from tqdm import tqdm
 
 
 def score_cell(
@@ -19,6 +21,7 @@ def score_cell(
     random_seed=0,
     verbose=False,
     save_intermediate=None,
+    sparse=False,
 ):
 
     """Score cells based on the trait gene set
@@ -136,17 +139,34 @@ def score_cell(
     )
 
     # Compute raw scores
-    v_raw_score, v_score_weight = _compute_raw_score(
-        adata, gene_list, gene_weight, weight_opt
-    )
+    if sparse:
+        v_raw_score, v_score_weight = sparse_util.sparse_compute_raw_score(
+            adata, gene_list, gene_weight, weight_opt
+        )
+    else:
+        v_raw_score, v_score_weight = _compute_raw_score(
+            adata, gene_list, gene_weight, weight_opt
+        )
 
     mat_ctrl_raw_score, mat_ctrl_weight = np.zeros([n_cell, n_ctrl]), np.zeros(
         [len(gene_list), n_ctrl]
     )
-    for i_ctrl in range(n_ctrl):
-        mat_ctrl_raw_score[:, i_ctrl], mat_ctrl_weight[:, i_ctrl] = _compute_raw_score(
-            adata, dic_ctrl_list[i_ctrl], dic_ctrl_weight[i_ctrl], weight_opt
-        )
+
+    for i_ctrl in tqdm(range(n_ctrl), desc="computing control scores"):
+        if sparse:
+            (
+                mat_ctrl_raw_score[:, i_ctrl],
+                mat_ctrl_weight[:, i_ctrl],
+            ) = sparse_util.sparse_compute_raw_score(
+                adata, dic_ctrl_list[i_ctrl], dic_ctrl_weight[i_ctrl], weight_opt
+            )
+        else:
+            (
+                mat_ctrl_raw_score[:, i_ctrl],
+                mat_ctrl_weight[:, i_ctrl],
+            ) = _compute_raw_score(
+                adata, dic_ctrl_list[i_ctrl], dic_ctrl_weight[i_ctrl], weight_opt
+            )
 
     # Compute normalized scores
     v_var_ratio_c2t = np.ones(n_ctrl)
