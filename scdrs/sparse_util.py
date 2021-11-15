@@ -20,6 +20,11 @@ def sparse_compute_stats(
         Number of bins for the variance, default 20
     copy : bool
         Whether to operate a copy of the data or inplace, default False
+
+    Returns
+    -------
+    data : anndata.AnnData
+        Annotated data matrix with mean, var calculated.
     """
 
     # Gene-wise statistics
@@ -77,11 +82,12 @@ def sparse_compute_stats(
 def sparse_compute_raw_score(adata, gene_list, gene_weight, weight_opt):
     """Compute raw score
         v_score_weight = gene_weight * {uniform/vs/inv_std}
+        `_SCDRS_SPARSE` is assumed to have been computed using `sparse_reg_out`
 
-    Args
-    ----
+    Parameters
+    ----------
     adata (n_cell, n_gene) : AnnData
-        adata.X should contain size-normalized log1p transformed count data
+        adata.X should contain raw count data
     gene_list (n_trait_gene) : list
         Trait gene list
     gene_weight (n_trait_gene) : list/np.ndarray
@@ -118,22 +124,35 @@ def sparse_compute_raw_score(adata, gene_list, gene_weight, weight_opt):
     cov_beta = adata.uns["_SCDRS_SPARSE"]["COV_BETA"]
     gene_mean = adata.uns["_SCDRS_SPARSE"]["GENE_MEAN"]
 
+    # calclulate v_raw_score = transformed_X @ v_score_weight
+    # where: transformed_X = adata.X + cov_mat @ cov_beta + gene_mean
     v_raw_score = (
         adata[:, gene_list].X.dot(v_score_weight)
         + cov_mat @ (cov_beta.loc[gene_list, :].values.T @ v_score_weight)
         + gene_mean.loc[gene_list, :].values.T @ v_score_weight
     ).flatten()
 
-    # X = adata.X + cov_mat @ cov_beta + gene_mean
-    # v_raw_score = (X[:, gene_index] @ v_score_weight).flatten()
-
     return v_raw_score, v_score_weight
 
 
 def sparse_reg_out(adata, cov):
     """
-    X: (n_obs, n_gene) sparse expression matrix
-    cov: (n_obs, n_cov) dense covariates matrix
+    Compute the sparse regression output
+
+    Parameters
+    ----------
+    adata (n_cell, n_gene) : AnnData
+        adata.X should contain size-normalized log1p transformed count data
+    cov (n_cell, n_gene) : np.ndarray
+        Covariance matrix
+
+    Returns
+    -------
+    adata.uns["_SCDRS_SPARSE"] : dict
+        Dictionary containing the following keys:
+        - "COV_MAT": Covariance matrix
+        - "COV_BETA": Covariance beta
+        - "GENE_MEAN": Gene mean
     """
     from scipy import sparse
 
@@ -142,15 +161,19 @@ def sparse_reg_out(adata, cov):
     assert n_obs == cov.shape[0]
     n_cov = cov.shape[1]
 
-    # Step 1: calculate the gene mean
+    # calculate the gene mean
     mean = adata.X.mean(axis=0)
 
-    # Step 2: regress out the covariates
+    # regress out the covariates
     # beta = (cov.T * cov)^-1 (cov.T * X)
     # X = (X - cov * beta) + m = X + cov * beta + m
     b = np.linalg.solve(
         np.dot(cov.T, cov) / n_obs, sparse.csr_matrix.dot(cov.T, adata.X) / n_obs
     )
+    # transformed_X = X + cov * beta + m
+    # or transformed_X = adata.X + COV_MAT * COV_BETA + GENE_MEAN
+    # because `cov` is assumed to contain intercept, the centering of `adata.X` is
+    # done by adding `COV_MAT * COV_BETA`
 
     adata.uns["_SCDRS_SPARSE"] = {
         "COV_BETA": pd.DataFrame(-b.T, index=adata.var_names),
@@ -163,7 +186,8 @@ def sparse_get_mean_var(
     adata: anndata.AnnData, axis: int, transform_func=None, n_chunk: int = 20
 ):
     """
-    Compute mean and variance of sparse matrix
+    Compute mean and variance of sparse matrix iteratively over chunks of sparse matrix
+    by converting to dense matrix and computing mean and variance of dense matrix
 
     Parameters
     ----------
