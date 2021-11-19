@@ -185,11 +185,13 @@ def main(args):
             )
 
         for trait in df_gs.index:
-            gs_gene_list = df_gs.loc[trait, "GENESET"].split(",")
-            h5ad_gene_list = [
-                dic_map[x] for x in set(gs_gene_list) & set(dic_map.keys())
-            ]
-            df_gs.loc[trait, "GENESET"] = ",".join(h5ad_gene_list)
+            gs_info = [g.split(":") for g in df_gs.loc[trait, "GENESET"].split(",")]
+            dict_gene_weights = {g[0] : float(g[1]) for g in gs_info}
+            h5ad_gene_weights = {
+                dic_map[x] : dict_gene_weights[x] for x in set(dict_gene_weights.keys()) & set(dic_map.keys())
+            }
+            df_gs.loc[trait, "GENESET"] = ",".join([f"{g}:{w}" for g, w in h5ad_gene_weights.items()])
+            print(df_gs.loc[trait, "GENESET"])
         print(
             "--gs_file converted from %s to %s genes (sys_time=%0.1fs)"
             % (GS_SPECIES, H5AD_SPECIES, time.time() - sys_start_time)
@@ -207,8 +209,13 @@ def main(args):
     # Compute score
     print("Compute: score:")
     for trait in df_gs.index:
-        gene_list = df_gs.loc[trait, "GENESET"].split(",")
-        gene_list = sorted(set(gene_list) & set(adata.var_names))
+        gs_info = [g.split(":") for g in df_gs.loc[trait, "GENESET"].split(",")]
+        assert np.all([len(g) == 2 for g in gs_info]), "Wrong format in .gs file, .gs format should be <gene1>:<weight1>,<gene2>:<weight2>..."
+        # with gene weights
+        dict_gene_weights = {g[0] : float(g[1]) for g in gs_info}
+         
+        gene_list = sorted(set(dict_gene_weights.keys()) & set(adata.var_names))
+        gene_weights = [dict_gene_weights[g] for g in gene_list]
         if len(gene_list) < 10:
             print(
                 "trait=%s: skipped due to small size (n_gene=%d, sys_time=%0.1fs)"
@@ -219,6 +226,7 @@ def main(args):
         df_res = md.score_cell(
             adata,
             gene_list,
+            gene_weight=gene_weights,
             ctrl_match_key=CTRL_MATCH_OPT,
             n_ctrl=N_CTRL,
             weight_opt=WEIGHT_OPT,
