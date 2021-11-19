@@ -6,12 +6,7 @@ import anndata
 
 
 # fixit: merge with compute_stats
-def sparse_compute_stats(
-    data, 
-    n_mean_bin=20,
-    n_var_bin=20,
-    copy=False
-):
+def sparse_compute_stats(data, n_mean_bin=20, n_var_bin=20, copy=False):
     """
     Compute the mean, variance, and technical variance of the log1p transformed count data
 
@@ -111,10 +106,10 @@ def sparse_compute_raw_score(adata, gene_list, gene_weight, weight_opt):
         Raw score
     v_score_weight (n_trait_gene,) : np.ndarray
         Gene weights score
-        
+
     Notes
     -----
-    
+
     """
     assert "_SCDRS_SPARSE" in adata.uns
 
@@ -163,14 +158,14 @@ def sparse_reg_out(adata, cov):
         - "COV_MAT": Covariance matrix
         - "COV_BETA": Covariance beta
         - "GENE_MEAN": Gene mean
-        
+
     Notes
     -----
-    The regression equation: 
+    The regression equation:
         resid_X = adata.X + cov * (-beta)
-    Transformed data:    
+    Transformed data:
         transformed_X = resid_X + GENE_MEAN = adata.X + COV_MAT * COV_BETA + GENE_MEAN
-    
+
     """
 
     assert np.all(cov[:, 0] == 1), "first column of covariate matrix must be 1"
@@ -186,8 +181,7 @@ def sparse_reg_out(adata, cov):
     # resid_X = X - cov * beta = X + cov * (-beta) + m
     # COV_BETA = (-beta)
     b = np.linalg.solve(
-        np.dot(cov.T, cov) / n_obs, 
-        sparse.csr_matrix.dot(cov.T, adata.X) / n_obs
+        np.dot(cov.T, cov) / n_obs, sparse.csr_matrix.dot(cov.T, adata.X) / n_obs
     )
     # resid_X = X + cov * (-beta)
     # transformed_X = resid_X + m = X + cov * (-beta) + m
@@ -202,12 +196,7 @@ def sparse_reg_out(adata, cov):
     }
 
 
-def sparse_get_mean_var(
-    adata, 
-    axis=0,
-    transform_func=None, 
-    n_chunk=20
-):
+def sparse_get_mean_var(adata, axis=0, transform_func=None, n_chunk=20):
     """
     Compute mean and variance of sparse matrix iteratively over chunks of sparse matrix
     by converting to dense matrix and computing mean and variance of dense matrix
@@ -238,7 +227,7 @@ def sparse_get_mean_var(
 
     if transform_func is None:
         transform_func = lambda x: x
-        
+
     # mean / var of transform_func(X + cov_mat @ cov_beta + mean)
     if axis == 0:
         # output would have the shape of (n_gene, )

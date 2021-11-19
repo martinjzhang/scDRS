@@ -66,7 +66,7 @@ def compare_score_file(df_res, df_res_ref):
                 v_[i] - v_ref[i],
                 np.absolute((v_[i] - v_ref[i]) / v_ref[i]),
             )
-        assert np.allclose(v_, v_ref, rtol=1e-3, equal_nan=True), err_msg
+        assert np.allclose(v_, v_ref, rtol=1e-2, equal_nan=True), err_msg
     return None
 
 
