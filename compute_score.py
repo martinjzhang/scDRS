@@ -20,7 +20,9 @@ import scdrs.sparse_util as sparse_util
 
 # Todo
 - Implement a memory efficient version
+- Implement scdrs.method.proprocess to incorporate sparse_reg_out and sparse_compute_stats
 - "gene_weight" argument needs to be tested 
+- Check the situation where df_cov does not explicitly contain "const" but contains a linear combinition of const
 
 # Finished
 - Add --n_ctrl (default value 500) 
@@ -131,6 +133,8 @@ def main(args):
     # adata = adata[0:500,:].copy()
 
     # Load .cov file and regress out covariates
+    # fixit: integrate regout with compute score
+    # fixit: add const if it does not exist
     if COV_FILE is not None:
         df_cov = pd.read_csv(COV_FILE, sep="\t", index_col=0)
         cov_list = list(df_cov.columns)
@@ -141,6 +145,12 @@ def main(args):
         )
         adata.obs = adata.obs.join(df_cov)
         adata.obs.fillna(adata.obs[cov_list].mean(), inplace=True)
+        # fixit: add const if it is not there
+        v_resid = scdrs.method.reg_out(np.ones(adata.shape[0]), adata.obs[cov_list])
+        if ((v_resid**2).mean()>0.05) and ('const' not in cov_list):
+            adata.obs['const'] = 1
+            cov_list = ['const'] + cov_list
+        # fixit
         print(
             "--cov_file loaded: covariates=[%s] (sys_time=%0.1fs)"
             % (", ".join(cov_list), time.time() - sys_start_time)
@@ -152,7 +162,7 @@ def main(args):
                 adata.X = sp.sparse.csr_matrix(adata.X)
                 print("FLAG_SPARSE=True, enforcing adata.X to be sp.sparse.csr_matrix")
 
-        if FLAG_SPARSE == False:
+        if FLAG_SPARSE == False: # fixit: if FLAG_SPARSE is probably better
             adata.var["mean"] = adata.X.mean(axis=0).T
             if sp.sparse.issparse(adata.X):
                 adata.X = adata.X.toarray()
@@ -165,6 +175,7 @@ def main(args):
             )
         else:
             # assert first column of covariates must be all 1s
+            # fixit: add 1 if the cov_file doesn't have this
             cov_values = adata.obs[cov_list].values
             assert np.all(
                 cov_values[:, 0] == 1
@@ -174,6 +185,7 @@ def main(args):
                 "FLAG_SPARSE=True, regress out covariates from --h5ad_file (sys_time=%0.1fs)"
                 % (time.time() - sys_start_time)
             )
+            
     # Load .gs file
     df_gs = pd.read_csv(GS_FILE, sep="\t")
     df_gs.index = df_gs["TRAIT"]
@@ -213,6 +225,7 @@ def main(args):
             % (GS_SPECIES, H5AD_SPECIES, time.time() - sys_start_time)
         )
     print("")
+    
     ###########################################################################################
     ######                                  Computation                                  ######
     ###########################################################################################
@@ -222,7 +235,7 @@ def main(args):
     if FLAG_SPARSE == False:
         md.compute_stats(adata)
     else:
-        sparse_util.sparse_compute_stats(adata)
+        sparse_util.sparse_compute_stats(adata) # fixit: this depends on adata.uns['_SCDRS_SPARSE'] 
     print("")
 
     # Compute score
