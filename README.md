@@ -32,6 +32,9 @@ Install from github:
 ```sh
 git clone https://github.com/martinjzhang/scDRS.git
 cd scDRS; pip install -e .
+# Current version under development; switch to submission version
+# https://github.com/martinjzhang/scDRS/releases/tag/v0.1
+git checkout -b initial_submission v0.1 
 ```
 
 Quick test:
