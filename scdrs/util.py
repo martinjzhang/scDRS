@@ -184,7 +184,7 @@ def load_gs(
         gs_info = [g.split(":") for g in gs.split(",")]
         if np.all([len(g) == 1 for g in gs_info]):
             # if all genes are weighted uniformly
-            dict_weights = {g: 1.0 for g in gs_info}
+            dict_weights = {g[0]: 1.0 for g in gs_info}
         elif np.all([len(g) == 2 for g in gs_info]):
             # if all genes are weighted by their weights
             dict_weights = {g[0]: float(g[1]) for g in gs_info}
