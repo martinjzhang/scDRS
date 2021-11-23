@@ -3,15 +3,17 @@ import numpy as np
 import scipy as sp
 import pandas as pd
 from skmisc.loess import loess
-import scdrs.sparse_util as sparse_util
+# import scdrs.sparse_util as sparse_util
+import scdrs.pp as pp
 from tqdm import tqdm
 
 
+# fixit: allow for user-defined control gene bins
 def score_cell(
     data,
     gene_list,
     gene_weight=None,
-    ctrl_match_key="mean",
+    ctrl_match_key="mean_var",
     n_ctrl=500,
     n_genebin=200,
     weight_opt="vs",
@@ -21,17 +23,17 @@ def score_cell(
     random_seed=0,
     verbose=False,
     save_intermediate=None,
-    sparse=False,
 ):
 
-    """Score cells based on the trait gene set
+    """Score cells based on the disease gene set
 
-    Args
-    ----
-    data (n_cell, n_gene) : AnnData
-        data.X should contain size-normalized log1p transformed count data
-    gene_list (n_trait_gene) : list
-        Trait gene list
+    Parameters
+    ----------
+    data : anndata.AnnData
+        Single-cell data of shape (n_cell, n_gene). Assumed
+        to be size-factor-normalized and log1p-transformed.
+    gene_list : list
+        Disease gene list of length n_trait_gene.
     gene_weight (n_trait_gene) : list/np.ndarray
         Gene weights for genes in the gene_list.
         If gene_weight=None, the weigts are set to be one.
@@ -75,20 +77,30 @@ def score_cell(
     np.random.seed(random_seed)
     adata = data.copy() if copy else data
     n_cell, n_gene = adata.shape
+    flag_sparse = adata.uns["SCDRS_PARAM"]["FLAG_SPARSE"]
+    flag_cov = adata.uns["SCDRS_PARAM"]["FLAG_COV"]
+    
+    # Check for preprocessing information
+    assert (
+        "SCDRS_PARAM" in adata.uns
+    ), "adata.uns['SCDRS_PARAM'] not found, run `scdrs.pp.preprocess` before calling this function"
+        
 
-    # Pre-compute statistics
-    var_set = {"mean", "var", "var_tech"}
-    obs_set = {"mean", "var"}
-    if (len(var_set - set(adata.var.columns)) > 0) | (
-        len(obs_set - set(adata.obs.columns)) > 0
-    ):
-        if verbose:
-            print("# score_cell: recompute statistics using method.compute_stats")
-        compute_stats(adata)
+    # # Pre-compute statistics
+    # var_set = {"mean", "var", "var_tech"}
+    # obs_set = {"mean", "var"}
+    # if (len(var_set - set(adata.var.columns)) > 0) | (
+    #     len(obs_set - set(adata.obs.columns)) > 0
+    # ):
+    #     if verbose:
+    #         print("# score_cell: recompute statistics using method.compute_stats")
+    #     compute_stats(adata)
 
     # Check options
-    if ctrl_match_key not in adata.var.columns:
-        raise ValueError("# score_cell: %s not in data.var.columns" % ctrl_match_key)
+    if ctrl_match_key not in adata.uns["SCDRS_PARAM"]["GENE_STATS"]:
+        raise ValueError("# score_cell: %s not in adata.uns['SCDRS_PARAM']['GENE_STATS']" % ctrl_match_key)
+    # if ctrl_match_key not in adata.var.columns:
+    #     raise ValueError("# score_cell: %s not in data.var.columns" % ctrl_match_key)
     weight_opt_list = ["uniform", "vs", "inv_std", "od"]
     if weight_opt not in weight_opt_list:
         raise ValueError(
@@ -103,17 +115,22 @@ def score_cell(
         )
 
     # Gene information
-    df_gene = pd.DataFrame(
-        index=adata.var_names,
-        data={
-            "gene": adata.var_names,
-            "mean": adata.var["mean"].values,
-            "var": adata.var["var"].values,
-        },
-    )
-    if ctrl_match_key not in df_gene.columns:
-        df_gene[ctrl_match_key] = adata.var[ctrl_match_key].values
+    df_gene = adata.uns["SCDRS_PARAM"]["GENE_STATS"].loc[adata.var_names].copy()
+    df_gene["gene"] = adata.var_names
     df_gene.drop_duplicates(subset="gene", inplace=True)
+    
+    # df_gene = pd.DataFrame(
+    #     index=adata.var_names,
+    #     data={
+    #         "gene": adata.var_names,
+    #         "mean": adata.var["mean"].values,
+    #         "var": adata.var["var"].values,
+    #     },
+    # )
+    # 
+    # if ctrl_match_key not in df_gene.columns:
+    #     df_gene[ctrl_match_key] = adata.var[ctrl_match_key].values
+    # df_gene.drop_duplicates(subset="gene", inplace=True)
 
     # Update gene_list and gene_weight
     n_gene_old = len(list(gene_list))
@@ -139,34 +156,46 @@ def score_cell(
     )
 
     # Compute raw scores
-    if sparse:
-        v_raw_score, v_score_weight = sparse_util.sparse_compute_raw_score(
+    # if sparse:
+    v_raw_score, v_score_weight = _compute_raw_score(
             adata, gene_list, gene_weight, weight_opt
         )
-    else:
-        v_raw_score, v_score_weight = _compute_raw_score(
-            adata, gene_list, gene_weight, weight_opt
-        )
+    
+    # if flag_sparse and flag_cov:
+    #     v_raw_score, v_score_weight = sparse_compute_raw_score(
+    #         adata, gene_list, gene_weight, weight_opt
+    #     )
+    # else:
+    #     v_raw_score, v_score_weight = _compute_raw_score(
+    #         adata, gene_list, gene_weight, weight_opt
+    #     )
 
     mat_ctrl_raw_score, mat_ctrl_weight = np.zeros([n_cell, n_ctrl]), np.zeros(
         [len(gene_list), n_ctrl]
     )
 
     for i_ctrl in tqdm(range(n_ctrl), desc="computing control scores"):
-        if sparse:
-            (
-                mat_ctrl_raw_score[:, i_ctrl],
-                mat_ctrl_weight[:, i_ctrl],
-            ) = sparse_util.sparse_compute_raw_score(
-                adata, dic_ctrl_list[i_ctrl], dic_ctrl_weight[i_ctrl], weight_opt
-            )
-        else:
-            (
+        (
                 mat_ctrl_raw_score[:, i_ctrl],
                 mat_ctrl_weight[:, i_ctrl],
             ) = _compute_raw_score(
                 adata, dic_ctrl_list[i_ctrl], dic_ctrl_weight[i_ctrl], weight_opt
             )
+        
+        # if flag_sparse and flag_cov:
+        #     (
+        #         mat_ctrl_raw_score[:, i_ctrl],
+        #         mat_ctrl_weight[:, i_ctrl],
+        #     ) = sparse_compute_raw_score(
+        #         adata, dic_ctrl_list[i_ctrl], dic_ctrl_weight[i_ctrl], weight_opt
+        #     )
+        # else:
+        #     (
+        #         mat_ctrl_raw_score[:, i_ctrl],
+        #         mat_ctrl_weight[:, i_ctrl],
+        #     ) = _compute_raw_score(
+        #         adata, dic_ctrl_list[i_ctrl], dic_ctrl_weight[i_ctrl], weight_opt
+        #     )
 
     # Compute normalized scores
     v_var_ratio_c2t = np.ones(n_ctrl)
@@ -280,14 +309,63 @@ def _select_ctrl_geneset(
     return dic_ctrl_list, dic_ctrl_weight
 
 
+# def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
+#     """Compute raw score
+#         v_score_weight = gene_weight * {uniform/vs/inv_std}
+# 
+#     Args
+#     ----
+#     adata (n_cell, n_gene) : AnnData
+#         adata.X should contain size-normalized log1p transformed count data
+#     gene_list (n_trait_gene) : list
+#         Trait gene list
+#     gene_weight (n_trait_gene) : list/np.ndarray
+#         Gene weights for genes in the gene_list
+#     weight_opt : str
+#         Option for computing the raw score
+#         - 'uniform': average over the genes in the gene_list
+#         - 'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct)
+#         - 'inv_std': weighted average with weights equal to 1/std
+#         - 'od': overdispersion score
+# 
+#     Returns
+#     -------
+#     v_raw_score (n_cell,) : np.ndarray
+#         Raw score
+#     v_score_weight (n_trait_gene,) : np.ndarray
+#         Gene weights score
+#     """
+# 
+#     # Compute raw score (overdispersion)
+#     if weight_opt == "od":
+#         return _compute_overdispersion_score(adata, gene_list, gene_weight)
+# 
+#     # Compute raw score (weighted average)
+#     if weight_opt == "uniform":
+#         v_score_weight = np.ones(len(gene_list))
+#     if weight_opt == "vs":
+#         v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list, "var_tech"].values + 1e-2)
+#     if weight_opt == "inv_std":
+#         v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list, "var"].values + 1e-2)
+# 
+#     if gene_weight is not None:
+#         v_score_weight = v_score_weight * np.array(gene_weight)
+#     v_score_weight = v_score_weight / v_score_weight.sum()
+#     v_raw_score = adata[:, gene_list].X.dot(v_score_weight).reshape([-1])
+# 
+#     return v_raw_score, v_score_weight
+
+
+# fixit: merge with _compute_raw_score
 def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
     """Compute raw score
         v_score_weight = gene_weight * {uniform/vs/inv_std}
+        `SCDRS_PARAM` is assumed to have been computed using `sparse_reg_out`
 
-    Args
-    ----
+    Parameters
+    ----------
     adata (n_cell, n_gene) : AnnData
-        adata.X should contain size-normalized log1p transformed count data
+        adata.X should contain raw count data
     gene_list (n_trait_gene) : list
         Trait gene list
     gene_weight (n_trait_gene) : list/np.ndarray
@@ -305,9 +383,19 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
         Raw score
     v_score_weight (n_trait_gene,) : np.ndarray
         Gene weights score
-    """
 
+    Notes
+    -----
+
+    """
+    assert "SCDRS_PARAM" in adata.uns
+    
+    df_gene = adata.uns["SCDRS_PARAM"]["GENE_STATS"]
+    flag_sparse = adata.uns["SCDRS_PARAM"]["FLAG_SPARSE"]
+    flag_cov = adata.uns["SCDRS_PARAM"]["FLAG_COV"]
+    
     # Compute raw score (overdispersion)
+    # Does not support implicit covariate correction mode
     if weight_opt == "od":
         return _compute_overdispersion_score(adata, gene_list, gene_weight)
 
@@ -315,14 +403,30 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
     if weight_opt == "uniform":
         v_score_weight = np.ones(len(gene_list))
     if weight_opt == "vs":
-        v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list, "var_tech"].values + 1e-2)
+        v_score_weight = 1 / np.sqrt(df_gene.loc[gene_list, "var_tech"].values + 1e-2)
     if weight_opt == "inv_std":
-        v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list, "var"].values + 1e-2)
+        v_score_weight = 1 / np.sqrt(df_gene.loc[gene_list, "var"].values + 1e-2)
 
     if gene_weight is not None:
         v_score_weight = v_score_weight * np.array(gene_weight)
     v_score_weight = v_score_weight / v_score_weight.sum()
-    v_raw_score = adata[:, gene_list].X.dot(v_score_weight).reshape([-1])
+    
+    if flag_sparse and flag_cov:
+        # Implicit covariate correction mode
+        cov_mat = adata.uns["SCDRS_PARAM"]["COV_MAT"].values
+        cov_beta = adata.uns["SCDRS_PARAM"]["COV_BETA"]
+        gene_mean = adata.uns["SCDRS_PARAM"]["COV_GENE_MEAN"]
+    
+        # calclulate v_raw_score = transformed_X @ v_score_weight
+        # where: transformed_X = adata.X + cov_mat @ cov_beta + gene_mean
+        v_raw_score = (
+            adata[:, gene_list].X.dot(v_score_weight)
+            + cov_mat @ (cov_beta.loc[gene_list, :].values.T @ v_score_weight)
+            + gene_mean.loc[gene_list, :].values.T @ v_score_weight
+        ).flatten()
+    else:
+        # Normal mode
+        v_raw_score = adata[:, gene_list].X.dot(v_score_weight).reshape([-1])
 
     return v_raw_score, v_score_weight
 
@@ -468,7 +572,7 @@ def _correct_background(
             delimiter="\t",
         )
         np.savetxt(
-            save_intermediate + ".ctrl_raw_score.2nd_gs_alignment.tsv.gz",
+            save_intermediate + ".ctrl_Re: MAGMA files for scDRSraw_score.2nd_gs_alignment.tsv.gz",
             mat_ctrl_norm_score,
             fmt="%.9e",
             delimiter="\t",
@@ -495,6 +599,7 @@ def _correct_background(
     return v_norm_score, mat_ctrl_norm_score
 
 
+# fixit: remove this from scdrs.method
 def compute_stats(data, n_mean_bin=20, n_var_bin=20, copy=False):
     """
     Precompute mean for each gene and mean&var for each cell
@@ -937,6 +1042,7 @@ def _get_rank(mat_X, axis=0):
     return mat_rank
 
 
+# fixit: instead call scdrs.pp.compute_stats
 def compute_gene_contrib(data, gene_list, random_seed=0, copy=False, verbose=False):
 
     """Find the contribution of each gene to the scDRS score
