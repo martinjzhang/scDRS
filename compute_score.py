@@ -146,10 +146,10 @@ def main(args):
         adata.obs = adata.obs.join(df_cov)
         adata.obs.fillna(adata.obs[cov_list].mean(), inplace=True)
         # fixit: add const if it is not there
-        v_resid = scdrs.method.reg_out(np.ones(adata.shape[0]), adata.obs[cov_list])
-        if ((v_resid**2).mean()>0.05) and ('const' not in cov_list):
-            adata.obs['const'] = 1
-            cov_list = ['const'] + cov_list
+        v_resid = md.reg_out(np.ones(adata.shape[0]), adata.obs[cov_list])
+        if ((v_resid ** 2).mean() > 0.05) and ("const" not in cov_list):
+            adata.obs["const"] = 1
+            cov_list = ["const"] + cov_list
         # fixit
         print(
             "--cov_file loaded: covariates=[%s] (sys_time=%0.1fs)"
@@ -162,7 +162,7 @@ def main(args):
                 adata.X = sp.sparse.csr_matrix(adata.X)
                 print("FLAG_SPARSE=True, enforcing adata.X to be sp.sparse.csr_matrix")
 
-        if FLAG_SPARSE == False: # fixit: if FLAG_SPARSE is probably better
+        if FLAG_SPARSE == False:  # fixit: if FLAG_SPARSE is probably better
             adata.var["mean"] = adata.X.mean(axis=0).T
             if sp.sparse.issparse(adata.X):
                 adata.X = adata.X.toarray()
@@ -185,47 +185,19 @@ def main(args):
                 "FLAG_SPARSE=True, regress out covariates from --h5ad_file (sys_time=%0.1fs)"
                 % (time.time() - sys_start_time)
             )
-            
-    # Load .gs file
-    df_gs = pd.read_csv(GS_FILE, sep="\t")
-    df_gs.index = df_gs["TRAIT"]
+
+    # Load .gs file, convert species if needed and merge with adata.var_names
+    dict_gs = util.load_gs(
+        GS_FILE,
+        src_species=GS_SPECIES,
+        dst_species=H5AD_SPECIES,
+        to_intersect=adata.var_names,
+    )
     print(
         "--gs_file loaded: n_geneset=%d (sys_time=%0.1fs)"
-        % (df_gs.shape[0], time.time() - sys_start_time)
+        % (len(dict_gs), time.time() - sys_start_time)
     )
 
-    # Convert df_gs genes to H5AD_SPECIES genes
-    if H5AD_SPECIES != GS_SPECIES:
-        dirname = os.path.dirname(__file__)
-        df_hom = pd.read_csv(
-            os.path.join(dirname, "scdrs/data/mouse_human_homologs.txt"), sep="\t"
-        )
-        if (GS_SPECIES == "hsapiens") & (H5AD_SPECIES == "mmusculus"):
-            dic_map = {
-                x: y for x, y in zip(df_hom["HUMAN_GENE_SYM"], df_hom["MOUSE_GENE_SYM"])
-            }
-        elif (GS_SPECIES == "mmusculus") & (H5AD_SPECIES == "hsapiens"):
-            dic_map = {
-                x: y for x, y in zip(df_hom["MOUSE_GENE_SYM"], df_hom["HUMAN_GENE_SYM"])
-            }
-        else:
-            raise ValueError(
-                "# compute_score: gene conversion from %s to %s is not supported"
-                % (GS_SPECIES, H5AD_SPECIES)
-            )
-
-        for trait in df_gs.index:
-            gs_gene_list = df_gs.loc[trait, "GENESET"].split(",")
-            h5ad_gene_list = [
-                dic_map[x] for x in set(gs_gene_list) & set(dic_map.keys())
-            ]
-            df_gs.loc[trait, "GENESET"] = ",".join(h5ad_gene_list)
-        print(
-            "--gs_file converted from %s to %s genes (sys_time=%0.1fs)"
-            % (GS_SPECIES, H5AD_SPECIES, time.time() - sys_start_time)
-        )
-    print("")
-    
     ###########################################################################################
     ######                                  Computation                                  ######
     ###########################################################################################
@@ -235,14 +207,15 @@ def main(args):
     if FLAG_SPARSE == False:
         md.compute_stats(adata)
     else:
-        sparse_util.sparse_compute_stats(adata) # fixit: this depends on adata.uns['_SCDRS_SPARSE'] 
+        sparse_util.sparse_compute_stats(
+            adata
+        )  # fixit: this depends on adata.uns['_SCDRS_SPARSE']
     print("")
 
     # Compute score
-    print("Compute: score:")
-    for trait in df_gs.index:
-        gene_list = df_gs.loc[trait, "GENESET"].split(",")
-        gene_list = sorted(set(gene_list) & set(adata.var_names))
+    print("Compute score:")
+    for trait in dict_gs:
+        gene_list, gene_weights = dict_gs[trait]
         if len(gene_list) < 10:
             print(
                 "trait=%s: skipped due to small size (n_gene=%d, sys_time=%0.1fs)"
@@ -253,6 +226,7 @@ def main(args):
         df_res = md.score_cell(
             adata,
             gene_list,
+            gene_weight=gene_weights,
             ctrl_match_key=CTRL_MATCH_OPT,
             n_ctrl=N_CTRL,
             weight_opt=WEIGHT_OPT,

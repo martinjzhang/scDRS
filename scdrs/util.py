@@ -9,6 +9,7 @@ import os
 import anndata
 import matplotlib.transforms as mtrans
 import matplotlib.pyplot as plt
+from typing import List, Tuple
 
 
 def check_import():
@@ -93,60 +94,121 @@ def group_stats(
     return df_stats
 
 
-def convert_gs_species(
-    df_gs: pd.DataFrame, src: str = "hsapiens", dst: str = "mmusculus"
-) -> pd.DataFrame:
-    """Convert species of genes in a gene set dataframe
+def load_homolog_mapping(src_species: str, dst_species: str) -> dict:
+    """Load gene homologs between mouse and human
 
     Parameters
     ----------
-    gs_species : pd.DataFrame
-        Gene set dataframe with columns:
-        - 'TRAIT'
-        - 'GENESET'
-    src : str, default 'hsapiens'
+    src_species : str
         Source species, must be either 'mmusculus' or 'hsapiens'
-    dst : str, default 'mmusculus'
+    dst_species : str
         Destination species, must be either 'mmusculus' or 'hsapiens'
-
 
     Returns
     -------
-    gs_species_converted : pd.DataFrame
+    dict
+        Dictionary of gene homologs
     """
 
-    assert src in [
-        "mmusculus",
-        "hsapiens",
-    ], "src must be either 'mmusculus' or 'hsapiens'"
-    assert dst in [
-        "mmusculus",
-        "hsapiens",
-    ], "dst must be either 'mmusculus' or 'hsapiens'"
-    assert src != dst, "src and dst cannot be the same"
+    assert src_species != dst_species, "src and dst cannot be the same"
 
-    dirname = os.path.dirname(__file__)
     df_hom = pd.read_csv(
-        os.path.join(dirname, "data/mouse_human_homologs.txt"), sep="\t"
+        os.path.join(os.path.dirname(__file__), "data/mouse_human_homologs.txt"),
+        sep="\t",
     )
-    if (src == "hsapiens") & (dst == "mmusculus"):
+    if (src_species == "hsapiens") & (dst_species == "mmusculus"):
         dic_map = {
             x: y for x, y in zip(df_hom["HUMAN_GENE_SYM"], df_hom["MOUSE_GENE_SYM"])
         }
-    elif (src == "mmusculus") & (dst == "hsapiens"):
+    elif (src_species == "mmusculus") & (dst_species == "hsapiens"):
         dic_map = {
             x: y for x, y in zip(df_hom["MOUSE_GENE_SYM"], df_hom["HUMAN_GENE_SYM"])
         }
     else:
-        raise ValueError(
-            "# gene conversion from %s to %s is not supported" % (src, dst)
+        raise NotImplementedError(
+            f"gene conversion from {src_species} to {dst_species} is not supported"
         )
-    df_gs = df_gs.copy()
-    for trait in df_gs.index:
-        src_gene_list = df_gs.loc[trait, "GENESET"].split(",")
-        dst_gene_list = [dic_map[x] for x in set(src_gene_list) & set(dic_map.keys())]
-        df_gs.loc[trait, "GENESET"] = ",".join(dst_gene_list)
-    return df_gs
+
+    return dic_map
+
+
+def load_gs(
+    gs_path: str,
+    src_species: str = None,
+    dst_species: str = None,
+    to_intersect: List[str] = None,
+) -> dict:
+    """Load the gene set file
+
+    Parameters
+    ----------
+    gs_path : str
+        Path to the gene set file with the following two columns, separated by tab:
+        - 'TRAIT'
+        - 'GENESET': (1) <gene1>,<gene2>,... each gene will be weighted uniformly or
+            (2) <gene1>:<weight1>,<gene2>:<weight2>,... each gene will be weighted by its weight
+    src_species : str, default None
+        Source species, must be either 'mmusculus' or 'hsapiens' if not None
+    dst_species : str, default None
+        Destination species, must be either 'mmusculus' or 'hsapiens' if not None
+    to_intersect : List[str], default None
+        List of gene sets to intersect with the read gene set file
+
+
+    Returns
+    -------
+    dict
+        Dictionary of gene sets: {
+            trait1: (gene_list, gene_weight),
+            trait2: (gene_list, gene_weight),
+            ...
+        }
+    """
+
+    assert (src_species is None) == (
+        dst_species is None
+    ), "src_species and dst_species must be both None or not None"
+
+    # dict_map is only needed when src_species and dst_species are not None and different
+    if ((src_species is not None) & (dst_species is not None)) and (
+        src_species != dst_species
+    ):
+        dict_map = load_homolog_mapping(src_species, dst_species)  # type: ignore
+    else:
+        dict_map = None  # type: ignore
+
+    # Load gene set file
+    dict_gs = {}
+    df_gs = pd.read_csv(gs_path, sep="\t")
+    for i, (trait, gs) in df_gs.iterrows():
+        gs_info = [g.split(":") for g in gs.split(",")]
+        if np.all([len(g) == 1 for g in gs_info]):
+            # if all genes are weighted uniformly
+            dict_weights = {g[0]: 1.0 for g in gs_info}
+        elif np.all([len(g) == 2 for g in gs_info]):
+            # if all genes are weighted by their weights
+            dict_weights = {g[0]: float(g[1]) for g in gs_info}
+        else:
+            raise ValueError(f"gene set {trait} contains genes with invalid format")
+
+        # Convert species if needed
+        # convert gene list to homologs, if gene can not be mapped, remove it
+        # in both gene list and gene weight
+        if dict_map is not None:
+            dict_weights = {
+                dict_map[g]: w for g, w in dict_weights.items() if g in dict_map
+            }
+
+        # Intersect with other gene sets
+        if to_intersect is not None:
+            dict_weights = {g: w for g, w in dict_weights.items() if g in to_intersect}
+
+        dict_gs[trait] = (
+            list(dict_weights.keys()),
+            list(dict_weights.values()),
+        )
+
+    return dict_gs
 
 
 def test_overlap(list1, list2, list_background):
