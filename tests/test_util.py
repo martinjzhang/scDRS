@@ -36,8 +36,8 @@ def test_compute_gearysc_significance():
 
 def test_gs_util():
 
-    # Test load_mouse_human_homologs
-    dict_mouse_to_human = util.load_mouse_human_homologs(
+    # Test load_homolog_mapping
+    dict_mouse_to_human = util.load_homolog_mapping(
         src_species="mmusculus", dst_species="hsapiens"
     )
     # check only take the first gene
@@ -45,7 +45,7 @@ def test_gs_util():
     assert g_human.isupper()
     assert g_mouse[0].isupper() & g_mouse[1:].islower()
 
-    dict_human_to_mouse = util.load_mouse_human_homologs(
+    dict_human_to_mouse = util.load_homolog_mapping(
         src_species="hsapiens", dst_species="mmusculus"
     )
     # check only take the first gene

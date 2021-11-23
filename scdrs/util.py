@@ -94,7 +94,7 @@ def group_stats(
     return df_stats
 
 
-def load_mouse_human_homologs(src_species: str, dst_species: str) -> dict:
+def load_homolog_mapping(src_species: str, dst_species: str) -> dict:
     """Load gene homologs between mouse and human
 
     Parameters
@@ -173,7 +173,7 @@ def load_gs(
     if ((src_species is not None) & (dst_species is not None)) and (
         src_species != dst_species
     ):
-        dict_map = load_mouse_human_homologs(src_species, dst_species)  # type: ignore
+        dict_map = load_homolog_mapping(src_species, dst_species)  # type: ignore
     else:
         dict_map = None  # type: ignore
 
