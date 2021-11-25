@@ -11,19 +11,29 @@ import scdrs
 def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, copy=False):
     """
     Preprocess single-cell data for scDRS analysis:
-        1. Regress out covariates and add back the original mean for each gene.
-        2. Compute gene-level and cell-level statistics.
 
-    When data.X is sparse and cov is present, scDRS operates in the implicity
-    covariate correction mode. In this mode, data.X is always sparse.
-    Covariate correction information is stored in data.uns["SCDRS_PARAM"] but
-    is not explicity applied to data.X.
+        1. Correct covariates by regressing out the covariates (including
+        a constant term) from data and adding back the original mean for
+        each gene.
 
-    In other cases, scDRS operates in the normal mode, where covariate correction
-    is applied to data.X.
+        2. Compute gene-level and cell-level statistics for the
+        covariate-corrected data.
 
+    Information is stored in `data.uns["SCDRS_PARAM"]`. It operates in
+    implicit-covariate-correction mode when `data.X` is sparse and `cov`
+    not `None` to improve memory efficiency; it operates in normal mode
+    otherwise.
 
-    The preproecssing information is stored in data.uns["SCDRS_PARAM"].
+    In normal mode, `data.X` is replaced by the covariate-corrected data.
+
+    In implicit-covariate-correction mode, the covariate correction information
+    is stored in data.uns["SCDRS_PARAM"] but is not explicitly applied to
+    `data.X`, so that `data.X` is always sparse. Subsequent computations on
+    the covariate-corrected data are based on the original data `data.X` and
+    the covariate correction information. Specifically,
+
+        CORRECTED_X = data.X + COV_MAT * COV_BETA + COV_GENE_MEAN
+
 
     Parameters
     ----------
@@ -43,25 +53,32 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, copy=False):
 
     Returns
     -------
+    `data.X` is updated to be the covariate-corrected data in normal mode.
+    Preprocessing information is stored in `data.uns["SCDRS_PARAM"]`.
+
     FLAG_SPARSE : bool
-        If data.X is sparse.  Stored as a key in data.uns["SCDRS_PARAM"].
+        If data.X is sparse.
     FLAG_COV : bool
-        If covariate correction is performed. Stored as a key in
-        data.uns["SCDRS_PARAM"].
+        If covariate correction is performed.
     COV_MAT : pandas.DataFrame
-        Covariance matrix of shape (n_cell, n_cov). Stored as a key
-        in data.uns["SCDRS_PARAM"].
+        Covariance matrix of shape (n_cell, n_cov).
     COV_BETA: pandas.DataFrame
-        Covariance effect sizes of shape (n_gene, n_cov). Stored as a key
-        in data.uns["SCDRS_PARAM"].
+        Covariance effect sizes of shape (n_gene, n_cov).
     COV_GENE_MEAN: pandas.Series
         Mean
     GENE_STATS : pandas.DataFrame
-        Gene-level statistics of shape (n_gene, n_stats). Stored as
-        a key in data.uns["SCDRS_PARAM"].
+        Gene-level statistics of shape (n_gene, 7):
+        - "mean" : mean expression in log scale.
+        - "var" : variance expression in log scale.
+        - "var_tech" : technical variance in log scale.
+        - "ct_mean" : mean expression in original non-log scale.
+        - "ct_var" : variance expression in original non-log scale.
+        - "ct_var_tech" : technical variance in original non-log scale.
+        - "mean_var" : n_mean_bin * n_var_bin mean-variance bins
     CELL_STATS : pandas.DataFrame
-        Cell-level statistics of shape (n_cell, n_stats). Stored as
-        a key in data.uns["SCDRS_PARAM"].
+        Cell-level statistics of shape (n_cell, 2):
+        - "mean" : mean expression in log scale.
+        - "var" : variance expression in log scale.
 
 
     Notes
@@ -71,7 +88,7 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, copy=False):
     scDRS saves:
         COV_MAT = cov, COV_BETA = (-beta), COV_GENE_MEAN = adata.X.mean(axis=0)
     The scDRS covariate-corrected data:
-        transformed_X = resid_X + GENE_MEAN = adata.X + COV_MAT * COV_BETA + COV_GENE_MEAN.
+        CORRECTED_X = resid_X + GENE_MEAN = adata.X + COV_MAT * COV_BETA + COV_GENE_MEAN.
 
 
     """
@@ -110,7 +127,9 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, copy=False):
         if (v_resid ** 2).mean() > 0.01:
             df_cov["SCDRS_CONST"] = 1
 
-        v_gene_mean = np.array(adata.X.mean(axis=0)).flatten() # numpy.ndarray of shape (n_gene,)
+        v_gene_mean = np.array(
+            adata.X.mean(axis=0)
+        ).flatten()  # numpy.ndarray of shape (n_gene,)
         if flag_sparse:
             # Sparse mode: save correction information
             mat_beta = np.linalg.solve(
@@ -129,13 +148,12 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, copy=False):
             # Dense mode: regress out covariate and add back mean
             adata.X = reg_out(adata.X, df_cov.values)
             adata.X += v_gene_mean
-            
-#             # Note: this version (dense+cov) should produce the exact toydata results 
-#             adata.var["mean"] = adata.X.mean(axis=0).T
-#             adata.X -= adata.var["mean"].values
-#             adata.X = reg_out(adata.X, df_cov[['SCDRS_CONST', 'covariate']].values)
-#             adata.X += adata.var["mean"]
 
+    #             # Note: this version (dense+cov) should produce the exact toydata results
+    #             adata.var["mean"] = adata.X.mean(axis=0).T
+    #             adata.X -= adata.var["mean"].values
+    #             adata.X = reg_out(adata.X, df_cov[['SCDRS_CONST', 'covariate']].values)
+    #             adata.X += adata.var["mean"]
 
     # Precompute for each gene and mean&var for each cell
     if flag_sparse and flag_cov:
@@ -182,10 +200,18 @@ def compute_stats(adata, implicit_cov_corr=False, n_mean_bin=20, n_var_bin=20):
     Returns
     -------
     df_gene : pandas.DataFrame
-        Gene-level statistics of shape (n_gene, 7). Contains
-        ["mean", "var", "ct_mean", "ct_var", "ct_var_tech", "var_tech", "mean_var"].
+        Gene-level statistics of shape (n_gene, 7):
+        - "mean" : mean expression in log scale.
+        - "var" : variance expression in log scale.
+        - "var_tech" : technical variance in log scale.
+        - "ct_mean" : mean expression in original non-log scale.
+        - "ct_var" : variance expression in original non-log scale.
+        - "ct_var_tech" : technical variance in original non-log scale.
+        - "mean_var" : n_mean_bin * n_var_bin mean-variance bins
     df_cell : pandas.DataFrame
-        Cell-level statistics of shape (n_cell, 2). Contains ["mean", "var"].
+        Cell-level statistics of shape (n_cell, 2):
+        - "mean" : mean expression in log scale.
+        - "var" : variance expression in log scale.
     """
 
     if implicit_cov_corr:
@@ -198,10 +224,10 @@ def compute_stats(adata, implicit_cov_corr=False, n_mean_bin=20, n_var_bin=20):
         columns=[
             "mean",
             "var",
+            "var_tech",
             "ct_mean",
             "ct_var",
             "ct_var_tech",
-            "var_tech",
             "mean_var",
         ],
     )

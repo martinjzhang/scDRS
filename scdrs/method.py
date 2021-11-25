@@ -9,12 +9,14 @@ from tqdm import tqdm
 
 
 # fixit: allow for user-defined control gene bins
+# fixit: maybe removing n_genebin and force data.uns["SCDRS_PARAM"]["GENE_STATS"][ctrl_match_key] to be categorical (check behaviour)
+# fixit: maybe changing the name from 'mean_var' to 'mean_var_bin'
 def score_cell(
     data,
     gene_list,
     gene_weight=None,
     ctrl_match_key="mean_var",
-    n_ctrl=500,
+    n_ctrl=1000,
     n_genebin=200,
     weight_opt="vs",
     copy=False,
@@ -25,7 +27,17 @@ def score_cell(
     save_intermediate=None,
 ):
 
-    """Score cells based on the disease gene set
+    """Score cells based on the disease gene set. 
+    
+    Preprocessing information `data.uns["SCDRS_PARAM"]` is required 
+    (run `scdrs.pp.preprocess` first). 
+    
+    It operates in implicit-covariate-correction mode if both `FLAG_SPARSE`z
+    and `FLAG_COV` are `True`, where computations are based on the implicit 
+    covariate-corrected data `CORRECTED_X = data.X + COV_MAT * COV_BETA + COV_GENE_MEAN`. 
+    
+    It operates in normal mode otherwise, where computations are based on `data.X`,
+    
 
     Parameters
     ----------
@@ -34,44 +46,48 @@ def score_cell(
         to be size-factor-normalized and log1p-transformed.
     gene_list : list
         Disease gene list of length n_trait_gene.
-    gene_weight (n_trait_gene) : list/np.ndarray
-        Gene weights for genes in the gene_list.
+    gene_weight : array_like, default=None
+        Gene weights of length n_trait_gene for genes in the gene_list.
         If gene_weight=None, the weigts are set to be one.
-    ctrl_match_key : str
-        The quantity for matching control and trait genes.
-        ctrl_match_key should appear in data.obs.columns
-    n_ctrl : int
+    ctrl_match_key : str, default="mean_var"
+        Gene-level statistic used for matching control and disease genes; 
+        should be in `data.uns["SCDRS_PARAM"]["GENE_STATS"]`.
+    n_ctrl : int, default=1000
         Number of control genesets
-    n_genebin : int
-        Number of bins for dividing genes by ctrl_match_key
-    weight_opt : str
+    n_genebin : int, default=200
+        Number of bins for dividing genes by ctrl_match_key if
+        `data.uns["SCDRS_PARAM"]["GENE_STATS"][ctrl_match_key]` is a continuous variable
+    weight_opt : str, default="vs"
         Option for computing the raw score
         'uniform': average over the genes in the gene_list
         'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct)
         'inv_std': weighted average with weights equal to 1/std
         'od': overdispersion score
-    copy : bool
+    copy : bool, default=False
         If to make copy of the AnnData object to avoid writing on the orignal data
-    return_raw_ctrl_score : bool
+    return_raw_ctrl_score : bool, default=False
         If to return control scores
-    return_norm_ctrl_score : bool
+    return_norm_ctrl_score : bool, default=False
         If to return control scores
-    random_seed : int
+    random_seed : int, default=0
         Random seed
-    verbose : bool
+    verbose : bool, default=False
         If to output messages
-    save_intermediate : str
+    save_intermediate : str, default=None
         File path prefix for saving intermediate results
 
     Returns
     -------
-    df_res (n_cell, n_key) : pd.DataFrame (dtype=np.float32) with columns:
-        - raw_score
-        - norm_score: scores after cell-wise and trait-wise normalization
-        - mc_pval: p-values computed using only the control scores from the same cell
-        - pval
+    df_res : pandas.DataFrame (dtype=np.float32)
+        scDRS results of shape (n_cell, n_key) with columns
+        - raw_score: raw disease scores.
+        - norm_score: normalized disease scores.
+        - mc_pval: Monte Carlo p-values based on the normalized control scores of the same cell.
+        - pval: scDRS individual cell-level disease-association p-values.
         - nlog10_pval: -log10(pval). Needed in case the single precision (np.float32) gives inaccurate p-values
-        - zscore: one-side z-score converted from pval
+        - zscore: one-side z-score converted from pval.
+        - ctrl_raw_score_*: raw control scores.
+        - ctrl_norm_score_*: normalized control scores.
     """
 
     np.random.seed(random_seed)
@@ -789,7 +805,7 @@ def score_cell_scanpy(adata, gene_list):
 ######################## Code for downstream analysis ########################
 ##############################################################################
 
-
+# fixit: identical to scdrs.pp.regout
 def reg_out(mat_Y, mat_X):
     """Regress mat_X out of mat_Y
 
