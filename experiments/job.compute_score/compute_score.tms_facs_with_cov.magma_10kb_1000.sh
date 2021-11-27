@@ -9,12 +9,14 @@
 #SBATCH -e /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/experiments/job_info/job_%A_%a.err # Standard error
 
 BATCH_NUM=$SLURM_ARRAY_TASK_ID
-# BATCH_NUM=0
+BATCH_NUM=0
 H5AD_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/tabula_muris_senis/tabula-muris-senis-facs-official-raw-obj.h5ad
 COV_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/tabula_muris_senis/tms_facs.cov
 GS_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/gs_file/magma_10kb_1000.74_traits.gs.batch/magma_10kb_1000.batch$BATCH_NUM.gs
 OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/score.tms_facs_with_cov.magma_10kb_1000
 OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/debug
+OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/debug.110121
+OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/debug.sparse.110121
 
 python3 /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/compute_score.py \
     --h5ad_file $H5AD_FILE\
@@ -27,4 +29,5 @@ python3 /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/compute_score.py \
     --n_ctrl 1000\
     --flag_return_ctrl_raw_score False\
     --flag_return_ctrl_norm_score True\
-    --out_folder $OUT_FOLDER
+    --out_folder $OUT_FOLDER\
+    --flag_sparse True
