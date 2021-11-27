@@ -13,8 +13,7 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, copy=False):
     Preprocess single-cell data for scDRS analysis:
 
         1. Correct covariates by regressing out the covariates (including
-        a constant term) from data and adding back the original mean for
-        each gene.
+        a constant term) and adding back the original mean for each gene.
 
         2. Compute gene-level and cell-level statistics for the
         covariate-corrected data.
@@ -53,7 +52,8 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, copy=False):
 
     Returns
     -------
-    `data.X` is updated to be the covariate-corrected data in normal mode.
+    `data.X` will be updated as the covariate-corrected data in normal mode 
+    and will stay untouched in the implicit covariate correctoin mode.
     Preprocessing information is stored in `data.uns["SCDRS_PARAM"]`.
 
     FLAG_SPARSE : bool
@@ -61,18 +61,18 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, copy=False):
     FLAG_COV : bool
         If covariate correction is performed.
     COV_MAT : pandas.DataFrame
-        Covariance matrix of shape (n_cell, n_cov).
+        Covariate matrix of shape (n_cell, n_cov).
     COV_BETA: pandas.DataFrame
-        Covariance effect sizes of shape (n_gene, n_cov).
+        Covariate effect sizes of shape (n_gene, n_cov).
     COV_GENE_MEAN: pandas.Series
-        Mean
+        Gene-level mean expression.
     GENE_STATS : pandas.DataFrame
         Gene-level statistics of shape (n_gene, 7):
         - "mean" : mean expression in log scale.
-        - "var" : variance expression in log scale.
+        - "var" : expression variance in log scale.
         - "var_tech" : technical variance in log scale.
         - "ct_mean" : mean expression in original non-log scale.
-        - "ct_var" : variance expression in original non-log scale.
+        - "ct_var" : expression variance in original non-log scale.
         - "ct_var_tech" : technical variance in original non-log scale.
         - "mean_var" : n_mean_bin * n_var_bin mean-variance bins
     CELL_STATS : pandas.DataFrame
@@ -295,7 +295,7 @@ def compute_stats(adata, implicit_cov_corr=False, n_mean_bin=20, n_var_bin=20):
 
 
 ##############################################################################
-############################### Subroutines ##################################
+######################## Preprocessing Subroutines ###########################
 ##############################################################################
 def reg_out(mat_Y, mat_X):
     """Regress mat_X out of mat_Y
