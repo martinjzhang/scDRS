@@ -150,7 +150,7 @@ def main(args):
     ###########################################################################################
     
     # Preprocess 
-    scdrs.pp.preprocess(adata, cov=df_cov, n_mean_bin=20, n_var_bin=20, copy=False)
+    scdrs.preprocess(adata, cov=df_cov, n_mean_bin=20, n_var_bin=20, copy=False)
 
     # Compute score
     print("Compute score:")
@@ -163,7 +163,7 @@ def main(args):
             )
             continue
             
-        df_res = scdrs.method.score_cell(
+        df_res = scdrs.score_cell(
             adata,
             gene_list,
             gene_weight=gene_weights,

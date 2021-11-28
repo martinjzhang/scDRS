@@ -522,7 +522,7 @@ def _correct_background(
         )
         np.savetxt(
             save_intermediate
-            + ".ctrl_Re: MAGMA files for scDRSraw_score.2nd_gs_alignment.tsv.gz",
+            + ".ctrl_raw_score.2nd_gs_alignment.tsv.gz",
             mat_ctrl_norm_score,
             fmt="%.9e",
             delimiter="\t",

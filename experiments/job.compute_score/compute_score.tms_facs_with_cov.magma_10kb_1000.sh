@@ -17,6 +17,7 @@ OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/sco
 OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/debug
 OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/debug.110121
 OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/debug.sparse.110121
+OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/debug.112721
 
 python3 /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/compute_score.py \
     --h5ad_file $H5AD_FILE\
@@ -29,5 +30,4 @@ python3 /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/compute_score.py \
     --n_ctrl 1000\
     --flag_return_ctrl_raw_score False\
     --flag_return_ctrl_norm_score True\
-    --out_folder $OUT_FOLDER\
-    --flag_sparse True
+    --out_folder $OUT_FOLDER
