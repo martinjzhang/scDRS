@@ -29,5 +29,9 @@ setuptools.setup(
         "pandas",
         "statsmodels",
         "pytest",
+        "fire",
+    ],
+    scripts=[
+        "bin/scdrs",
     ],
 )

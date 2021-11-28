@@ -1,0 +1,123 @@
+#!/usr/bin/env python
+
+import fire
+import pandas as pd
+import numpy as np
+from statsmodels.stats.multitest import multipletests
+import scdrs
+
+
+def score():
+    """
+    CLI for scoring cell, e.g.,
+
+    scdrs score --h5ad-file <h5ad_file> ...
+    """
+    pass
+
+
+def make_gs_weight(
+    src_path: str,
+    out: str,
+    gene_col: str = "GENE",
+    pval_col: str = None,
+    zsc_col: str = None,
+    weight: str = "zscore",
+    fdr: float = None,
+    fwer: float = None,
+    n_min: int = 100,
+    n_max: int = 1000,
+):
+    """
+    CLI for making gene set, convert a MAGMA result-like file to a gene set, e.g.,
+
+    using the following steps:
+    1. Read result, which is assumed to space-delimited, e.g., MAGMA result file
+    2. Find the gene ID column with `gene_col` and p-values
+        (either through `pval_col` or `zsc_col`)
+    3. Thresholding the number of genes using FDR or FWER
+    4. Then cap them between `n_min` and `n_max`
+    5. Write gene set to `out`
+
+    Examples
+    --------
+    scdrs make-gs-weight \
+        --src-path <src_path> \
+        --out <out> \
+        --gene-col <gene_col> \
+        --pval-col <pval_col> \
+        --zsc-col <zsc_col> \
+        --weight <weight> \
+        --fdr <fdr> \
+        --fwer <fwer> \
+        --n-min <n_min> \
+        --n-max <n_max>
+    """
+    # 1. Read result, which is assumed to space-delimited, e.g., MAGMA result file
+    df = pd.read_csv(src_path, delim_whitespace=True)
+
+    # 2. Find the gene ID column with `gene_col` and p-values
+    #    (either through `pval_col` or `zsc_col`)
+    assert gene_col in df.columns, f"Gene column {gene_col} not found in {src_path}"
+
+    assert (pval_col is None) or (
+        zsc_col is None
+    ), f"`pval_col` and `zsc_col` can not be both specified"
+
+    # if none of them is specified, infer the pval_col with "P"
+    if (pval_col is None) and (zsc_col is None):
+        pval_col = "P"
+
+    # calculate p-values
+    if pval_col is not None:
+        pval = df[pval_col].values
+    elif zsc_col is not None:
+        # single-sided gene-level p-value
+        pval = scdrs.util.zsc2pval(df[pval_col].values)
+
+    df_pval = pd.DataFrame({"GENE": df[gene_col].values, "P": pval}).dropna(axis=0)
+
+    # 3. Thresholding the number of genes using FDR or FWER (if specified)
+    #   and cap them between `n_min` and `n_max`
+
+    assert (fdr is None) or (
+        fwer is None
+    ), f"`fdr` and `fwer` can not be both specified"
+    if fwer is not None:
+        n_gene = multipletests(df_pval.P, method="bonferroni")[1] < fwer
+    elif fdr is not None:
+        n_gene = multipletests(df_pval.P, method="fdr_bh")[1] < fdr
+    else:
+        # if none of them is specified, just use the n_max
+        n_gene = n_max
+
+    # 4. cap them between `n_min` and `n_max`
+    n_gene = np.minimum(n_gene, n_max)
+    n_gene = np.maximum(n_gene, n_min)
+
+    # 5. use the top `n_gene` genes
+    df_gene = df_pval.sort_values("P").iloc[:n_gene, :].reset_index(drop=True)
+
+    if weight == "zscore":
+        df_gene["WEIGHT"] = scdrs.util.zsc2pval(df_gene.P)
+    elif weight == "uniform":
+        df_gene["WEIGHT"] = 1
+    else:
+        raise ValueError(f"Unknown weight {weight}")
+
+    # 6. Write gene set to `out`
+
+    df_gene[["GENE", "WEIGHT"]].to_csv(out, sep="\t", index=False)
+
+
+def downstream():
+    """
+    CLI for downstream analysis, e.g.,
+
+    scdrs downstream --h5ad-file <h5ad_file> ...
+    """
+    pass
+
+
+if __name__ == "__main__":
+    fire.Fire()
