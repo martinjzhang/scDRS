@@ -70,25 +70,18 @@ def compare_score_file(df_res, df_res_ref):
     return None
 
 
-def test_score_cell_nocov():
+def test_score_cell_dense_nocov():
     """
     score_cell: dense + nocov
     """
-
     adata, df_cov, df_gs, dic_res_ref = load_toy_data()
     gene_list = df_gs.loc["toydata_gs_mouse", "GENESET"].split(",")
     gene_list = sorted(set(gene_list) & set(adata.var_names))
 
-    scdrs.method.compute_stats(adata)
+    adata.X = adata.X.toarray()
+    scdrs.pp.preprocess(adata, cov=None, n_mean_bin=20, n_var_bin=20, copy=False)
     df_res = scdrs.method.score_cell(
-        adata,
-        gene_list,
-        ctrl_match_key="mean_var",
-        n_ctrl=20,
-        weight_opt="vs",
-        return_ctrl_raw_score=False,
-        return_ctrl_norm_score=False,
-        verbose=False,
+        adata, gene_list, ctrl_match_key="mean_var", n_ctrl=20, weight_opt="vs"
     )
     compare_score_file(df_res, dic_res_ref["REF_NOCOV"])
 
@@ -103,42 +96,29 @@ def test_score_cell_dense_cov():
     gene_list = df_gs.loc["toydata_gs_mouse", "GENESET"].split(",")
     gene_list = sorted(set(gene_list) & set(adata.var_names))
 
-    # Load cov
-    cov_list = list(df_cov.columns)
-    if len(set(df_cov.index) & set(adata.obs_names)) < 0.1 * adata.shape[0]:
-        raise ValueError("--cov_file does not match the cells in --h5ad_file")
-    adata.obs.drop(
-        [x for x in cov_list if x in adata.obs.columns], axis=1, inplace=True
-    )
-    adata.obs = adata.obs.join(df_cov)
-    adata.obs.fillna(adata.obs[cov_list].mean(), inplace=True)
-    # fixit
-    v_resid = scdrs.method.reg_out(np.ones(adata.shape[0]), adata.obs[cov_list])
-    if ((v_resid ** 2).mean() > 0.05) and ("const" not in cov_list):
-        adata.obs["const"] = 1
-        cov_list = ["const"] + cov_list
-    # fixit
-
-    adata.var["mean"] = adata.X.mean(axis=0).T
-    if sp.sparse.issparse(adata.X):
-        adata.X = adata.X.toarray()
-    adata.X -= adata.var["mean"].values
-    adata.X = scdrs.method.reg_out(adata.X, adata.obs[cov_list].values)
-    adata.X += adata.var["mean"]
-
-    # Compute score
-    scdrs.method.compute_stats(adata)
+    adata.X = adata.X.toarray()
+    scdrs.pp.preprocess(adata, cov=df_cov, n_mean_bin=20, n_var_bin=20, copy=False)
     df_res = scdrs.method.score_cell(
-        adata,
-        gene_list,
-        ctrl_match_key="mean_var",
-        n_ctrl=20,
-        weight_opt="vs",
-        return_ctrl_raw_score=False,
-        return_ctrl_norm_score=False,
-        verbose=False,
+        adata, gene_list, ctrl_match_key="mean_var", n_ctrl=20, weight_opt="vs"
     )
     compare_score_file(df_res, dic_res_ref["REF_COV"])
+
+    return None
+
+
+def test_score_cell_sparse_nocov():
+    """
+    score_cell: sparse + nocov
+    """
+    adata, df_cov, df_gs, dic_res_ref = load_toy_data()
+    gene_list = df_gs.loc["toydata_gs_mouse", "GENESET"].split(",")
+    gene_list = sorted(set(gene_list) & set(adata.var_names))
+
+    scdrs.pp.preprocess(adata, cov=None, n_mean_bin=20, n_var_bin=20, copy=False)
+    df_res = scdrs.method.score_cell(
+        adata, gene_list, ctrl_match_key="mean_var", n_ctrl=20, weight_opt="vs"
+    )
+    compare_score_file(df_res, dic_res_ref["REF_NOCOV"])
 
     return None
 
@@ -151,37 +131,9 @@ def test_score_cell_sparse_cov():
     gene_list = df_gs.loc["toydata_gs_mouse", "GENESET"].split(",")
     gene_list = sorted(set(gene_list) & set(adata.var_names))
 
-    # Load cov
-    cov_list = list(df_cov.columns)
-    if len(set(df_cov.index) & set(adata.obs_names)) < 0.1 * adata.shape[0]:
-        raise ValueError("--cov_file does not match the cells in --h5ad_file")
-    adata.obs.drop(
-        [x for x in cov_list if x in adata.obs.columns], axis=1, inplace=True
-    )
-    adata.obs = adata.obs.join(df_cov)
-    adata.obs.fillna(adata.obs[cov_list].mean(), inplace=True)
-    # fixit
-    v_resid = scdrs.method.reg_out(np.ones(adata.shape[0]), adata.obs[cov_list])
-    if ((v_resid ** 2).mean() > 0.05) and ("const" not in cov_list):
-        adata.obs["const"] = 1
-        cov_list = ["const"] + cov_list
-    # fixit
-
-    cov_values = adata.obs[cov_list].values
-    scdrs.sparse_util.sparse_reg_out(adata, cov_values)
-
-    # Compute score
-    scdrs.sparse_util.sparse_compute_stats(adata)
+    scdrs.pp.preprocess(adata, cov=df_cov, n_mean_bin=20, n_var_bin=20, copy=False)
     df_res = scdrs.method.score_cell(
-        adata,
-        gene_list,
-        ctrl_match_key="mean_var",
-        n_ctrl=20,
-        weight_opt="vs",
-        return_ctrl_raw_score=False,
-        return_ctrl_norm_score=False,
-        verbose=False,
-        sparse=True,
+        adata, gene_list, ctrl_match_key="mean_var", n_ctrl=20, weight_opt="vs"
     )
     compare_score_file(df_res, dic_res_ref["REF_COV"])
 

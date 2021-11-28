@@ -15,8 +15,8 @@ Individual cell disease-relevance score
 .. autosummary:: 
    :toctree: reference
 
-   scdrs.method.score_cell
-   scdrs.method.compute_stats
+   scdrs.preprocess
+   scdrs.score_cell
 
 Downstream analyses
 ~~~~~~~~~~~~~~~~~~~
