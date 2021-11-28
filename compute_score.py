@@ -7,24 +7,19 @@ import os
 import time
 import argparse
 from statsmodels.stats.multitest import multipletests
-
-# Inhouse tools
-import scdrs.util as util
-import scdrs.data_loader as dl
-import scdrs.method as md
-import scdrs.sparse_util as sparse_util
+import scdrs
 
 """
 # Fixit
 
 
 # Todo
-- Implement a memory efficient version
 - Implement scdrs.method.proprocess to incorporate sparse_reg_out and sparse_compute_stats
 - "gene_weight" argument needs to be tested 
 - Check the situation where df_cov does not explicitly contain "const" but contains a linear combinition of const
 
 # Finished
+- Implement a memory efficient version
 - Add --n_ctrl (default value 500) 
 - Add --cov_file option to regress out covariates stored in COV_FILE before feeding into the score function 
 - Add --ctrl_match_opt='mean_var': use mean- and var- matched control genes 
@@ -109,7 +104,7 @@ def main(args):
             )
     if CTRL_MATCH_OPT not in ["mean", "mean_var"]:
         raise ValueError("--ctrl_match_opt needs to be one of [mean, mean_var]")
-    if WEIGHT_OPT not in ["uniform", "vs", "od"]:
+    if WEIGHT_OPT not in ["uniform", "vs", "inv_std", "od"]:
         raise ValueError("--weight_opt needs to be one of [uniform, vs, inv_std, od]")
 
     ###########################################################################################
@@ -133,61 +128,13 @@ def main(args):
     # adata = adata[0:500,:].copy()
 
     # Load .cov file and regress out covariates
-    # fixit: integrate regout with compute score
-    # fixit: add const if it does not exist
     if COV_FILE is not None:
         df_cov = pd.read_csv(COV_FILE, sep="\t", index_col=0)
-        cov_list = list(df_cov.columns)
-        if len(set(df_cov.index) & set(adata.obs_names)) < 0.1 * adata.shape[0]:
-            raise ValueError("--cov_file does not match the cells in --h5ad_file")
-        adata.obs.drop(
-            [x for x in cov_list if x in adata.obs.columns], axis=1, inplace=True
-        )
-        adata.obs = adata.obs.join(df_cov)
-        adata.obs.fillna(adata.obs[cov_list].mean(), inplace=True)
-        # fixit: add const if it is not there
-        v_resid = md.reg_out(np.ones(adata.shape[0]), adata.obs[cov_list])
-        if ((v_resid ** 2).mean() > 0.05) and ("const" not in cov_list):
-            adata.obs["const"] = 1
-            cov_list = ["const"] + cov_list
-        # fixit
-        print(
-            "--cov_file loaded: covariates=[%s] (sys_time=%0.1fs)"
-            % (", ".join(cov_list), time.time() - sys_start_time)
-        )
-
-        if FLAG_SPARSE:
-            # if adata not csr_matrix, enforce adata.X to be csr_matrix
-            if not isinstance(adata.X, sp.sparse.csr_matrix):
-                adata.X = sp.sparse.csr_matrix(adata.X)
-                print("FLAG_SPARSE=True, enforcing adata.X to be sp.sparse.csr_matrix")
-
-        if FLAG_SPARSE == False:  # fixit: if FLAG_SPARSE is probably better
-            adata.var["mean"] = adata.X.mean(axis=0).T
-            if sp.sparse.issparse(adata.X):
-                adata.X = adata.X.toarray()
-            adata.X -= adata.var["mean"].values
-            adata.X = md.reg_out(adata.X, adata.obs[cov_list].values)
-            adata.X += adata.var["mean"]
-            print(
-                "Regress out covariates from --h5ad_file (sys_time=%0.1fs)"
-                % (time.time() - sys_start_time)
-            )
-        else:
-            # assert first column of covariates must be all 1s
-            # fixit: add 1 if the cov_file doesn't have this
-            cov_values = adata.obs[cov_list].values
-            assert np.all(
-                cov_values[:, 0] == 1
-            ), "FLAG_SPARSE=True, First column of covariates must be all 1s, insert an intercept if there isn't one"
-            sparse_util.sparse_reg_out(adata, cov_values)
-            print(
-                "FLAG_SPARSE=True, regress out covariates from --h5ad_file (sys_time=%0.1fs)"
-                % (time.time() - sys_start_time)
-            )
+    else:
+        df_cov = None
 
     # Load .gs file, convert species if needed and merge with adata.var_names
-    dict_gs = util.load_gs(
+    dict_gs = scdrs.util.load_gs(
         GS_FILE,
         src_species=GS_SPECIES,
         dst_species=H5AD_SPECIES,
@@ -201,16 +148,9 @@ def main(args):
     ###########################################################################################
     ######                                  Computation                                  ######
     ###########################################################################################
-
-    # Compute statistics, including the 20*20 mean-var bins
-    print("Compute cell-level and gene-level statistics:")
-    if FLAG_SPARSE == False:
-        md.compute_stats(adata)
-    else:
-        sparse_util.sparse_compute_stats(
-            adata
-        )  # fixit: this depends on adata.uns['_SCDRS_SPARSE']
-    print("")
+    
+    # Preprocess 
+    scdrs.pp.preprocess(adata, cov=df_cov, n_mean_bin=20, n_var_bin=20, copy=False)
 
     # Compute score
     print("Compute score:")
@@ -222,8 +162,8 @@ def main(args):
                 % (trait, len(gene_list), time.time() - sys_start_time)
             )
             continue
-
-        df_res = md.score_cell(
+            
+        df_res = scdrs.method.score_cell(
             adata,
             gene_list,
             gene_weight=gene_weights,
@@ -233,8 +173,8 @@ def main(args):
             return_ctrl_raw_score=FLAG_RETURN_CTRL_RAW_SCORE,
             return_ctrl_norm_score=FLAG_RETURN_CTRL_NORM_SCORE,
             verbose=False,
-            sparse=FLAG_SPARSE,
         )
+
         df_res.iloc[:, 0:6].to_csv(
             os.path.join(OUT_FOLDER, "%s.score.gz" % trait),
             sep="\t",
