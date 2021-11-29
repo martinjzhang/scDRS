@@ -225,7 +225,12 @@ def downstream(
     group_list = []
     var_list = []
     if group_analysis is not None:
-        group_list.extend([g for g in group_analysis])
+        if isinstance(group_analysis, str):
+            group_list.extend(group_analysis.split(","))
+        elif isinstance(group_analysis, tuple):
+            group_list.extend([g for g in group_analysis])
+        else:
+            raise ValueError("group_analysis should be a string or a tuple of strings")
         if "connectivities" not in adata.obsp:
             sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
             print(
@@ -233,7 +238,12 @@ def downstream(
                 "because `connectivities` is not found in adata.obsp"
             )
     elif corr_analysis is not None:
-        var_list.extend([v for v in corr_analysis])
+        if isinstance(corr_analysis, str):
+            var_list.extend(corr_analysis.split(","))
+        elif isinstance(corr_analysis, tuple):
+            var_list.extend([v for v in corr_analysis])
+        else:
+            raise ValueError("corr_analysis should be a string or a tuple of strings")
     elif gene_analysis is not None:
         pass
     else:

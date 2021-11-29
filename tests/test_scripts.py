@@ -56,3 +56,46 @@ def test_score_cell():
     df_ref_res = pd.read_csv(REF_COV_FILE, sep="\t", index_col=0)
     compare_score_file(df_res, df_ref_res)
     tmp_dir.cleanup()
+
+
+def test_downstream():
+
+    # Load toy data
+    ROOT_DIR = scdrs.__path__[0]
+    H5AD_FILE = os.path.join(ROOT_DIR, "data/toydata_mouse.h5ad")
+    SCORE_FILE = os.path.join(ROOT_DIR, "data/res/@.full_score.gz")
+    REF_RES_DIR = os.path.join(ROOT_DIR, "data/res")
+
+    import tempfile
+
+    tmp_dir = tempfile.TemporaryDirectory()
+    tmp_dir_path = tmp_dir.name
+    tmp_dir_path = "/Users/kangchenghou/work/scDRS/tests/tmp"
+    for task in [
+        "--group-analysis cell_type",
+        "--corr-analysis causal_variable,non_causal_variable,covariate",
+        "--gene-analysis",
+    ]:
+        # call scdrs downstream
+        cmds = [
+            f"scdrs downstream",
+            f"--h5ad_file {H5AD_FILE}",
+            f"--score-file {SCORE_FILE}",
+            task,
+            "--filter-data False",
+            "--raw-count False",
+            f"--out_folder {tmp_dir_path}",
+        ]
+        subprocess.check_call(" ".join(cmds), shell=True)
+
+    # check consistency between computed results and reference results
+
+    for prefix in ["toydata_gs_human", "toydata_gs_mouse"]:
+        for suffix in ["scdrs_ct.cell_type", "scdrs_gene", "scdrs_var"]:
+            res_path = os.path.join(tmp_dir_path, f"{prefix}.{suffix}")
+            ref_res_path = os.path.join(REF_RES_DIR, f"{prefix}.{suffix}")
+            df_res = pd.read_csv(res_path, sep="\t", index_col=0)
+            df_ref_rs = pd.read_csv(ref_res_path, sep="\t", index_col=0)
+            assert np.allclose(df_res.values, df_ref_rs.values)
+
+    tmp_dir.cleanup()
