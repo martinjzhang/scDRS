@@ -13,7 +13,7 @@ import os
 import fnmatch
 
 
-def score():
+def compute_score():
     """
     CLI for scoring cell, e.g.,
     TODO: decide whether to move compute_score.py here
@@ -22,7 +22,7 @@ def score():
     pass
 
 
-def make_gs(
+def munge_gs(
     out: str,
     pval_file: str = None,
     zscore_file: str = None,
@@ -136,7 +136,7 @@ def make_gs(
     df_gs.to_csv(out, sep="\t", index=False)
 
 
-def downstream(
+def perform_downstream(
     h5ad_file: str,
     score_file: str,
     out_folder: str,

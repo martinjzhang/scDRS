@@ -21,9 +21,8 @@ Check out the bioRxiv manuscript [Zhang*, Hou*, et al. "Polygenic enrichment dis
 # Table of contents <!-- omit in toc -->
 - [Installation](#installation)
 - [Within python scDRS demo](#within-python-scdrs-demo)
-- [Make .gs file (CLI)](#make-gs-file-cli)
 - [Command line interface for scDRS score calculation](#command-line-interface-for-scdrs-score-calculation)
-- [scDRS downsteam applications (CLI)](#scdrs-downsteam-applications-cli)
+- [Command line interface for scDRS downsteam applications](#command-line-interface-for-scdrs-downsteam-applications)
 - [File formats](#file-formats)
   - [scDRS input files](#scdrs-input-files)
   - [scDRS output files](#scdrs-output-files)
@@ -78,15 +77,6 @@ The expected output is (see below for format of **.score.gz** file):
   | A17_B002755_B007347_S17.mm10-plus-7-0 | 5.379276  |  3.338063  | 0.003992 | 0.000800 |  3.096939   | 3.155926 |
   |    C22_B003856_S298_L004.mus-2-0-1    | 5.443514  |  4.537418  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
 
-# Make .gs file (CLI)
-- Input: space-delimited file with gene names in the first column, and the rest of columns as disease names and gene-level p-values or z-scores.
-- Output: weights gene set file used by scDRS.
-
-```sh
-scdrs make-gs \
-  --pval-file <pval-file> \ # replace this with --zscore-file <zscore-file> as needed
-  --out-file <out-file>
-```
 
 # Command line interface for scDRS score calculation 
 - Input: scRNA-seq data (**.h5ad** file) and gene set file (**.gs** file)
@@ -123,35 +113,32 @@ scdrs make-gs \
   - `--flag_return_ctrl_norm_score` ("True"/"False") : if to return normalized control scores
   - `--out_folder` : output folder. Score files will be saved as `{out_folder}/{trait}.score.gz` (see below for file format)
 
-# scDRS downsteam applications (CLI)
+# Command line interface for scDRS downsteam applications 
 - Input: scRNA-seq data (**.h5ad** file), gene set file (**.gs** file), and scDRS full score files (**.full_score.gz** files)
 - Output: **{trait}.scdrs_ct.{cell_type}** file for cell type-level analyses (association and heterogeneity); **{trait}.scdrs_var** file for cell variable-disease association; **{trait}.scdrs_gene** file for disease gene prioritization.
+  ```sh
+  h5ad_file=your_scrnaseq_data
+  out_dir=your_output_folder
+  python compute_downstream.py \
+      --h5ad_file ${h5ad_file}.h5ad \
+      --score_file @.full_score.gz \
+      --cell_type cell_type \
+      --cell_variable causal_variable,non_causal_variable,covariate\
+      --flag_gene True\
+      --flag_filter False\
+      --flag_raw_count False\
+      --out_folder ${out_dir}
+  ```
+  
 
-```sh
-h5ad_file=your_scrnaseq_data
-out_dir=your_output_folder
-scdrs downstream \
-    --h5ad_file ${h5ad_file}.h5ad \
-    --score_file @.full_score.gz \
-    --group-analysis <group-vars> \
-    --flag_filter False \
-    --flag_raw_count False \
-    --out_folder ${out_dir}
-```
-
-The line of `--group-analysis <group-vars>` can be replaced with
-- `--corr-analysis <corr_vars>` for correlation analysis between scDRS scores with some covariates.
-- `--gene-analysis` for gene prioritization.
-
-These options corresponds to
-- --`h5ad_file` (**.h5ad** file) : scRNA-seq data
-- --`score_file` (**.full_score.gz** files) : scDRS full score files; supporting use of "@" to match strings
-- --`group_analysis` (str) : cell type column (supporting multiple columns separated by comma); must be present in `adata.obs.columns`; used for cell type-disease association analyses (5% quantile as test statistic) and detecting association heterogeneity within cell type (Geary's C as test statistic)
-- --`corr_analysis` (str) : cell-level variable columns (supporting multiple columns separated by comma); must be present in `adata.obs.columns`; used for cell variable-disease association analyses (Pearson's correlation as test statistic)
-- --`gene-analysis` ("True"/"False") : if to correlate scDRS disease scores with gene expression
-- --`flag_filter` ("True"/"False") : if to perform minimum filtering of cells and genes
-- --`flag_raw_count` ("True"/"False") : if to perform normalization (size-factor + log1p)
-- --`out_folder` : output folder. Score files will be saved as `{out_folder}/{trait}.scdrs_ct.{cell_type}` for cell type-level analyses (association and heterogeneity); `{out_folder}/{trait}.scdrs_var` file for cell variable-disease association; `{out_folder}/{trait}.scdrs_var.{trait}.scdrs_gene` file for disease gene prioritization. (see below for file format)
+  - --`h5ad_file` (**.h5ad** file) : scRNA-seq data
+  - --`score_file` (**.full_score.gz** files) : scDRS full score files; supporting use of "@" to match strings
+  - --`cell_type` (str) : cell type column (supporting multiple columns separated by comma); must be present in `adata.obs.columns`; used for cell type-disease association analyses (5% quantile as test statistic) and detecting association heterogeneity within cell type (Geary's C as test statistic)
+  - --`cell_variable` (str) : cell-level variable columns (supporting multiple columns separated by comma); must be present in `adata.obs.columns`; used for cell variable-disease association analyses (Pearson's correlation as test statistic)
+  - --`flag_gene` ("True"/"False") : if to correlate scDRS disease scores with gene expression
+  - --`flag_filter` ("True"/"False") : if to perform minimum filtering of cells and genes
+  - --`flag_raw_count` ("True"/"False") : if to perform normalization (size-factor + log1p)
+  - --`out_folder` : output folder. Score files will be saved as `{out_folder}/{trait}.scdrs_ct.{cell_type}` for cell type-level analyses (association and heterogeneity); `{out_folder}/{trait}.scdrs_var` file for cell variable-disease association; `{out_folder}/{trait}.scdrs_var.{trait}.scdrs_gene` file for disease gene prioritization. (see below for file format)
     
 
 # File formats
