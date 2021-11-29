@@ -70,7 +70,6 @@ def test_downstream():
 
     tmp_dir = tempfile.TemporaryDirectory()
     tmp_dir_path = tmp_dir.name
-    tmp_dir_path = "/Users/kangchenghou/work/scDRS/tests/tmp"
     for task in [
         "--group-analysis cell_type",
         "--corr-analysis causal_variable,non_causal_variable,covariate",
