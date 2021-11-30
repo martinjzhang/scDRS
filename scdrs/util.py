@@ -9,7 +9,7 @@ import os
 import anndata
 import matplotlib.transforms as mtrans
 import matplotlib.pyplot as plt
-from typing import List
+from typing import List, Dict
 import scdrs
 from anndata import read_h5ad
 import fnmatch
@@ -21,20 +21,32 @@ def check_import():
 
 
 def load_h5ad(
-    h5ad_file, filter_data: bool = False, raw_count: bool = False
+    h5ad_file: str, flag_filter_data: bool = False, flag_raw_count: bool = True
 ) -> anndata.AnnData:
-    """Load scDRS data
+    """Load h5ad file and optionally filter out cells and perform normalization
+
+    Parameters
+    ----------
+    h5ad_file : str
+        Path to h5ad file
+    flag_filter_data : bool
+        If True, filter out cells with
+        sc.pp.filter_cells(adata, min_genes=250)
+        sc.pp.filter_genes(adata, min_cells=50)
+    flag_raw_count : bool
+        If True, perform raw count normalization
 
     Returns
     -------
-
+    anndata.AnnData
+        AnnData object
     """
     # Load .h5ad file
     adata = read_h5ad(h5ad_file)
-    if filter_data:
+    if flag_filter_data:
         sc.pp.filter_cells(adata, min_genes=250)
         sc.pp.filter_genes(adata, min_cells=50)
-    if raw_count:
+    if flag_raw_count:
         sc.pp.normalize_per_cell(adata, counts_per_cell_after=1e4)
         sc.pp.log1p(adata)
     print(
@@ -44,32 +56,47 @@ def load_h5ad(
     return adata
 
 
-def load_drs_score(score_file: str, obs_names: List[str] = None):
+def load_drs_score(
+    score_file: str, obs_names: List[str] = None
+) -> Dict[str, pd.DataFrame]:
     """Load drs scores, could be multiple score files
 
     Parameters
     ----------
     score_file : str
-        Path to the score file
+        Either path to a single score file, such as /path/to/trait.full_score.gz
+        or a file pattern for multiple score files, such as /path/to/@.full_score.gz
     obs_names : List[str]
-        List of cell names
+        List of cell names used to assess the overlap between the score file and the
+        cell list. If provided, score file with less than 10% overlap will be skipped.
 
     Returns
     -------
-    pd.DataFrame
-        scDRS data
+    Dict[str, pd.DataFrame]
+        Dictionary of score dataframes, keyed by trait name
     """
+    assert score_file.endswith(
+        "full_score.gz"
+    ), "score_file should be a full_score.gz file"
 
-    # Load score file
-    score_file_pattern = score_file.split(os.path.sep)[-1]
-    score_dir = score_file.replace(os.path.sep + score_file_pattern, "")
-    score_file_list = [
-        x
-        for x in os.listdir(score_dir)
-        if fnmatch.fnmatch(x, score_file_pattern.replace("@", "*"))
-    ]
-    print("Infer score_dir=%s" % score_dir)
-    print("Find %s score_files: %s" % (len(score_file_list), ",".join(score_file_list)))
+    if "@" not in score_file:
+        # Single score file
+        score_file_list = [score_file]
+    else:
+        # Potentially multiple score files
+        score_file_pattern = score_file.split(os.path.sep)[-1]
+        score_dir = score_file.replace(os.path.sep + score_file_pattern, "")
+        score_file_list = [
+            x
+            for x in os.listdir(score_dir)
+            if fnmatch.fnmatch(x, score_file_pattern.replace("@", "*"))
+        ]
+        print("Infer score_dir=%s" % score_dir)
+        print(
+            "Find %s score_files: %s"
+            % (len(score_file_list), ",".join(score_file_list))
+        )
+
     dict_score = {}
     for score_file in score_file_list:
         temp_df = pd.read_csv(
@@ -92,24 +119,34 @@ def load_drs_score(score_file: str, obs_names: List[str] = None):
 
 
 def downstream_group_analysis(
-    adata: anndata.AnnData, df_drs: pd.DataFrame, group_cols: List[str]
-):
+    adata: anndata.AnnData,
+    df_drs: pd.DataFrame,
+    group_cols: List[str],
+    fdr_thresholds: List[float] = [0.05, 0.1, 0.2],
+) -> Dict[str, pd.DataFrame]:
     """
-    Perform the group-level downstream analysis for scDRS results
+    Perform the group-level downstream analysis for scDRS results, including
+    1. Proportion of FDR < 0.1 cells in each group
+    2. Group-level trait association
+    3. Group-level heterogeneity
+
+    To perform group-level heterogeneity analysis, if the nearest neighbor graph
+    "connectivities" is not presented in the adata project, it will be generated using
+    sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
 
     Parameters
     ----------
-    df_drs : pd.DataFrame
-        scDRS results dataframe
     adata : anndata.AnnData
         AnnData object
-    group_col : str
-        Column name of group column in adata.obs
+    df_drs : pd.DataFrame
+        scDRS results dataframe for a single trait
+    group_cols : str
+        Column name in adata.obs used to define the groups
 
     Returns
     -------
-    pd.DataFrame
-        Group-level statistics (n_group x n_stats)
+    Dict[str, pd.DataFrame]
+        Group-level statistics (n_group x n_stats) keyed by the group names
     """
 
     if "connectivities" not in adata.obsp:
@@ -119,11 +156,14 @@ def downstream_group_analysis(
             "because `connectivities` is not found in adata.obsp"
         )
 
+    # common cell_list
     cell_list = sorted(set(adata.obs_names) & set(df_drs.index))
     control_list = [x for x in df_drs.columns if x.startswith("ctrl_norm_score")]
     n_ctrl = len(control_list)
     df_reg = adata.obs.loc[cell_list, group_cols].copy()
-    df_reg = df_reg.join(df_drs.loc[cell_list, ["norm_score"] + control_list])
+    df_reg = df_reg.join(
+        df_drs.loc[cell_list, ["norm_score"] + control_list + ["pval"]]
+    )
 
     # Check group_cols
     missed_group_cols = [col for col in group_cols if col not in adata.obs.columns]
@@ -146,13 +186,26 @@ def downstream_group_analysis(
             "hetero_mcp",
             "hetero_mcz",
         ]
+        for fdr_threshold in fdr_thresholds:
+            res_cols.append(f"n_fdr_{fdr_threshold}")
 
         df_res = pd.DataFrame(index=group_list, columns=res_cols, dtype=np.float32)
 
-        # Basic info
+        df_fdr = pd.DataFrame(
+            {"fdr": multipletests(df_reg["pval"].values, method="fdr_bh")[1]},
+            index=df_reg.index,
+        )
+
         for group in group_list:
             group_cell_list = list(df_reg.index[df_reg[group_col] == group])
+            # Basic info
             df_res.loc[group, ["n_cell", "n_ctrl"]] = [len(group_cell_list), n_ctrl]
+
+            # Number of FDR < fdr_threshold cells in each group
+            for fdr_threshold in fdr_thresholds:
+                df_res.loc[group, f"n_fdr_{fdr_threshold}"] = (
+                    df_fdr.loc[group_cell_list, "fdr"].values < fdr_threshold
+                ).sum()
 
         # Association
         for group in group_list:
@@ -172,16 +225,20 @@ def downstream_group_analysis(
         for ct in group_list:
             mc_p, mc_z = df_rls.loc[ct, ["pval", "zsc"]]
             df_res.loc[ct, ["hetero_mcp", "hetero_mcz"]] = [mc_p, mc_z]
+
+        # write to dict for this group_col
         dict_df_res[group_col] = df_res
+
     return dict_df_res
 
 
 def downstream_corr_analysis(
     adata: anndata.AnnData, df_drs: pd.DataFrame, var_cols: List[str]
-):
+) -> pd.DataFrame:
     """
-    Perform the downstream correlation analysis between cell-level variables with
-    scDRS scores
+    Perform the correlation between cell-level variables with scDRS scores and
+    assign p-values and z-scores based on Monte Carlo estimates by comparing the
+    correlation between trait scores and control scores.
 
     Parameters
     ----------
@@ -189,7 +246,7 @@ def downstream_corr_analysis(
         AnnData object
     df_drs : pd.DataFrame
         scDRS results dataframe
-    var_cols : Union[List[str], str]
+    var_cols : List[str]
         Column name of cell-level variables in adata.obs
 
     Returns
@@ -229,8 +286,26 @@ def downstream_corr_analysis(
     return df_res
 
 
-def downstream_gene_analysis(adata: anndata.AnnData, df_drs: pd.DataFrame):
-    """"""
+def downstream_gene_analysis(
+    adata: anndata.AnnData, df_drs: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Perform the correlation between gene-level variables with scDRS scores and
+    assign p-values and z-scores based on Monte Carlo estimates by comparing the
+    correlation between trait scores and control scores.
+
+    Parameters
+    ----------
+    adata : anndata.AnnData
+        AnnData object
+    df_drs : pd.DataFrame
+        scDRS results dataframe
+
+    Returns
+    -------
+    pd.DataFrame
+        Correlation results (n_gene x n_stats)
+    """
 
     cell_list = sorted(set(adata.obs_names) & set(df_drs.index))
     control_list = [x for x in df_drs.columns if x.startswith("ctrl_norm_score")]
@@ -247,6 +322,7 @@ def downstream_gene_analysis(adata: anndata.AnnData, df_drs: pd.DataFrame):
     return df_res
 
 
+# TODO: remove this function
 def group_stats(
     df_drs: pd.DataFrame,
     adata: anndata.AnnData,

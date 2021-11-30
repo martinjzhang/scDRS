@@ -81,8 +81,8 @@ def test_downstream():
             f"--h5ad_file {H5AD_FILE}",
             f"--score-file {SCORE_FILE}",
             task,
-            "--filter-data False",
-            "--raw-count False",
+            "--flag-filter-data False",
+            "--flag-raw-count False",
             f"--out_folder {tmp_dir_path}",
         ]
         subprocess.check_call(" ".join(cmds), shell=True)
@@ -94,7 +94,12 @@ def test_downstream():
             res_path = os.path.join(tmp_dir_path, f"{prefix}.{suffix}")
             ref_res_path = os.path.join(REF_RES_DIR, f"{prefix}.{suffix}")
             df_res = pd.read_csv(res_path, sep="\t", index_col=0)
-            df_ref_rs = pd.read_csv(ref_res_path, sep="\t", index_col=0)
-            assert np.allclose(df_res.values, df_ref_rs.values)
+            df_ref_res = pd.read_csv(ref_res_path, sep="\t", index_col=0)
+            # only test common columns between `df_res` and `df_ref_res`
+            common_cols = set(df_res.columns) & set(df_ref_res.columns)
+            assert np.allclose(
+                df_res[common_cols].values, df_ref_res[common_cols].values
+            )
+            print(df_res)
 
     tmp_dir.cleanup()

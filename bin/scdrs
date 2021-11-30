@@ -7,7 +7,6 @@ from statsmodels.stats.multitest import multipletests
 import scdrs
 from typing import Dict, List
 import scanpy as sc
-import time
 import os
 
 
@@ -141,8 +140,8 @@ def perform_downstream(
     group_analysis: str = None,
     corr_analysis: str = None,
     gene_analysis: str = None,
-    filter_data: bool = False,
-    raw_count: bool = True,
+    flag_filter_data: bool = False,
+    flag_raw_count: bool = True,
 ):
     """
     CLI for group-level analysis, e.g.,
@@ -157,10 +156,22 @@ def perform_downstream(
         Path to the score file
     out_folder: str
         Path to the output folder
-    group_list: str
-        Comma-seperated column names for variables representing groups
+    group_analysis: str
+        Comma-seperated column names for variables in `adata` representing groups
         (e.g., cell types or tissues)
+    corr_analysis: str
+        Comma-seperated column names for variables in `adata` representing variables of
+        interest (e.g., age, sex) to correlate to scDRS scores
+    gene_analysis: str
+        Flag to perform the gene prioritization by correlating gene expression with scDRS
+        scores. No parameters are needed. Specify by `--gene-analysis`
+    flag_filter_data: bool
+        whether to filter the data based on the scDRS scores. Default is False.
+    flag_raw_count: bool
+        whether to use raw count or normalized count for downstream analysis.
+        Default is True.
     """
+
     # check arguments
     assert (
         (group_analysis is not None)
@@ -169,13 +180,18 @@ def perform_downstream(
     ) == 1, (
         "only one of `group_analysis`, `corr_analysis`, `gene_analyis` can be specified"
     )
+    # load h5ad file and score files
     adata = scdrs.util.load_h5ad(
-        h5ad_file=h5ad_file, filter_data=filter_data, raw_count=raw_count
+        h5ad_file=h5ad_file,
+        flag_filter_data=flag_filter_data,
+        flag_raw_count=flag_raw_count,
     )
     dict_df_score = scdrs.util.load_drs_score(score_file)
 
     # branch into different analysis
     if group_analysis is not None:
+        # `group_analysis` can be either List[str] or str
+        # make group_cols a list
         if isinstance(group_analysis, str):
             group_cols = group_analysis.split(",")
         elif isinstance(group_analysis, tuple):
@@ -197,19 +213,22 @@ def perform_downstream(
                 )
 
     elif corr_analysis is not None:
+        # `corr_analysis` can be either List[str] or str
+        # make group_cols a list
         if isinstance(corr_analysis, str):
-            var_list = corr_analysis.split(",")
+            var_cols = corr_analysis.split(",")
         elif isinstance(corr_analysis, tuple):
-            var_list = [v for v in corr_analysis]
+            var_cols = [v for v in corr_analysis]
         else:
             raise ValueError("corr_analysis should be a string or a tuple of strings")
         for trait in dict_df_score:
             df_res = scdrs.util.downstream_corr_analysis(
-                adata=adata, df_drs=dict_df_score[trait], var_cols=var_list
+                adata=adata, df_drs=dict_df_score[trait], var_cols=var_cols
             )
             df_res.to_csv(
                 os.path.join(out_folder, f"{trait}.scdrs_var"), sep="\t", index=True
             )
+
     elif gene_analysis is not None:
         for trait in dict_df_score:
             df_res = scdrs.util.downstream_gene_analysis(
@@ -219,6 +238,7 @@ def perform_downstream(
             df_res.to_csv(
                 os.path.join(out_folder, f"{trait}.scdrs_gene"), sep="\t", index=True
             )
+
     else:
         raise ValueError("No analysis specified")
 
