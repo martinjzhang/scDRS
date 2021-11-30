@@ -20,6 +20,14 @@ def check_import():
     return
 
 
+def convert_species_name(species):
+    if species in ["Mouse", "mouse", "Mus_musculus", "mus_musculus", "mmusculus"]:
+        return "mmusculus"
+    if species in ["Human", "human", "Homo_sapiens", "homo_sapiens", "hsapiens"]:
+        return "hsapiens"
+    raise ValueError("species name %s not supported" % species)
+
+
 def load_h5ad(
     h5ad_file: str, flag_filter_data: bool = False, flag_raw_count: bool = True
 ) -> anndata.AnnData:
