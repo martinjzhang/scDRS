@@ -6,11 +6,9 @@ import numpy as np
 from statsmodels.stats.multitest import multipletests
 import scdrs
 from typing import Dict, List
-from anndata import read_h5ad
 import scanpy as sc
 import time
 import os
-import fnmatch
 
 
 def compute_score():
@@ -163,8 +161,6 @@ def perform_downstream(
         Comma-seperated column names for variables representing groups
         (e.g., cell types or tissues)
     """
-    sys_start_time = time.time()
-
     # check arguments
     assert (
         (group_analysis is not None)
@@ -173,191 +169,58 @@ def perform_downstream(
     ) == 1, (
         "only one of `group_analysis`, `corr_analysis`, `gene_analyis` can be specified"
     )
-
-    # Load .h5ad file
-    adata = read_h5ad(h5ad_file)
-    if filter_data:
-        sc.pp.filter_cells(adata, min_genes=250)
-        sc.pp.filter_genes(adata, min_cells=50)
-    if raw_count:
-        sc.pp.normalize_per_cell(adata, counts_per_cell_after=1e4)
-        sc.pp.log1p(adata)
-    print(
-        "--h5ad_file loaded: n_cell=%d, n_gene=%d (sys_time=%0.1fs)"
-        % (adata.shape[0], adata.shape[1], time.time() - sys_start_time)
+    adata = scdrs.util.load_h5ad(
+        h5ad_file=h5ad_file, filter_data=filter_data, raw_count=raw_count
     )
+    dict_df_score = scdrs.util.load_drs_score(score_file)
 
-    # Load score file
-    score_file_pattern = score_file.split(os.path.sep)[-1]
-    score_dir = score_file.replace(os.path.sep + score_file_pattern, "")
-    score_file_list = [
-        x
-        for x in os.listdir(score_dir)
-        if fnmatch.fnmatch(x, score_file_pattern.replace("@", "*"))
-    ]
-    print("Infer score_dir=%s" % score_dir)
-    print("Find %s score_files: %s" % (len(score_file_list), ",".join(score_file_list)))
-    dic_score = {}
-    for score_file in score_file_list:
-        temp_df = pd.read_csv(
-            score_dir + os.path.sep + score_file, sep="\t", index_col=0
-        )
-        n_cell_overlap = len(set(adata.obs_names) & set(temp_df.index))
-        if n_cell_overlap < 0.1 * adata.shape[0]:
-            print(
-                "WARNING: %s skipped, %d/%d cells in adata"
-                % (score_file, n_cell_overlap, adata.shape[0])
-            )
-        else:
-            dic_score[score_file.replace(".full_score.gz", "")] = temp_df.copy()
-
-    print(
-        "--score_file loaded: n_trait=%d, (sys_time=%0.1fs)"
-        % (len(dic_score), time.time() - sys_start_time)
-    )
-    print("")
-
-    ###########################################################################################
-    ######                                  Computation                                  ######
-    ###########################################################################################
-
-    # preprocess arguments
-    group_list = []
-    var_list = []
+    # branch into different analysis
     if group_analysis is not None:
         if isinstance(group_analysis, str):
-            group_list.extend(group_analysis.split(","))
+            group_cols = group_analysis.split(",")
         elif isinstance(group_analysis, tuple):
-            group_list.extend([g for g in group_analysis])
+            group_cols = [g for g in group_analysis]
         else:
             raise ValueError("group_analysis should be a string or a tuple of strings")
-        if "connectivities" not in adata.obsp:
-            sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
-            print(
-                "Compute connectivities with `sc.pp.neighbors`"
-                "because `connectivities` is not found in adata.obsp"
+        for trait in dict_df_score:
+            dict_df_res = scdrs.util.downstream_group_analysis(
+                adata=adata, df_drs=dict_df_score[trait], group_cols=group_cols
             )
-    elif corr_analysis is not None:
-        if isinstance(corr_analysis, str):
-            var_list.extend(corr_analysis.split(","))
-        elif isinstance(corr_analysis, tuple):
-            var_list.extend([v for v in corr_analysis])
-        else:
-            raise ValueError("corr_analysis should be a string or a tuple of strings")
-    elif gene_analysis is not None:
-        pass
-    else:
-        raise ValueError("No analysis specified")
-
-    # A separate file for each trait
-    for trait in dic_score.keys():
-        cell_list = sorted(set(adata.obs_names) & set(dic_score[trait].index))
-        control_list = [
-            x for x in dic_score[trait].columns if x.startswith("ctrl_norm_score")
-        ]
-        n_ctrl = len(control_list)
-        df_reg = adata.obs.loc[cell_list, group_list + var_list].copy()
-        df_reg = df_reg.join(
-            dic_score[trait].loc[cell_list, ["norm_score"] + control_list]
-        )
-        if group_analysis is not None:
-            # Cell type-disease analysis: association + heterogeneity
-            for ct_col in group_list:
-                ct_list = sorted(set(adata.obs[ct_col]))
-                col_list = [
-                    "n_cell",
-                    "n_ctrl",
-                    "assoc_mcp",
-                    "assoc_mcz",
-                    "hetero_mcp",
-                    "hetero_mcz",
-                ]
-                df_res = pd.DataFrame(index=ct_list, columns=col_list, dtype=np.float32)
-                # Basic info
-                for ct in ct_list:
-                    ct_cell_list = list(df_reg.index[df_reg[ct_col] == ct])
-                    df_res.loc[ct, ["n_cell", "n_ctrl"]] = [len(ct_cell_list), n_ctrl]
-                # Association
-                for ct in ct_list:
-                    ct_cell_list = list(df_reg.index[df_reg[ct_col] == ct])
-                    score_q95 = np.quantile(
-                        df_reg.loc[ct_cell_list, "norm_score"], 0.95
-                    )
-                    v_ctrl_score_q95 = np.quantile(
-                        df_reg.loc[ct_cell_list, control_list], 0.95, axis=0
-                    )
-                    mc_p = ((v_ctrl_score_q95 >= score_q95).sum() + 1) / (
-                        v_ctrl_score_q95.shape[0] + 1
-                    )
-                    mc_z = (
-                        score_q95 - v_ctrl_score_q95.mean()
-                    ) / v_ctrl_score_q95.std()
-                    df_res.loc[ct, ["assoc_mcp", "assoc_mcz"]] = [mc_p, mc_z]
-                # Heterogeneity
-                df_rls = scdrs.util.test_gearysc(adata, df_reg, groupby=ct_col)
-                for ct in ct_list:
-                    mc_p, mc_z = df_rls.loc[ct, ["pval", "zsc"]]
-                    df_res.loc[ct, ["hetero_mcp", "hetero_mcz"]] = [mc_p, mc_z]
-
-                df_res.to_csv(
+            for group_col in group_cols:
+                dict_df_res[group_col].to_csv(
                     os.path.join(
-                        out_folder, "%s.scdrs_ct.%s" % (trait, ct_col.replace(" ", "_"))
+                        out_folder,
+                        f"{trait}.scdrs_ct.{group_col.replace(' ', '_')}",
                     ),
                     sep="\t",
                     index=True,
                 )
-                print(
-                    "%s: cell type-level analysis with label=%s (sys_time=%0.1fs)"
-                    % (trait, ct_col, time.time() - sys_start_time)
-                )
-        elif corr_analysis is not None:
-            # Variable-disease correlation
-            if len(var_list) > 0:
-                col_list = ["n_ctrl", "corr_mcp", "corr_mcz"]
-                df_res = pd.DataFrame(
-                    index=var_list, columns=col_list, dtype=np.float32
-                )
-                for var_col in var_list:
-                    corr_ = np.corrcoef(df_reg[var_col], df_reg["norm_score"])[0, 1]
-                    v_corr_ = np.array(
-                        [
-                            np.corrcoef(
-                                df_reg[var_col], df_reg["ctrl_norm_score_%d" % x]
-                            )[0, 1]
-                            for x in np.arange(n_ctrl)
-                        ]
-                    )
-                    mc_p = ((v_corr_ >= corr_).sum() + 1) / (v_corr_.shape[0] + 1)
-                    mc_z = (corr_ - v_corr_.mean()) / v_corr_.std()
-                    df_res.loc[var_col] = [n_ctrl, mc_p, mc_z]
-                df_res.to_csv(
-                    os.path.join(out_folder, "%s.scdrs_var" % trait),
-                    sep="\t",
-                    index=True,
-                )
-                print(
-                    "%s: cell-level variable-disease correlation analysis (sys_time=%0.1fs)"
-                    % (trait, time.time() - sys_start_time)
-                )
-        elif gene_analysis is not None:
-            # Gene prioritization
-            mat_expr = adata[df_reg.index].X.copy()
-            v_corr = scdrs.method._pearson_corr(mat_expr, df_reg["norm_score"].values)
-            df_res = pd.DataFrame(
-                index=adata.var_names, columns=["CORR", "RANK"], dtype=np.float32
-            )
-            df_res["CORR"] = v_corr
-            df_res.sort_values("CORR", ascending=False, inplace=True)
-            df_res["RANK"] = np.arange(df_res.shape[0])
-            df_res.to_csv(
-                os.path.join(out_folder, "%s.scdrs_gene" % trait), sep="\t", index=True
-            )
-            print(
-                "%s: disease gene prioritization (sys_time=%0.1fs)"
-                % (trait, time.time() - sys_start_time)
-            )
+
+    elif corr_analysis is not None:
+        if isinstance(corr_analysis, str):
+            var_list = corr_analysis.split(",")
+        elif isinstance(corr_analysis, tuple):
+            var_list = [v for v in corr_analysis]
         else:
-            print("%s: no analysis" % trait)
+            raise ValueError("corr_analysis should be a string or a tuple of strings")
+        for trait in dict_df_score:
+            df_res = scdrs.util.downstream_corr_analysis(
+                adata=adata, df_drs=dict_df_score[trait], var_cols=var_list
+            )
+            df_res.to_csv(
+                os.path.join(out_folder, f"{trait}.scdrs_var"), sep="\t", index=True
+            )
+    elif gene_analysis is not None:
+        for trait in dict_df_score:
+            df_res = scdrs.util.downstream_gene_analysis(
+                adata=adata, df_drs=dict_df_score[trait]
+            )
+            # save results
+            df_res.to_csv(
+                os.path.join(out_folder, f"{trait}.scdrs_gene"), sep="\t", index=True
+            )
+    else:
+        raise ValueError("No analysis specified")
 
 
 if __name__ == "__main__":

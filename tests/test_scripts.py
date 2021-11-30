@@ -77,7 +77,7 @@ def test_downstream():
     ]:
         # call scdrs downstream
         cmds = [
-            f"scdrs downstream",
+            f"scdrs perform-downstream",
             f"--h5ad_file {H5AD_FILE}",
             f"--score-file {SCORE_FILE}",
             task,

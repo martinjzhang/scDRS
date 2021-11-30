@@ -9,12 +9,242 @@ import os
 import anndata
 import matplotlib.transforms as mtrans
 import matplotlib.pyplot as plt
-from typing import List, Tuple
+from typing import List
+import scdrs
+from anndata import read_h5ad
+import fnmatch
 
 
 def check_import():
     print("# test: scdrs")
     return
+
+
+def load_h5ad(
+    h5ad_file, filter_data: bool = False, raw_count: bool = False
+) -> anndata.AnnData:
+    """Load scDRS data
+
+    Returns
+    -------
+
+    """
+    # Load .h5ad file
+    adata = read_h5ad(h5ad_file)
+    if filter_data:
+        sc.pp.filter_cells(adata, min_genes=250)
+        sc.pp.filter_genes(adata, min_cells=50)
+    if raw_count:
+        sc.pp.normalize_per_cell(adata, counts_per_cell_after=1e4)
+        sc.pp.log1p(adata)
+    print(
+        "scdrs.util.load_scdrs_data: --h5ad_file loaded: n_cell=%d, n_gene=%d"
+        % (adata.shape[0], adata.shape[1])
+    )
+    return adata
+
+
+def load_drs_score(score_file: str, obs_names: List[str] = None):
+    """Load drs scores, could be multiple score files
+
+    Parameters
+    ----------
+    score_file : str
+        Path to the score file
+    obs_names : List[str]
+        List of cell names
+
+    Returns
+    -------
+    pd.DataFrame
+        scDRS data
+    """
+
+    # Load score file
+    score_file_pattern = score_file.split(os.path.sep)[-1]
+    score_dir = score_file.replace(os.path.sep + score_file_pattern, "")
+    score_file_list = [
+        x
+        for x in os.listdir(score_dir)
+        if fnmatch.fnmatch(x, score_file_pattern.replace("@", "*"))
+    ]
+    print("Infer score_dir=%s" % score_dir)
+    print("Find %s score_files: %s" % (len(score_file_list), ",".join(score_file_list)))
+    dict_score = {}
+    for score_file in score_file_list:
+        temp_df = pd.read_csv(
+            score_dir + os.path.sep + score_file, sep="\t", index_col=0
+        )
+        if obs_names is not None:
+            # if a list of cells is provided
+            # Sanity check between the overlap of adata and score file
+            n_cell_overlap = len(set(obs_names) & set(temp_df.index))
+            if n_cell_overlap < 0.1 * len(obs_names):
+                print(
+                    "WARNING: %s skipped, %d/%d cells in adata"
+                    % (score_file, n_cell_overlap, len(obs_names))
+                )
+                continue
+        dict_score[score_file.replace(".full_score.gz", "")] = temp_df.copy()
+
+    print("--score_file loaded: n_trait=%d" % (len(dict_score)))
+    return dict_score
+
+
+def downstream_group_analysis(
+    adata: anndata.AnnData, df_drs: pd.DataFrame, group_cols: List[str]
+):
+    """
+    Perform the group-level downstream analysis for scDRS results
+
+    Parameters
+    ----------
+    df_drs : pd.DataFrame
+        scDRS results dataframe
+    adata : anndata.AnnData
+        AnnData object
+    group_col : str
+        Column name of group column in adata.obs
+
+    Returns
+    -------
+    pd.DataFrame
+        Group-level statistics (n_group x n_stats)
+    """
+
+    if "connectivities" not in adata.obsp:
+        sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
+        print(
+            "Compute connectivities with `sc.pp.neighbors`"
+            "because `connectivities` is not found in adata.obsp"
+        )
+
+    cell_list = sorted(set(adata.obs_names) & set(df_drs.index))
+    control_list = [x for x in df_drs.columns if x.startswith("ctrl_norm_score")]
+    n_ctrl = len(control_list)
+    df_reg = adata.obs.loc[cell_list, group_cols].copy()
+    df_reg = df_reg.join(df_drs.loc[cell_list, ["norm_score"] + control_list])
+
+    # Check group_cols
+    missed_group_cols = [col for col in group_cols if col not in adata.obs.columns]
+    if len(missed_group_cols) > 0:
+        raise ValueError(
+            f"Following `group_cols` not in adata.obs.columns: {','.join(missed_group_cols)}"
+        )
+
+    # Cell type-disease analysis: association + heterogeneity
+
+    # dictionary of results group_col -> df_res
+    dict_df_res = {}
+    for group_col in group_cols:
+        group_list = sorted(set(adata.obs[group_col]))
+        res_cols = [
+            "n_cell",
+            "n_ctrl",
+            "assoc_mcp",
+            "assoc_mcz",
+            "hetero_mcp",
+            "hetero_mcz",
+        ]
+
+        df_res = pd.DataFrame(index=group_list, columns=res_cols, dtype=np.float32)
+
+        # Basic info
+        for group in group_list:
+            group_cell_list = list(df_reg.index[df_reg[group_col] == group])
+            df_res.loc[group, ["n_cell", "n_ctrl"]] = [len(group_cell_list), n_ctrl]
+
+        # Association
+        for group in group_list:
+            group_cell_list = list(df_reg.index[df_reg[group_col] == group])
+            score_q95 = np.quantile(df_reg.loc[group_cell_list, "norm_score"], 0.95)
+            v_ctrl_score_q95 = np.quantile(
+                df_reg.loc[group_cell_list, control_list], 0.95, axis=0
+            )
+            mc_p = ((v_ctrl_score_q95 >= score_q95).sum() + 1) / (
+                v_ctrl_score_q95.shape[0] + 1
+            )
+            mc_z = (score_q95 - v_ctrl_score_q95.mean()) / v_ctrl_score_q95.std()
+            df_res.loc[group, ["assoc_mcp", "assoc_mcz"]] = [mc_p, mc_z]
+
+        # Heterogeneity
+        df_rls = scdrs.util.test_gearysc(adata, df_reg, groupby=group_col)
+        for ct in group_list:
+            mc_p, mc_z = df_rls.loc[ct, ["pval", "zsc"]]
+            df_res.loc[ct, ["hetero_mcp", "hetero_mcz"]] = [mc_p, mc_z]
+        dict_df_res[group_col] = df_res
+    return dict_df_res
+
+
+def downstream_corr_analysis(
+    adata: anndata.AnnData, df_drs: pd.DataFrame, var_cols: List[str]
+):
+    """
+    Perform the downstream correlation analysis between cell-level variables with
+    scDRS scores
+
+    Parameters
+    ----------
+    adata : anndata.AnnData
+        AnnData object
+    df_drs : pd.DataFrame
+        scDRS results dataframe
+    var_cols : Union[List[str], str]
+        Column name of cell-level variables in adata.obs
+
+    Returns
+    -------
+    pd.DataFrame
+        Correlation results (n_var x n_stats)
+    """
+
+    cell_list = sorted(set(adata.obs_names) & set(df_drs.index))
+    control_list = [x for x in df_drs.columns if x.startswith("ctrl_norm_score")]
+    n_ctrl = len(control_list)
+    df_reg = adata.obs.loc[cell_list, var_cols].copy()
+    df_reg = df_reg.join(df_drs.loc[cell_list, ["norm_score"] + control_list])
+
+    # Check var_cols
+    missed_var_cols = [col for col in var_cols if col not in adata.obs.columns]
+    if len(missed_var_cols) > 0:
+        raise ValueError(
+            f"Following `var_cols` not in adata.obs.columns: {','.join(missed_var_cols)}"
+        )
+
+    # Variable-disease correlation
+    col_list = ["n_ctrl", "corr_mcp", "corr_mcz"]
+    df_res = pd.DataFrame(index=var_cols, columns=col_list, dtype=np.float32)
+    for var_col in var_cols:
+        corr_ = np.corrcoef(df_reg[var_col], df_reg["norm_score"])[0, 1]
+        v_corr_ = np.array(
+            [
+                np.corrcoef(df_reg[var_col], df_reg["ctrl_norm_score_%d" % x])[0, 1]
+                for x in np.arange(n_ctrl)
+            ]
+        )
+        mc_p = ((v_corr_ >= corr_).sum() + 1) / (v_corr_.shape[0] + 1)
+        mc_z = (corr_ - v_corr_.mean()) / v_corr_.std()
+        df_res.loc[var_col] = [n_ctrl, mc_p, mc_z]
+
+    return df_res
+
+
+def downstream_gene_analysis(adata: anndata.AnnData, df_drs: pd.DataFrame):
+    """"""
+
+    cell_list = sorted(set(adata.obs_names) & set(df_drs.index))
+    control_list = [x for x in df_drs.columns if x.startswith("ctrl_norm_score")]
+    df_reg = df_drs.loc[cell_list, ["norm_score"] + control_list]
+
+    mat_expr = adata[cell_list].X.copy()
+    v_corr = scdrs.method._pearson_corr(mat_expr, df_reg["norm_score"].values)
+    df_res = pd.DataFrame(
+        index=adata.var_names, columns=["CORR", "RANK"], dtype=np.float32
+    )
+    df_res["CORR"] = v_corr
+    df_res.sort_values("CORR", ascending=False, inplace=True)
+    df_res["RANK"] = np.arange(df_res.shape[0])
+    return df_res
 
 
 def group_stats(
