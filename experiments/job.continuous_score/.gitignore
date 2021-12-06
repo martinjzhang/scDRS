@@ -1,0 +1,5 @@
+job_info/
+data/
+geneset/
+*.xlsx
+*.csv
