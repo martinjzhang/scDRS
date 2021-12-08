@@ -393,7 +393,7 @@ def perform_downstream(
         flag_filter_data=flag_filter_data,
         flag_raw_count=flag_raw_count,
     )
-    dict_df_score = scdrs.util.load_drs_score(score_file)
+    dict_df_score = scdrs.util.load_scdrs_score(score_file)
 
     # branch into different analysis
     if group_analysis is not None:
@@ -406,7 +406,7 @@ def perform_downstream(
         else:
             raise ValueError("group_analysis should be a string or a tuple of strings")
         for trait in dict_df_score:
-            dict_df_res = scdrs.util.downstream_group_analysis(
+            dict_df_res = scdrs.method.downstream_group_analysis(
                 adata=adata, df_drs=dict_df_score[trait], group_cols=group_cols
             )
             for group_col in group_cols:
@@ -429,7 +429,7 @@ def perform_downstream(
         else:
             raise ValueError("corr_analysis should be a string or a tuple of strings")
         for trait in dict_df_score:
-            df_res = scdrs.util.downstream_corr_analysis(
+            df_res = scdrs.method.downstream_corr_analysis(
                 adata=adata, df_drs=dict_df_score[trait], var_cols=var_cols
             )
             df_res.to_csv(
@@ -438,7 +438,7 @@ def perform_downstream(
 
     elif gene_analysis is not None:
         for trait in dict_df_score:
-            df_res = scdrs.util.downstream_gene_analysis(
+            df_res = scdrs.method.downstream_gene_analysis(
                 adata=adata, df_drs=dict_df_score[trait]
             )
             # save results
