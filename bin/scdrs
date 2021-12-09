@@ -87,8 +87,8 @@ def compute_score(
     GS_SPECIES = gs_species
     CTRL_MATCH_OPT = ctrl_match_opt
     WEIGHT_OPT = weight_opt
-    FLAG_FILTER = flag_filter == "True"
-    FLAG_RAW_COUNT = flag_raw_count == "True"
+    FLAG_FILTER = flag_filter
+    FLAG_RAW_COUNT = flag_raw_count
     N_CTRL = n_ctrl
     FLAG_RETURN_CTRL_RAW_SCORE = flag_return_ctrl_raw_score
     FLAG_RETURN_CTRL_NORM_SCORE = flag_return_ctrl_norm_score
