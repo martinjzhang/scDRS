@@ -1024,7 +1024,9 @@ def downstream_group_analysis(
             df_res.loc[group, ["assoc_mcp", "assoc_mcz"]] = [mc_p, mc_z]
 
         # Heterogeneity
-        df_rls = scdrs.method.test_gearysc(adata, df_reg, groupby=group_col)
+        df_rls = scdrs.method.test_gearysc(
+            adata[cell_list], df_reg.loc[cell_list, :], groupby=group_col
+        )
         for ct in group_list:
             mc_p, mc_z = df_rls.loc[ct, ["pval", "zsc"]]
             df_res.loc[ct, ["hetero_mcp", "hetero_mcz"]] = [mc_p, mc_z]
@@ -1236,8 +1238,9 @@ def test_gearysc(
             - `ctrl_mean`: mean of the control scores
             - `ctrl_sd`: standard deviation of the control scores
     """
-
-    df_score_full = df_score_full.reindex(adata.obs.index).dropna()
+    assert np.all(
+        df_score_full.index == adata.obs_names
+    ), "adata.obs_names must match df_score_full.index"
     norm_score = df_score_full["norm_score"]
     ctrl_norm_score = df_score_full[
         [col for col in df_score_full.columns if col.startswith(f"ctrl_norm_score_")]

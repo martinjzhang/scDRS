@@ -93,7 +93,7 @@ def main(args):
     temp_list = [x for x in CELLTYPE_LIST + VARIABLE_LIST if x not in adata.obs.columns]
     if len(temp_list) > 0:
         raise ValueError(
-            "Following columns not in adata.obs.columns: %s" % ",".join(temp__list)
+            "Following columns not in adata.obs.columns: %s" % ",".join(temp_list)
         )
     else:
         print("cell_type and cell_variable are in adata.obs.columns")
@@ -197,7 +197,10 @@ def main(args):
                 mc_z = (score_q95 - v_ctrl_score_q95.mean()) / v_ctrl_score_q95.std()
                 df_res.loc[ct, ["assoc_mcp", "assoc_mcz"]] = [mc_p, mc_z]
             # Heterogeneity
-            df_rls = util.test_gearysc(adata, df_reg, groupby=ct_col)
+            # subset to common set of cells
+            df_rls = md.test_gearysc(
+                adata[cell_list], df_reg.loc[cell_list, :], groupby=ct_col
+            )
             for ct in ct_list:
                 mc_p, mc_z = df_rls.loc[ct, ["pval", "zsc"]]
                 df_res.loc[ct, ["hetero_mcp", "hetero_mcz"]] = [mc_p, mc_z]
