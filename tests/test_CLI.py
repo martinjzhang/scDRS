@@ -3,7 +3,7 @@ import os
 import subprocess
 import pandas as pd
 import numpy as np
-from .test_score_cell import compare_score_file
+from .test_method_score_cell import compare_score_file
 
 
 def test_score_cell():

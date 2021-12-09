@@ -846,7 +846,7 @@ def _spearman_corr(mat_X, mat_Y):
 
 
 def _get_rank(mat_X, axis=0):
-    """Spearman's correlation between every columns in mat_X and mat_Y
+    """Get rank for each row/columns of the given matrix
 
     Args
     ----
