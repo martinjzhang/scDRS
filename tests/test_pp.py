@@ -25,10 +25,33 @@ def test_reg_out():
     Test scdrs.pp.reg_out
     """
     
-    mat_Y = np.array()
-    mat_X = np.array()
-    
-    
+    mat_list = [np.array([1, 2, 3]), 
+                np.array([[1, 2], [3, 4], [5, 6]]), 
+                sparse.csr_matrix([1, 2, 3]).T,
+                sparse.csr_matrix([[1, 2], [3, 4], [5, 6]])]
+    for mat_X in mat_list:
+        for mat_Y in mat_list:
+            mat_Y_resid = scdrs.pp.reg_out(mat_Y, mat_X)
+            
+            # Compare results with np.linalg.lstsq
+            if sparse.issparse(mat_X):
+                mat_X = mat_X.toarray()
+            if len(mat_X.shape)==1:
+                mat_X = mat_X.reshape([-1,1])
+            if sparse.issparse(mat_Y):
+                mat_Y = mat_Y.toarray()
+            if len(mat_Y.shape)==1:
+                mat_Y = mat_Y.reshape([-1,1])
+            mat_beta,_,_,_ = np.linalg.lstsq(mat_X, mat_Y, rcond=-1)
+            mat_Y_resid_true = mat_Y - mat_X.dot(mat_beta)
+            
+            print('mat_X', mat_X)
+            print('mat_Y', mat_Y)
+            err_msg = 'avg_abs_dif=%0.2e'%np.absolute(mat_Y_resid- mat_Y_resid_true).mean()
+            assert np.allclose(
+                        mat_Y_resid, mat_Y_resid_true, rtol=1e-5, equal_nan=True
+                    ), err_msg
+
     return
 
 
