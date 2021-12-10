@@ -358,18 +358,18 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
 
     if flag_sparse and flag_cov:
         # Implicit covariate correction mode
+        cell_list = list(adata.obs_names)
         cov_list = list(adata.uns["SCDRS_PARAM"]["COV_MAT"])
-
-        cov_mat = adata.uns["SCDRS_PARAM"]["COV_MAT"].values
-        cov_beta = adata.uns["SCDRS_PARAM"]["COV_BETA"].loc[gene_list, cov_list].values
-        gene_mean = adata.uns["SCDRS_PARAM"]["COV_GENE_MEAN"].loc[gene_list, :].values
+        cov_mat = adata.uns["SCDRS_PARAM"]["COV_MAT"].loc[cell_list, cov_list].values
+        cov_beta = adata.uns["SCDRS_PARAM"]["COV_BETA"].loc[gene_list, cov_list].values.T
+        gene_mean = adata.uns["SCDRS_PARAM"]["COV_GENE_MEAN"].loc[gene_list].values
 
         # Compute v_raw_score = transformed_X @ v_score_weight
         # where transformed_X = adata.X + cov_mat @ cov_beta + gene_mean
         v_raw_score = (
             adata[:, gene_list].X.dot(v_score_weight)
-            + cov_mat @ (cov_beta.T @ v_score_weight)
-            + gene_mean.T @ v_score_weight
+            + cov_mat @ (cov_beta @ v_score_weight)
+            + gene_mean @ v_score_weight
         ).flatten()
     else:
         # Normal mode
