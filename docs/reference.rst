@@ -24,7 +24,7 @@ Downstream analyses
 .. autosummary:: 
    :toctree: reference
 
-   scdrs.util.test_gearysc
+   scdrs.method.test_gearysc
    scdrs.util.convert_gs_species
 
 .. Data loading

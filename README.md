@@ -126,7 +126,7 @@ The expected output is (see below for format of **.score.gz** file):
       --cell_variable causal_variable,non_causal_variable,covariate\
       --flag_gene True\
       --flag_filter False\
-      --flag_raw_count False\
+      --flag_raw_count False\ # flag_raw_count is set to `False` because the toy data is already log-normalized, set to `True` if your data is not log-normalized
       --out_folder ${out_dir}
   ```
   
