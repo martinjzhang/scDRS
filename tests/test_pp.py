@@ -196,7 +196,7 @@ def test_preprocess_consistency_nocov():
 
 def test_compute_stats():
     """
-    Test scdrs.pp.compute_stats
+    Test scdrs.pp.compute_stats: normal mode
 
     TODO:
     -----
@@ -222,14 +222,14 @@ def test_compute_stats():
     # df_gene["var"]
     v_var_true = np.var(mat_X, axis=0)
     err_msg = (
-        "avg_abs_gene_mean_dif=%0.2e" % np.absolute(df_gene["var"] - v_var_true).mean()
+        "avg_abs_gene_var_dif=%0.2e" % np.absolute(df_gene["var"] - v_var_true).mean()
     )
     assert np.allclose(df_gene["var"], v_var_true, rtol=1e-4, equal_nan=True), err_msg
 
     # df_gene["ct_mean"]
     v_mean_true = np.mean(mat_X_ct, axis=0)
     err_msg = (
-        "avg_abs_gene_mean_dif=%0.2e"
+        "avg_abs_gene_ct_mean_dif=%0.2e"
         % np.absolute(df_gene["ct_mean"] - v_mean_true).mean()
     )
     assert np.allclose(
@@ -239,7 +239,83 @@ def test_compute_stats():
     # df_gene["ct_var"]
     v_var_true = np.var(mat_X_ct, axis=0)
     err_msg = (
+        "avg_abs_gene_ct_var_dif=%0.2e"
+        % np.absolute(df_gene["ct_var"] - v_var_true).mean()
+    )
+    assert np.allclose(
+        df_gene["ct_var"], v_var_true, rtol=1e-4, equal_nan=True
+    ), err_msg
+
+    # df_cell["mean"]
+    v_mean_true = np.mean(mat_X, axis=1)
+    err_msg = (
+        "avg_abs_cell_mean_dif=%0.2e"
+        % np.absolute(df_cell["mean"] - v_mean_true).mean()
+    )
+    assert np.allclose(df_cell["mean"], v_mean_true, rtol=1e-4, equal_nan=True), err_msg
+
+    # df_cell["var"]
+    v_var_true = np.var(mat_X, axis=1)
+    err_msg = (
+        "avg_abs_cell_var_dif=%0.2e" % np.absolute(df_cell["var"] - v_var_true).mean()
+    )
+    assert np.allclose(df_cell["var"], v_var_true, rtol=1e-4, equal_nan=True), err_msg
+
+    return
+
+
+def test_compute_stats_implicit_covariate_correction():
+    """
+    Test scdrs.pp.compute_stats: implicit covariate correction mode
+
+    TODO:
+    -----
+    1. The following columns are not tested: df_gene["var_tech"],
+    df_gene["ct_var_tech"], df_gene["mean_var"]
+    """
+
+    adata, df_cov, df_gs, dic_res_ref = load_toy_data()
+    adata = adata[:, :50].copy()
+    scdrs.pp.preprocess(adata, cov=df_cov)
+    df_gene, df_cell = scdrs.pp.compute_stats(adata, implicit_cov_corr=True)
+
+    # adata.X + COV_MAT * COV_BETA + COV_GENE_MEAN
+    mat_X = adata.X.toarray()
+    mat_X = mat_X + adata.uns["SCDRS_PARAM"]["COV_MAT"].values.dot(
+        adata.uns["SCDRS_PARAM"]["COV_BETA"].values.T
+    )
+    mat_X = mat_X + adata.uns["SCDRS_PARAM"]["COV_GENE_MEAN"].values
+    mat_X_ct = np.expm1(mat_X)
+
+    # df_gene["mean"]
+    v_mean_true = np.mean(mat_X, axis=0)
+    err_msg = (
         "avg_abs_gene_mean_dif=%0.2e"
+        % np.absolute(df_gene["mean"] - v_mean_true).mean()
+    )
+    assert np.allclose(df_gene["mean"], v_mean_true, rtol=1e-4, equal_nan=True), err_msg
+
+    # df_gene["var"]
+    v_var_true = np.var(mat_X, axis=0)
+    err_msg = (
+        "avg_abs_gene_var_dif=%0.2e" % np.absolute(df_gene["var"] - v_var_true).mean()
+    )
+    assert np.allclose(df_gene["var"], v_var_true, rtol=1e-4, equal_nan=True), err_msg
+
+    # df_gene["ct_mean"]
+    v_mean_true = np.mean(mat_X_ct, axis=0)
+    err_msg = (
+        "avg_abs_gene_ct_mean_dif=%0.2e"
+        % np.absolute(df_gene["ct_mean"] - v_mean_true).mean()
+    )
+    assert np.allclose(
+        df_gene["ct_mean"], v_mean_true, rtol=1e-4, equal_nan=True
+    ), err_msg
+
+    # df_gene["ct_var"]
+    v_var_true = np.var(mat_X_ct, axis=0)
+    err_msg = (
+        "avg_abs_gene_ct_var_dif=%0.2e"
         % np.absolute(df_gene["ct_var"] - v_var_true).mean()
     )
     assert np.allclose(

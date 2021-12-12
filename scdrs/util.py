@@ -126,6 +126,8 @@ def load_scdrs_score(
     return dict_score
 
 
+# TODO: convert species names
+# FIXIT: this line is funny: f"gene conversion from {src_species} to {dst_species} is not supported"
 def load_homolog_mapping(src_species: str, dst_species: str) -> dict:
     """Load gene homologs between mouse and human
 
