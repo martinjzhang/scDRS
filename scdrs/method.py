@@ -180,8 +180,9 @@ def score_cell(
 
     # Compute normalized scores
     v_var_ratio_c2t = np.ones(n_ctrl)
-    if weight_opt in ["uniform", "vs", "inv_std"]:
-        # For raw scores compuated as weighted average. estimate variance ratio assuming independence
+    if (ctrl_match_key == "mean_var") & (weight_opt in ["uniform", "vs", "inv_std"]):
+        # For mean_var matched control genes and raw scores computed as weighted average,
+        # estimate variance ratio assuming independence.
         for i_ctrl in range(n_ctrl):
             v_var_ratio_c2t[i_ctrl] = (
                 df_gene.loc[dic_ctrl_list[i_ctrl], "var"]
@@ -231,12 +232,19 @@ def _select_ctrl_geneset(
     random_seed,
 ):
 
-    """Subroutine for score_cell. Select control gene sets.
+    """Subroutine for `scdrs.method.score_cell`. Select control gene sets that match
+    the disease gene set by `ctrl_match_key`.
+
+    It recognizes `ctrl_match_key` as categorical if the number of unique values is
+    less than 10% of the total number of values, and otherwise continuous. For
+    categorical `ctrl_match_key`, genes are matched within each category. For continuous
+    `ctrl_match_key`, genes are divided into `n_genebin` bins and are matched within
+    each bin. A matched control gene takes the same weight as the disease gene,
 
     Args
     ----
     input_df_gene : pd.DataFrame
-        Gene-level statistics of shape (n_gene, ):.
+        Gene-level statistics of shape (n_gene, n_stats).
     gene_list : list
         Disease gene list of length n_disease_gene.
     gene_weight : list
@@ -263,6 +271,8 @@ def _select_ctrl_geneset(
 
     np.random.seed(random_seed)
     df_gene = input_df_gene.copy()
+    if "gene" not in df_gene:
+        df_gene["gene"] = df_gene.index
     disease_gene_set = set(gene_list)
     dic_gene_weight = {x: y for x, y in zip(gene_list, gene_weight)}
 
@@ -365,7 +375,9 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
         cell_list = list(adata.obs_names)
         cov_list = list(adata.uns["SCDRS_PARAM"]["COV_MAT"])
         cov_mat = adata.uns["SCDRS_PARAM"]["COV_MAT"].loc[cell_list, cov_list].values
-        cov_beta = adata.uns["SCDRS_PARAM"]["COV_BETA"].loc[gene_list, cov_list].values.T
+        cov_beta = (
+            adata.uns["SCDRS_PARAM"]["COV_BETA"].loc[gene_list, cov_list].values.T
+        )
         gene_mean = adata.uns["SCDRS_PARAM"]["COV_GENE_MEAN"].loc[gene_list].values
 
         # Compute v_raw_score = transformed_X @ v_score_weight
@@ -386,29 +398,59 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
 def _compute_overdispersion_score(adata, gene_list, gene_weight):
     """Compute overdispersion score
 
-        Let w_g_raw = gene_weight / \sigma_{tech,g}^2
-        Let w_g = w_g_raw / \sum_g w_g_raw
-        s_c = \sum_g w_g * [(X_cg - \mu_g)^2 - \sigma_{tech,g}^2]
+        Raw weight: w_g_raw = gene_weight / \sigma_{tech,g}^2
+
+        Normalized weight: w_g = w_g_raw / \sum_g w_g_raw
+
+        Overdispersion score: s_c = \sum_g w_g * [(X_cg - \mu_g)^2 - \sigma_{tech,g}^2]
 
     Args
     ----
-    adata (n_cell, n_gene) : AnnData
-        adata.X should contain size-normalized log1p transformed count data
-    gene_list (n_disease_gene) : list
-        Trait gene list
-    gene_weight (n_disease_gene) : list/np.ndarray
-        Gene weights for genes in the gene_list
+    adata : anndata.AnnData
+        Single-cell data of shape (n_cell, n_gene). Assumed
+        to be size-factor-normalized and log1p-transformed.
+    gene_list : list
+        Disease gene list of length n_disease_gene.
+    gene_weight : list
+        Gene weights of length n_disease_gene for genes in the gene_list.
 
     Returns
     -------
-    v_raw_score (n_cell,) : np.ndarray
-        Raw score
-    v_score_weight (n_disease_gene,) : np.ndarray
-        Gene weights score
+    v_raw_score : np.ndarray
+        Raw score of shape (n_cell,).
+    v_score_weight : np.ndarray
+        Gene weights of shape (n_disease_gene,).
     """
 
-    v_mean = adata.var.loc[gene_list, "mean"].values
-    v_var_tech = adata.var.loc[gene_list, "var_tech"].values
+    gene_list = list(gene_list)
+    gene_weight = list(gene_weight)
+
+    assert (
+        "SCDRS_PARAM" in adata.uns
+    ), "adata.uns['SCDRS_PARAM'] not found, run `scdrs.pp.preprocess` first"
+
+    # Mode check
+    flag_sparse = adata.uns["SCDRS_PARAM"]["FLAG_SPARSE"]
+    flag_cov = adata.uns["SCDRS_PARAM"]["FLAG_COV"]
+    if flag_sparse and flag_cov:
+        cell_list = list(adata.obs_names)
+        cov_list = list(adata.uns["SCDRS_PARAM"]["COV_MAT"])
+        mat_X = (
+            adata[:, gene_list].X.toarray()
+            + adata.uns["SCDRS_PARAM"]["COV_MAT"]
+            .loc[cell_list, cov_list]
+            .values.dot(
+                adata.uns["SCDRS_PARAM"]["COV_BETA"].loc[gene_list, cov_list].values.T
+            )
+            + adata.uns["SCDRS_PARAM"]["COV_GENE_MEAN"].loc[gene_list].values
+        )
+    else:
+        mat_X = adata[:, gene_list].X
+
+    v_mean = adata.uns["SCDRS_PARAM"]["GENE_STATS"].loc[gene_list, "mean"].values
+    v_var_tech = (
+        adata.uns["SCDRS_PARAM"]["GENE_STATS"].loc[gene_list, "var_tech"].values
+    )
 
     v_w = 1 / (v_var_tech + 1e-2)
     if gene_weight is not None:
@@ -416,17 +458,11 @@ def _compute_overdispersion_score(adata, gene_list, gene_weight):
     v_w = v_w / v_w.sum()
 
     # Compute overdispersion score
-    if sp.sparse.issparse(adata.X):
-        v_raw_score = (
-            adata[:, gene_list].X.power(2).dot(v_w).reshape([-1])
-        )  # Quadratic term
+    if sp.sparse.issparse(mat_X):
+        v_raw_score = mat_X.power(2).dot(v_w).reshape([-1])  # Quadratic term
     else:
-        v_raw_score = (
-            (adata[:, gene_list].X ** 2).dot(v_w).reshape([-1])
-        )  # Quadratic term
-    v_raw_score = v_raw_score - adata[:, gene_list].X.dot(2 * v_w * v_mean).reshape(
-        [-1]
-    )  # Linear term
+        v_raw_score = (mat_X ** 2).dot(v_w).reshape([-1])  # Quadratic term
+    v_raw_score = v_raw_score - mat_X.dot(2 * v_w * v_mean).reshape([-1])  # Linear term
     v_raw_score = (
         v_raw_score + (v_w * (v_mean ** 2 - v_var_tech)).sum()
     )  # Constant term
@@ -473,10 +509,11 @@ def _correct_background(
             delimiter="\t",
         )
 
-    # Calibrate gene sets (mean 0 and same independent variance)
+    # Zero-values are assigned the smallest values at the end
     ind_zero_score = v_raw_score == 0
     ind_zero_ctrl_score = mat_ctrl_raw_score == 0
 
+    # First gene set alignment: mean 0 and same independent variance
     v_raw_score = v_raw_score - v_raw_score.mean()
     mat_ctrl_raw_score = mat_ctrl_raw_score - mat_ctrl_raw_score.mean(axis=0)
     mat_ctrl_raw_score = mat_ctrl_raw_score / np.sqrt(v_var_ratio_c2t)
@@ -494,7 +531,7 @@ def _correct_background(
             delimiter="\t",
         )
 
-    # Cell-wise correction
+    # Cell-wise standardization
     v_mean = mat_ctrl_raw_score.mean(axis=1)
     v_std = mat_ctrl_raw_score.std(axis=1)
     v_norm_score = v_raw_score.copy()
@@ -514,7 +551,7 @@ def _correct_background(
             delimiter="\t",
         )
 
-    # Gene-set-wise correction
+    # Second gene set alignment: mean 0
     v_norm_score = v_norm_score - v_norm_score.mean()
     mat_ctrl_norm_score = mat_ctrl_norm_score - mat_ctrl_norm_score.mean(axis=0)
     if save_intermediate is not None:
