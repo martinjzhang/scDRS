@@ -14,12 +14,10 @@ H5AD_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/tabula_muris_se
 COV_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/tabula_muris_senis/tms_facs.cov
 GS_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/gs_file/magma_10kb_1000.74_traits.gs.batch/magma_10kb_1000.batch$BATCH_NUM.gs
 OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/score.tms_facs_with_cov.magma_10kb_1000
-OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/debug
-OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/debug.110121
-OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/debug.sparse.110121
-OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/debug.112721
+OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/debug.121221
 
-python3 /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/compute_score.py \
+# python3 /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/compute_score.py \
+scdrs compute-score \
     --h5ad_file $H5AD_FILE\
     --h5ad_species mouse\
     --cov_file $COV_FILE\

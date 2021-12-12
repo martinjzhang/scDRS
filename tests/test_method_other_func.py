@@ -342,30 +342,34 @@ def test_correct_background_causal_cell():
     dic_norm_score = {}
     dic_ctrl_score = {}
 
-    for config in ["none", "cell-perturb", "gs-perturb", "cell-gs-perturb"]:
+    for config in ["no-perturb", "zero-mask", "cell-perturb", "gs-perturb", "all-perturb"]:
 
         np.random.seed(0)
         v_raw_score = np.random.rand(500)
         v_raw_score[5] = 3  # Causal cell
         mat_ctrl_raw_score = np.random.rand(500, 100)
+        ind_zero_ctrl_score = mat_ctrl_raw_score<0.01
 
         # Cell-wise transformation
-        if config in ["cell-perturb", "cell-gs-perturb"]:
-            v_translate_cell = np.random.rand(500) * 10
+        if config in ["cell-perturb", "all-perturb"]:
+            v_translate_cell = np.random.rand(500) * 1
             v_raw_score = v_raw_score + v_translate_cell
             mat_ctrl_raw_score = (mat_ctrl_raw_score.T + v_translate_cell).T
 
-            v_scale_cell = np.random.rand(500) + 0.5
+            v_scale_cell = np.random.rand(500) * 0.5 + 0.5
             v_raw_score = v_raw_score * v_scale_cell
             mat_ctrl_raw_score = (mat_ctrl_raw_score.T * v_scale_cell).T
 
         # Gene-gene-wise scaling
         v_var_ratio_c2t = np.ones(100)
-        if config in ["gs-perturb", "cell-gs-perturb"]:
-            mat_ctrl_raw_score += np.random.rand(100) * 10
-            v_var_ratio_c2t = np.random.rand(100)
+        if config in ["gs-perturb", "all-perturb"]:
+            mat_ctrl_raw_score += np.random.rand(100) * 1
+            v_var_ratio_c2t = np.random.rand(100) * 0.5 + 0.5
             mat_ctrl_raw_score = mat_ctrl_raw_score * np.sqrt(v_var_ratio_c2t)
-
+        
+        if config in ["zero-mask", "all-perturb"]:
+            mat_ctrl_raw_score[ind_zero_ctrl_score] = 0
+            
         v_norm_score, mat_ctrl_norm_score = scdrs.method._correct_background(
             v_raw_score, mat_ctrl_raw_score, v_var_ratio_c2t, save_intermediate=None
         )
@@ -374,53 +378,55 @@ def test_correct_background_causal_cell():
         dic_ctrl_score[config] = mat_ctrl_norm_score
 
         # Check causal cell
-        err_msg = "Config=%s cell #5 should be causal (norm disease score==%0.2e)" % (
+        err_msg = "Config=%s, cell #5 should be causal (norm disease score=%0.2e)" % (
             config,
             v_norm_score[5],
         )
         assert v_norm_score[5] > 3, err_msg
 
+#         # Check mean and var across cells and across gene sets
+#         max_abs_cell_mean_dif = np.absolute(mat_ctrl_norm_score.mean(axis=1)).max()
+#         max_abs_cell_var_dif = np.absolute(mat_ctrl_norm_score.var(axis=1) - 1).max()
+#         max_abs_gs_mean_dif = np.absolute(mat_ctrl_norm_score.mean(axis=0)).max()
+#         max_abs_gs_var_dif = np.absolute(mat_ctrl_norm_score.var(axis=0) - 1).max()
+
+#         err_msg = "Config=%s" % config
+#         err_msg += (
+#             "\nCell-wise mean ~ 0, max abs deviation=%0.2e\n"
+#             % max_abs_cell_mean_dif
+#         )
+#         err_msg += (
+#             "Cell-wise var ~ 1, max abs deviation=%0.2e\n"
+#             % max_abs_cell_var_dif
+#         )
+#         err_msg += (
+#             "Gene-set-wise mean ~ 0, max abs deviation=%0.2e\n"
+#             % max_abs_gs_mean_dif
+#         )
+#         err_msg += (
+#             "Gene-set-wise var ~ 1, max abs deviation=%0.2e"
+#             % max_abs_gs_var_dif
+#         )
+#         assert (
+#             (max_abs_cell_mean_dif < 0.2)
+#             & (max_abs_cell_var_dif < 0.2)
+#             & (max_abs_gs_mean_dif < 0.2)
+#             & (max_abs_gs_var_dif < 0.2)
+#         ), err_msg
+
+#         # Consistency of normalized disease score
+#         err_msg = "Config: %s vs. no-perturb, max_abs_norm_score_dif=%0.2e" % (
+#             config,
+#             np.absolute(dic_norm_score[config] - dic_norm_score["no-perturb"]).max(),
+#         )
+#         assert (
+#             np.absolute(dic_norm_score[config] - dic_norm_score["no-perturb"]).max() < 0.1
+#         ), err_msg
+        
     return
 
 
-# # Check mean and var across cells and across gene sets
-# max_abs_cell_mean_dif = np.absolute(mat_ctrl_norm_score.mean(axis=1)).max()
-# max_abs_cell_var_dif = np.absolute(mat_ctrl_norm_score.var(axis=1) - 1).max()
-# max_abs_gs_mean_dif = np.absolute(mat_ctrl_norm_score.mean(axis=0)).max()
-# max_abs_gs_var_dif = np.absolute(mat_ctrl_norm_score.var(axis=0) - 1).max()
 
-# err_msg = "\n" + config
-# err_msg += (
-#     "\nCell-wise mean should be close to 0, max(abs(cell_mean))=%0.2e\n"
-#     % max_abs_cell_mean_dif
-# )
-# err_msg += (
-#     "Cell-wise var should be close to 1, max(abs(cell_var-1))=%0.2e\n"
-#     % max_abs_cell_var_dif
-# )
-# err_msg += (
-#     "Gene-set-wise mean should be close to 0, max(abs(gs_mean))=%0.2e\n"
-#     % max_abs_gs_mean_dif
-# )
-# err_msg += (
-#     "Gene-set-wise var should be close to 1, max(abs(gs_var-1))=%0.2e"
-#     % max_abs_gs_var_dif
-# )
-# assert (
-#     (max_abs_cell_mean_dif < 0.2)
-#     & (max_abs_cell_var_dif < 0.2)
-#     & (max_abs_gs_mean_dif < 0.2)
-#     & (max_abs_gs_var_dif < 0.2)
-# ), err_msg
-
-# # Consistency
-# err_msg = "%s vs. none: max_abs_norm_score_dif=%0.2e" % (
-#     config,
-#     np.absolute(dic_norm_score[config] - dic_norm_score["none"]).max(),
-# )
-# assert (
-#     np.absolute(dic_norm_score[config] - dic_norm_score["none"]).max() < 0.1
-# ), err_msg
 
 
 def test_get_p_from_empi_null():
