@@ -3,10 +3,14 @@ import os
 import subprocess
 import pandas as pd
 import numpy as np
-from .test_method_score_cell import compare_score_file
+import tempfile
+from .test_method_score_cell_main import compare_score_file
 
 
-def test_score_cell():
+def test_score_cell_script():
+    """
+    Test script `compute_score.py`
+    """
 
     # Load toy data
     ROOT_DIR = scdrs.__path__[0]
@@ -14,8 +18,6 @@ def test_score_cell():
     COV_FILE = os.path.join(ROOT_DIR, "data/toydata_mouse.cov")
     assert os.path.exists(H5AD_FILE), "built-in data toydata_mouse.h5ad missing"
     assert os.path.exists(COV_FILE), "built-in data toydata_mouse.cov missing"
-
-    import tempfile
 
     tmp_dir = tempfile.TemporaryDirectory()
     tmp_dir_path = tmp_dir.name
@@ -56,11 +58,12 @@ def test_score_cell():
     df_ref_res = pd.read_csv(REF_COV_FILE, sep="\t", index_col=0)
     compare_score_file(df_res, df_ref_res)
     tmp_dir.cleanup()
+    return
 
 
-def test_score_cell2():
+def test_score_cell_cli():
     """
-    New `scdrs compute-score` test
+    Test CLI `scdrs compute-score`
     """
     # Load toy data
     ROOT_DIR = scdrs.__path__[0]
@@ -68,8 +71,6 @@ def test_score_cell2():
     COV_FILE = os.path.join(ROOT_DIR, "data/toydata_mouse.cov")
     assert os.path.exists(H5AD_FILE), "built-in data toydata_mouse.h5ad missing"
     assert os.path.exists(COV_FILE), "built-in data toydata_mouse.cov missing"
-
-    import tempfile
 
     tmp_dir = tempfile.TemporaryDirectory()
     tmp_dir_path = tmp_dir.name
@@ -110,17 +111,84 @@ def test_score_cell2():
     df_ref_res = pd.read_csv(REF_COV_FILE, sep="\t", index_col=0)
     compare_score_file(df_res, df_ref_res)
     tmp_dir.cleanup()
+    return
 
 
-def test_downstream():
+def test_munge_gs_cli():
+    """
+    Test CLI `scdrs munge-gs`
+    """
+
+    tmp_dir = tempfile.TemporaryDirectory()
+    tmp_dir_path = tmp_dir.name
+
+    # pval_file and zscore_file
+    temp_df = pd.DataFrame(
+        data={
+            "GENE": ["OR4F5", "DAZ1", "BPY2B"],
+            "HEIGHT": [0.02, np.nan, 0.4],
+            "BMI": [0.8, 0.02, np.nan],
+        }
+    )
+    temp_df.to_csv(os.path.join(tmp_dir_path, "pval_file.tsv"), sep="\t", index=False)
+    temp_df = pd.DataFrame(
+        data={
+            "GENE": ["OR4F5", "DAZ1", "BPY2B"],
+            "HEIGHT": [2.0537, np.nan, 0.25335],
+            "BMI": [-0.84162, 2.0537, np.nan],
+        }
+    )
+    temp_df.to_csv(os.path.join(tmp_dir_path, "zscore_file.tsv"), sep="\t", index=False)
+
+    dict_df_score = {}
+    for input_file in ["pval_file", "zscore_file"]:
+        for selection in [
+            "--n-max 1",
+            "--n-min 1 --n-max 3 --fdr 0.05",
+            "--n-min 1 --n-max 3 --fwer 0.05",
+        ]:
+            # Call scdrs munge-gs
+            input_file_path = os.path.join(tmp_dir_path, "%s.tsv" % input_file)
+            output_file_path = os.path.join(tmp_dir_path, f"outfile.gs")
+            cmds = [
+                "scdrs munge-gs",
+                f"--{input_file} {input_file_path}",
+                f"--out-file {output_file_path}",
+                "--weight zscore",
+                selection,
+            ]
+            subprocess.check_call(" ".join(cmds), shell=True)
+            temp_df = pd.read_csv(
+                os.path.join(tmp_dir_path, f"outfile.gs"),
+                sep="\t",
+                index_col=0,
+            )
+
+            # Check results
+            err_msg = "input_file=%s, %s" % (input_file, selection)
+            assert list(temp_df.index) == ["HEIGHT", "BMI"], err_msg
+            assert temp_df.loc["HEIGHT", "GENESET"] == "OR4F5:2.0537", err_msg
+            assert temp_df.loc["BMI", "GENESET"] == "DAZ1:2.0537", err_msg
+
+    tmp_dir.cleanup()
+
+    return
+
+
+def test_downstream_cli():
+    """
+    Test CLI `scdrs perform-downstream`
+
+    1. --group-analysis cell_type
+    2. --corr-analysis causal_variable,non_causal_variable,covariate
+    3. --gene-analysis
+    """
 
     # Load toy data
     ROOT_DIR = scdrs.__path__[0]
     H5AD_FILE = os.path.join(ROOT_DIR, "data/toydata_mouse.h5ad")
     SCORE_FILE = os.path.join(ROOT_DIR, "data/res/@.full_score.gz")
     REF_RES_DIR = os.path.join(ROOT_DIR, "data/res")
-
-    import tempfile
 
     tmp_dir = tempfile.TemporaryDirectory()
     tmp_dir_path = tmp_dir.name
@@ -157,19 +225,18 @@ def test_downstream():
             print(df_res)
 
     tmp_dir.cleanup()
+    return
 
 
-def test_downstream_old():
+def test_downstream_script():
     """
-    Sanity check for the old implementation of compute_downsstream.py
+    Test script `compute_downsstream.py`
     """
     # Load toy data
     ROOT_DIR = scdrs.__path__[0]
     H5AD_FILE = os.path.join(ROOT_DIR, "data/toydata_mouse.h5ad")
     SCORE_FILE = os.path.join(ROOT_DIR, "data/res/@.full_score.gz")
     REF_RES_DIR = os.path.join(ROOT_DIR, "data/res")
-
-    import tempfile
 
     tmp_dir = tempfile.TemporaryDirectory()
     tmp_dir_path = tmp_dir.name
@@ -203,3 +270,4 @@ def test_downstream_old():
             print(df_res)
 
     tmp_dir.cleanup()
+    return

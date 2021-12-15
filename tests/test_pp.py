@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 import pandas as pd
 from scipy import sparse
-from .test_method_score_cell import load_toy_data
+from .test_method_score_cell_main import load_toy_data
 import scdrs
 
 

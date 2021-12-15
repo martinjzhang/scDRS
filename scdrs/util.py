@@ -25,7 +25,7 @@ def convert_species_name(species):
         return "mmusculus"
     if species in ["Human", "human", "Homo_sapiens", "homo_sapiens", "hsapiens"]:
         return "hsapiens"
-    raise ValueError("species name %s not supported" % species)
+    raise ValueError("species name '%s' is not supported" % species)
 
 
 def load_h5ad(
@@ -49,7 +49,6 @@ def load_h5ad(
     anndata.AnnData
         AnnData object
     """
-    # Load .h5ad file
     adata = read_h5ad(h5ad_file)
     if flag_filter_data:
         sc.pp.filter_cells(adata, min_genes=250)
@@ -57,13 +56,10 @@ def load_h5ad(
     if flag_raw_count:
         sc.pp.normalize_per_cell(adata, counts_per_cell_after=1e4)
         sc.pp.log1p(adata)
-    print(
-        "scdrs.util.load_scdrs_data: --h5ad_file loaded: n_cell=%d, n_gene=%d"
-        % (adata.shape[0], adata.shape[1])
-    )
     return adata
 
 
+# TODO: review
 def load_scdrs_score(
     score_file: str, obs_names: List[str] = None
 ) -> Dict[str, pd.DataFrame]:
@@ -126,23 +122,25 @@ def load_scdrs_score(
     return dict_score
 
 
-# TODO: convert species names
-# FIXIT: this line is funny: f"gene conversion from {src_species} to {dst_species} is not supported"
 def load_homolog_mapping(src_species: str, dst_species: str) -> dict:
     """Load gene homologs between mouse and human
 
     Parameters
     ----------
     src_species : str
-        Source species, must be either 'mmusculus' or 'hsapiens'
+        Source species. One of 'mmusculus', 'mouse', 'hsapiens', or 'human'.
     dst_species : str
-        Destination species, must be either 'mmusculus' or 'hsapiens'
+        Destination species. One of 'mmusculus', 'mouse', 'hsapiens', or 'human'.
+        Cannot be the same as `src_species`.
 
     Returns
     -------
     dict
-        Dictionary of gene homologs
+        Dictionary of gene homologs (gene symbol).
     """
+
+    src_species = convert_species_name(src_species)
+    dst_species = convert_species_name(dst_species)
 
     assert src_species != dst_species, "src and dst cannot be the same"
 
@@ -172,21 +170,22 @@ def load_gs(
     dst_species: str = None,
     to_intersect: List[str] = None,
 ) -> dict:
-    """Load the gene set file
+    """Load the gene set file (.gs file)
 
     Parameters
     ----------
     gs_path : str
         Path to the gene set file with the following two columns, separated by tab:
         - 'TRAIT'
-        - 'GENESET': (1) <gene1>,<gene2>,... each gene will be weighted uniformly or
+        - 'GENESET':
+            (1) <gene1>,<gene2>,... each gene will be weighted uniformly or
             (2) <gene1>:<weight1>,<gene2>:<weight2>,... each gene will be weighted by its weight
     src_species : str, default None
         Source species, must be either 'mmusculus' or 'hsapiens' if not None
     dst_species : str, default None
         Destination species, must be either 'mmusculus' or 'hsapiens' if not None
     to_intersect : List[str], default None
-        List of gene sets to intersect with the read gene set file
+        Gene list to intersect with the input .gs file
 
 
     Returns
@@ -203,7 +202,8 @@ def load_gs(
         dst_species is None
     ), "src_species and dst_species must be both None or not None"
 
-    # dict_map is only needed when src_species and dst_species are not None and different
+    # Load homolog map dict_map; only needed when src_species and dst_species
+    # are not None and different.
     if ((src_species is not None) & (dst_species is not None)) and (
         src_species != dst_species
     ):
@@ -235,11 +235,13 @@ def load_gs(
 
         # Intersect with other gene sets
         if to_intersect is not None:
+            to_intersect = set(to_intersect)
             dict_weights = {g: w for g, w in dict_weights.items() if g in to_intersect}
 
+        gene_list = list(dict_weights.keys())
         dict_gs[trait] = (
-            list(dict_weights.keys()),
-            list(dict_weights.values()),
+            gene_list,
+            [dict_weights[g] for g in gene_list],
         )
 
     return dict_gs
@@ -326,10 +328,17 @@ def qqplot(x, y, quantiles=None, interpolation="nearest", ax=None, **kwargs):
 
 
 def zsc2pval(zsc):
-    return 1 - sp.stats.norm.cdf(zsc)
+    """
+    Convert z-score to one-sided p-value. Accurate up to `zsc=36` and `pval=4.2e-284`.
+    """
+#     return 1 - sp.stats.norm.cdf(zsc)
+    return sp.stats.norm.cdf(-zsc) # This is more accurate
 
 
 def pval2zsc(pval):
+    """
+    Convert one-sided p-value to z-score. Accurate up to `zsc=36` and `pval=4.2e-284`.
+    """
     return -sp.stats.norm.ppf(pval)
 
 
