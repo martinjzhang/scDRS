@@ -1,10 +1,14 @@
 #!/bin/bash
 
+# scDRS scripts examples
+
+# compute-score
 H5AD_FILE=../scdrs/data/toydata_mouse.h5ad
 COV_FILE=../scdrs/data/toydata_mouse.cov
 GS_FILE_MOUSE=../scdrs/data/toydata_mouse.gs
 GS_FILE_HUMAN=../scdrs/data/toydata_human.gs
-OUT_FOLDER=../scdrs/data/res
+OUT_FOLDER=../scdrs/data/res.from_scripts
+SCORE_FILE=${OUT_FOLDER}/@.full_score.gz
 
 python3 ../compute_score.py \
     --h5ad_file $H5AD_FILE\
@@ -34,7 +38,7 @@ python3 ../compute_score.py \
     --flag_return_ctrl_norm_score True\
     --out_folder $OUT_FOLDER
 
-SCORE_FILE=../scdrs/data/res/@.full_score.gz
+# compute-downstream
 python3 ../compute_downstream.py \
     --h5ad_file $H5AD_FILE\
     --score_file $SCORE_FILE\
