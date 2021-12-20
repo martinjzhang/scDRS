@@ -28,6 +28,26 @@ def convert_species_name(species):
     raise ValueError("species name '%s' is not supported" % species)
 
 
+def str_or_list_like(x):
+    """Determine if x is list-list (list, tuple) using duck-typing.
+
+    Here is a set of Attributes for different classes
+    |         x          |      type(x)       |    x.strip    | x.__getitem__ |  x.__iter__   |
+    |         aa         |   <class 'str'>    |     True      |     True      |     True      |
+    |     ['a', 'b']     |   <class 'list'>   |     False     |     True      |     True      |
+    |     ('a', 'b')     |  <class 'tuple'>   |     False     |     True      |     True      |
+    |     {'b', 'a'}     |   <class 'set'>    |     False     |     False     |     True      |
+    |  {'a': 1, 'b': 2}  |   <class 'dict'>   |     False     |     True      |     True      |
+    """
+
+    if hasattr(x, "strip"):
+        return "str"
+    elif hasattr(x, "__getitem__") or hasattr(x, "__iter__"):
+        return "list_like"
+    else:
+        return "others"
+
+
 def load_h5ad(
     h5ad_file: str, flag_filter_data: bool = False, flag_raw_count: bool = True
 ) -> anndata.AnnData:
@@ -59,47 +79,41 @@ def load_h5ad(
     return adata
 
 
-# TODO: review
 def load_scdrs_score(
     score_file: str, obs_names: List[str] = None
 ) -> Dict[str, pd.DataFrame]:
-    """Load drs scores, could be multiple score files
+    """Load scDRS scores. Use "@" to specify all matched files,
+    e.g., score_file_folder/@.full_score.gz
 
     Parameters
     ----------
     score_file : str
-        Either path to a single score file, such as /path/to/trait.full_score.gz
-        or a file pattern for multiple score files, such as /path/to/@.full_score.gz
+        Path to scDRS `.full_score.gz` file. Use '@' to specify multiple file names,
+        e.g., `score_file_path/@.full_score.gz`. However, `score_file_path` should
+        not contain '@'.
     obs_names : List[str]
-        List of cell names used to assess the overlap between the score file and the
-        cell list. If provided, score file with less than 10% overlap will be skipped.
+        Expected list of cells. Score files with less than 10% overlap with this list
+        will be skipped.
 
     Returns
     -------
     Dict[str, pd.DataFrame]
-        Dictionary of score dataframes, keyed by trait name
+        Dictionary of score dataframes, keyed by trait name.
     """
     assert score_file.endswith(
         "full_score.gz"
-    ), "score_file should be a full_score.gz file"
+    ), "Expect scDRS .full_score.gz files for score_file"
 
-    if "@" not in score_file:
-        # Single score file
-        score_file_list = [score_file]
-    else:
-        # Potentially multiple score files
-        score_file_pattern = score_file.split(os.path.sep)[-1]
-        score_dir = score_file.replace(os.path.sep + score_file_pattern, "")
-        score_file_list = [
-            x
-            for x in os.listdir(score_dir)
-            if fnmatch.fnmatch(x, score_file_pattern.replace("@", "*"))
-        ]
-        print("Infer score_dir=%s" % score_dir)
-        print(
-            "Find %s score_files: %s"
-            % (len(score_file_list), ",".join(score_file_list))
-        )
+    # Get score_dir and score_file_list for potentially multiple score files
+    score_file_pattern = score_file.split(os.path.sep)[-1]
+    score_dir = score_file.replace(os.path.sep + score_file_pattern, "")
+    score_file_list = [
+        x
+        for x in os.listdir(score_dir)
+        if fnmatch.fnmatch(x, score_file_pattern.replace("@", "*"))
+    ]
+    print("Score file folder: %s" % score_dir)
+    print("Find %d score files: %s" % (len(score_file_list), ",".join(score_file_list)))
 
     dict_score = {}
     for score_file in score_file_list:
@@ -107,18 +121,17 @@ def load_scdrs_score(
             score_dir + os.path.sep + score_file, sep="\t", index_col=0
         )
         if obs_names is not None:
-            # if a list of cells is provided
-            # Sanity check between the overlap of adata and score file
+            # Check overlap of cells between score_file and obs_names
             n_cell_overlap = len(set(obs_names) & set(temp_df.index))
             if n_cell_overlap < 0.1 * len(obs_names):
                 print(
-                    "WARNING: %s skipped, %d/%d cells in adata"
+                    "WARNING: %s skipped, containing %d/%d target cells"
                     % (score_file, n_cell_overlap, len(obs_names))
                 )
                 continue
         dict_score[score_file.replace(".full_score.gz", "")] = temp_df.copy()
 
-    print("--score_file loaded: n_trait=%d" % (len(dict_score)))
+    print("Read %d legit score files" % (len(dict_score)))
     return dict_score
 
 
@@ -331,8 +344,8 @@ def zsc2pval(zsc):
     """
     Convert z-score to one-sided p-value. Accurate up to `zsc=36` and `pval=4.2e-284`.
     """
-#     return 1 - sp.stats.norm.cdf(zsc)
-    return sp.stats.norm.cdf(-zsc) # This is more accurate
+    #     return 1 - sp.stats.norm.cdf(zsc)
+    return sp.stats.norm.cdf(-zsc)  # This is more accurate
 
 
 def pval2zsc(pval):

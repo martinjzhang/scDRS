@@ -7,11 +7,41 @@ import scdrs
 from .test_method_score_cell_main import load_toy_data
 
 
-def test_correlate_gene():
+def test_downstream_group_analysis():
     """
-    Test scdrs.method.correlate_gene
+    Test scdrs.method.downstream_group_analysis
+    @Kangcheng: could you add a unit test here?
     """
+    return
 
+
+def test_downstream_corr_analysis():
+    """
+    Test scdrs.method.downstream_corr_analysis
+    """
+    return
+
+
+def test_downstream_gene_analysis():
+    """
+    Test scdrs.method.downstream_gene_analysis
+    """
+    return
+
+
+def test_test_gearysc():
+    """
+    Test scdrs.method.test_gearysc
+    @Kangcheng: could you add a unit test here?
+    """
+    return
+
+
+def test_gearys_c():
+    """
+    Test scdrs.method.gearys_c
+    @Kangcheng: could you add a unit test here?
+    """
     return
 
 
@@ -45,37 +75,3 @@ def test_get_rank():
     """
     return
 
-
-def test_downstream_group_analysis():
-    """
-    Test scdrs.method.downstream_group_analysis
-    """
-    return
-
-
-def test_downstream_corr_analysis():
-    """
-    Test scdrs.method.downstream_corr_analysis
-    """
-    return
-
-
-def test_downstream_gene_analysis():
-    """
-    Test scdrs.method.downstream_gene_analysis
-    """
-    return
-
-
-def test_test_gearysc():
-    """
-    Test scdrs.method.test_gearysc
-    """
-    return
-
-
-def test_gearys_c():
-    """
-    Test scdrs.method.gearys_c
-    """
-    return

@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="scdrs",
-    version="0.9.1",
+    version="1.0.0",
     author="Martin Jinye Zhang, Kangcheng Hou",
     author_email="martinjzhang@gmail.com, kangchenghou@gmail.com",
     description="Single-cell disease-relevance score",

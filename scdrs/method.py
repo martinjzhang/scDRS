@@ -394,7 +394,6 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
     return v_raw_score, v_score_weight
 
 
-# fixit: review
 def _compute_overdispersion_score(adata, gene_list, gene_weight):
     """Compute overdispersion score
 
@@ -700,321 +699,57 @@ def score_cell_scanpy(adata, gene_list):
 ##############################################################################
 ######################## Code for downstream analysis ########################
 ##############################################################################
-def correlate_gene(
-    data, trs_name="trs_ez", suffix="", corr_opt="pearson", cov_list=None, copy=False
-):
-
-    """Compute the correlation between gene expressions and TRS
-
-    Args
-    ----
-    data (n_cell, n_gene) : AnnData
-        adata.X should contain size-normalized log1p transformed count data
-    trs_name : str
-        The variable to correlate gene expression with. Should be one column in data.obs.
-    suffix : str
-        The name of the added gene-wise correlation would be 'trs_corr'+suffix.
-    corr_opt : str
-        Option for computing the correlation
-        'pearson': Pearson's correlation
-        'spearman': Spearman's correlation
-    cov_list : list of str
-        Covariates to control for.
-        The covariates are first centered and then regressed out from
-            both trs_name and the gene expression before computing the correlation.
-        Elements in cov_list should be present in data.obs.columns
-    copy : bool
-        If to make copy of the AnnData object
-
-    Returns
-    -------
-    adata (AnnData):
-        Add the columns 'scdrs_corr'+suffix to data.var
-    """
-
-    adata = data.copy() if copy else data
-
-    # Check options
-    corr_opt_list = ["pearson", "spearman"]
-    if corr_opt not in corr_opt_list:
-        raise ValueError(
-            "# compute_scdrs_corr: corr_opt not in [%s]"
-            % ", ".join([str(x) for x in corr_opt_list])
-        )
-    if trs_name not in adata.obs.columns:
-        raise ValueError("# compute_scdrs_corr: %s not in data.obs.columns" % trs_name)
-    if cov_list is not None:
-        temp_list = list(set(cov_list) - set(adata.obs.columns))
-        if len(temp_list) > 0:
-            raise ValueError(
-                "# compute_scdrs_corr: covariates %s not in data.obs.columns"
-                % ",".join(temp_list)
-            )
-
-    # Get data
-    mat_X = data.X.toarray()
-    v_trs = data.obs[trs_name].values.copy()
-
-    # Regress out covariates
-    if cov_list is not None:
-        mat_cov = adata.obs[cov_list].values.copy()
-        mat_cov = mat_cov - mat_cov.mean(axis=0)
-        v_trs = pp.reg_out(v_trs, mat_cov)
-        mat_X = pp.reg_out(mat_X, mat_cov)
-
-    # Compute correlation
-    if corr_opt == "pearson":
-        v_corr = _pearson_corr(mat_X, v_trs)
-
-    if corr_opt == "spearman":
-        v_corr = _spearman_corr(mat_X, v_trs)
-
-    adata.var["scdrs_corr" + suffix] = v_corr
-
-    return adata if copy else None
-
-
-def _pearson_corr(mat_X, mat_Y):
-    """Pearson's correlation between every columns in mat_X and mat_Y
-
-    Args
-    ----
-    mat_X (N,M1): np.ndarray
-    mat_Y (N,M2): np.ndarray
-
-    Returns
-    -------
-    mat_corr: (M1,M2): np.ndarray
-        Correlation matrix
-    """
-
-    # If sparse, use _pearson_corr_sparse
-    if sp.sparse.issparse(mat_X) | sp.sparse.issparse(mat_Y):
-        return _pearson_corr_sparse(mat_X, mat_Y)
-
-    # Reshape
-    if len(mat_X.shape) == 1:
-        mat_X = mat_X.reshape([-1, 1])
-    if len(mat_Y.shape) == 1:
-        mat_Y = mat_Y.reshape([-1, 1])
-
-    mat_X = (mat_X - mat_X.mean(axis=0)) / mat_X.std(axis=0).clip(min=1e-8)
-    mat_Y = (mat_Y - mat_Y.mean(axis=0)) / mat_Y.std(axis=0).clip(min=1e-8)
-    mat_corr = mat_X.T.dot(mat_Y) / mat_X.shape[0]
-    mat_corr = np.array(mat_corr, dtype=np.float32)
-
-    if (mat_X.shape[1] == 1) | (mat_Y.shape[1] == 1):
-        return mat_corr.reshape([-1])
-    else:
-        return mat_corr
-
-
-def _pearson_corr_sparse(mat_X, mat_Y):
-    """Pearson's correlation between every columns in mat_X and mat_Y (sparse matrix)
-
-    Args
-    ----
-    mat_X (N,M1): sp.sparse
-    mat_Y (N,M2): sp.sparse
-
-    Returns
-    -------
-    mat_corr: (M1,M2): np.ndarray
-        Correlation matrix
-    """
-
-    # Reshape
-    if len(mat_X.shape) == 1:
-        mat_X = mat_X.reshape([-1, 1])
-    if len(mat_Y.shape) == 1:
-        mat_Y = mat_Y.reshape([-1, 1])
-
-    # Convert to sparse matrix if not already sparse
-    if sp.sparse.issparse(mat_X) is False:
-        mat_X = sp.sparse.csr_matrix(mat_X)
-    if sp.sparse.issparse(mat_Y) is False:
-        mat_Y = sp.sparse.csr_matrix(mat_Y)
-
-    # Compute v_mean,v_var
-    v_X_mean, v_X_var = pp._get_mean_var(mat_X, axis=0)
-    v_X_sd = np.sqrt(v_X_var).clip(min=1e-8)
-    v_Y_mean, v_Y_var = pp._get_mean_var(mat_Y, axis=0)
-    v_Y_sd = np.sqrt(v_Y_var).clip(min=1e-8)
-
-    mat_corr = mat_X.T.dot(mat_Y) / mat_X.shape[0]
-    mat_corr = mat_corr - v_X_mean.reshape([-1, 1]).dot(v_Y_mean.reshape([1, -1]))
-    mat_corr = mat_corr / v_X_sd.reshape([-1, 1]).dot(v_Y_sd.reshape([1, -1]))
-    mat_corr = np.array(mat_corr, dtype=np.float32)
-
-    if (mat_X.shape[1] == 1) | (mat_Y.shape[1] == 1):
-        return mat_corr.reshape([-1])
-    else:
-        return mat_corr
-
-
-def _spearman_corr(mat_X, mat_Y):
-    """Spearman's correlation between every columns in mat_X and mat_Y
-
-    Args
-    ----
-    mat_X (N,M1): np.ndarray
-    mat_Y (N,M2): np.ndarray
-
-    Returns
-    -------
-    mat_corr (M1,M2): np.ndarray
-        Correlation matrix
-    """
-
-    # Reshape
-    if len(mat_X.shape) == 1:
-        mat_X = mat_X.reshape([-1, 1])
-    if len(mat_Y.shape) == 1:
-        mat_Y = mat_Y.reshape([-1, 1])
-
-    mat_X = _get_rank(mat_X, axis=0)
-    mat_Y = _get_rank(mat_Y, axis=0)
-
-    mat_X = (mat_X - mat_X.mean(axis=0)) / mat_X.std(axis=0).clip(min=1e-8)
-    mat_Y = (mat_Y - mat_Y.mean(axis=0)) / mat_Y.std(axis=0).clip(min=1e-8)
-    mat_corr = mat_X.T.dot(mat_Y) / mat_X.shape[0]
-
-    if (mat_X.shape[1] == 1) | (mat_Y.shape[1] == 1):
-        return mat_corr.reshape([-1])
-    else:
-        return mat_corr
-
-
-def _get_rank(mat_X, axis=0):
-    """Get rank for each row/columns of the given matrix
-
-    Args
-    ----
-    mat_X (N,M): np.ndarray
-    axis: int
-        axis=0: column-wise rank (across rows)
-        axis=1: row-wise rank (across columns)
-    Returns
-    -------
-    mat_rank  (N,M): np.ndarray
-        Rank matrix
-    """
-
-    if axis == 0:
-        mat_X = np.argsort(mat_X, axis=0)
-        mat_rank = np.empty_like(mat_X)
-        temp_v = np.arange(mat_X.shape[0])
-        for i_col in range(mat_X.shape[1]):
-            mat_rank[mat_X[:, i_col], i_col] = temp_v
-
-    if axis == 1:
-        mat_X = np.argsort(mat_X, axis=1)
-        mat_rank = np.empty_like(mat_X)
-        temp_v = np.arange(mat_X.shape[1])
-        for i_row in range(mat_X.shape[0]):
-            mat_rank[i_row, mat_X[i_row, :]] = temp_v
-
-    return mat_rank
-
-
-# fixit: instead call scdrs.pp.compute_stats
-# deprecated: use pp.preprocess instead
-def compute_gene_contrib(data, gene_list, random_seed=0, copy=False, verbose=False):
-
-    """Find the contribution of each gene to the scDRS score
-
-    Args
-    ----
-    data (n_cell, n_gene) : AnnData
-        adata.X should contain size-normalized log1p transformed count data
-    gene_list (n_disease_gene) : list
-        Trait gene list
-    copy : bool
-        If to make copy of the AnnData object
-
-    Returns
-    -------
-    adata (AnnData):
-        Add the columns 'trs_corr'+suffix to data.var
-    """
-
-    np.random.seed(random_seed)
-    adata = data.copy() if copy else data
-
-    # Pre-compute statistics
-    if "var_tech" not in adata.var.columns:
-        if verbose:
-            print("# score_cell: recompute statistics using method.compute_stats")
-        compute_stats(adata)
-
-    # Compute contribution for each gene
-    gene_list = sorted(set(gene_list) & set(adata.var_names))
-    v_score_weight = 1 / np.sqrt(adata.var.loc[gene_list, "var_tech"].values + 1e-2)
-    df_contrib = pd.DataFrame(
-        index=adata.obs_names, columns=gene_list, data=adata[:, gene_list].X.toarray()
-    )
-    df_contrib = df_contrib * v_score_weight
-
-    return df_contrib
-
-
 def downstream_group_analysis(
     adata: anndata.AnnData,
-    df_drs: pd.DataFrame,
+    df_full_score: pd.DataFrame,
     group_cols: List[str],
     fdr_thresholds: List[float] = [0.05, 0.1, 0.2],
 ) -> Dict[str, pd.DataFrame]:
     """
-    Perform the group-level downstream analysis for scDRS results, including
-    1. Proportion of FDR < 0.1 cells in each group
-    2. Group-level trait association
-    3. Group-level heterogeneity
+    scDRS group-level analysis
 
-    To perform group-level heterogeneity analysis, if the nearest neighbor graph
-    "connectivities" is not presented in the adata project, it will be generated using
-    sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
+    For each annotation in `group_cols` and each group of cells in the annotation, compute:
+    1. Proportion of FDR < 0.1 cells.
+    2. Group-level trait association.
+    3. Group-level heterogeneity.
+
+    `connectivities` is expected in `adata.obsp` for the group-level heterogeneity analysis.
+    Recommended parameters: `sc.pp.neighbors(adata, n_neighbors=15, n_pcs=20)`.
 
     Parameters
     ----------
     adata : anndata.AnnData
-        AnnData object
-    df_drs : pd.DataFrame
-        scDRS results dataframe for a single trait
-    group_cols : str
-        Column name in adata.obs used to define the groups
+        Single-cell data of shape (n_cell, n_gene). Assumed
+        to be size-factor-normalized and log1p-transformed.
+    df_full_score : pd.DataFrame
+        scDRS `.full_score` results of a single trait.
+    group_cols : list of str
+        List of column names in adata.obs used to define cell groups.
 
     Returns
     -------
-    Dict[str, pd.DataFrame]
-        Group-level statistics (n_group x n_stats) keyed by the group names
+    dict_df_res : Dict[str, pd.DataFrame]
+        Group-level statistics (n_group, n_stats) keyed by the group names.
     """
 
-    if "connectivities" not in adata.obsp:
-        sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
-        print(
-            "Compute connectivities with `sc.pp.neighbors`"
-            "because `connectivities` is not found in adata.obsp"
-        )
+    assert (
+        "connectivities" in adata.obsp
+    ), "Expect `connectivities` in `adata.obsp`; run `sc.pp.neighbors` first"
 
-    # common cell_list
-    cell_list = sorted(set(adata.obs_names) & set(df_drs.index))
-    control_list = [x for x in df_drs.columns if x.startswith("ctrl_norm_score")]
+    assert (
+        len(set(group_cols) - set(adata.obs)) == 0
+    ), "Missing group_cols variables from `adata.obs.columns`."
+
+    # Align cells between `adata` and `df_full_score`.
+    cell_list = sorted(set(adata.obs_names) & set(df_full_score.index))
+    control_list = [x for x in df_full_score.columns if x.startswith("ctrl_norm_score")]
     n_ctrl = len(control_list)
     df_reg = adata.obs.loc[cell_list, group_cols].copy()
     df_reg = df_reg.join(
-        df_drs.loc[cell_list, ["norm_score"] + control_list + ["pval"]]
+        df_full_score.loc[cell_list, ["norm_score"] + control_list + ["pval"]]
     )
 
-    # Check group_cols
-    missed_group_cols = [col for col in group_cols if col not in adata.obs.columns]
-    if len(missed_group_cols) > 0:
-        raise ValueError(
-            f"Following `group_cols` not in adata.obs.columns: {','.join(missed_group_cols)}"
-        )
-
-    # Cell type-disease analysis: association + heterogeneity
-
-    # dictionary of results group_col -> df_res
+    # Group-level analysis; dict_df_res : group_col -> df_res
     dict_df_res = {}
     for group_col in group_cols:
         group_list = sorted(set(adata.obs[group_col]))
@@ -1060,7 +795,7 @@ def downstream_group_analysis(
             mc_z = (score_q95 - v_ctrl_score_q95.mean()) / v_ctrl_score_q95.std()
             df_res.loc[group, ["assoc_mcp", "assoc_mcz"]] = [mc_p, mc_z]
 
-        # Heterogeneity
+        # Heterogeneity @Kangcheng: could you review
         df_rls = scdrs.method.test_gearysc(
             adata[cell_list], df_reg.loc[cell_list, :], groupby=group_col
         )
@@ -1074,8 +809,9 @@ def downstream_group_analysis(
     return dict_df_res
 
 
+# TODO: review
 def downstream_corr_analysis(
-    adata: anndata.AnnData, df_drs: pd.DataFrame, var_cols: List[str]
+    adata: anndata.AnnData, df_full_score: pd.DataFrame, var_cols: List[str]
 ) -> pd.DataFrame:
     """
     Perform the correlation between cell-level variables with scDRS scores and
@@ -1086,7 +822,7 @@ def downstream_corr_analysis(
     ----------
     adata : anndata.AnnData
         AnnData object
-    df_drs : pd.DataFrame
+    df_full_score : pd.DataFrame
         scDRS results dataframe
     var_cols : List[str]
         Column name of cell-level variables in adata.obs
@@ -1097,11 +833,11 @@ def downstream_corr_analysis(
         Correlation results (n_var x n_stats)
     """
 
-    cell_list = sorted(set(adata.obs_names) & set(df_drs.index))
-    control_list = [x for x in df_drs.columns if x.startswith("ctrl_norm_score")]
+    cell_list = sorted(set(adata.obs_names) & set(df_full_score.index))
+    control_list = [x for x in df_full_score.columns if x.startswith("ctrl_norm_score")]
     n_ctrl = len(control_list)
     df_reg = adata.obs.loc[cell_list, var_cols].copy()
-    df_reg = df_reg.join(df_drs.loc[cell_list, ["norm_score"] + control_list])
+    df_reg = df_reg.join(df_full_score.loc[cell_list, ["norm_score"] + control_list])
 
     # Check var_cols
     missed_var_cols = [col for col in var_cols if col not in adata.obs.columns]
@@ -1128,8 +864,9 @@ def downstream_corr_analysis(
     return df_res
 
 
+# TODO: review
 def downstream_gene_analysis(
-    adata: anndata.AnnData, df_drs: pd.DataFrame
+    adata: anndata.AnnData, df_full_score: pd.DataFrame
 ) -> pd.DataFrame:
     """
     Perform the correlation between gene-level variables with scDRS scores and
@@ -1140,7 +877,7 @@ def downstream_gene_analysis(
     ----------
     adata : anndata.AnnData
         AnnData object
-    df_drs : pd.DataFrame
+    df_full_score : pd.DataFrame
         scDRS results dataframe
 
     Returns
@@ -1149,9 +886,9 @@ def downstream_gene_analysis(
         Correlation results (n_gene x n_stats)
     """
 
-    cell_list = sorted(set(adata.obs_names) & set(df_drs.index))
-    control_list = [x for x in df_drs.columns if x.startswith("ctrl_norm_score")]
-    df_reg = df_drs.loc[cell_list, ["norm_score"] + control_list]
+    cell_list = sorted(set(adata.obs_names) & set(df_full_score.index))
+    control_list = [x for x in df_full_score.columns if x.startswith("ctrl_norm_score")]
+    df_reg = df_full_score.loc[cell_list, ["norm_score"] + control_list]
 
     mat_expr = adata[cell_list].X.copy()
     v_corr = scdrs.method._pearson_corr(mat_expr, df_reg["norm_score"].values)
@@ -1242,9 +979,13 @@ def group_stats(
     return df_stats
 
 
+##############################################################################
+##################### Subroutines for downstream analysis ####################
+##############################################################################
+# @Kangcheng: could you review
 def test_gearysc(
     adata: anndata.AnnData,
-    df_score_full: pd.DataFrame,
+    df_full_score: pd.DataFrame,
     groupby: str,
     opt="control_distribution_match",
 ) -> pd.DataFrame:
@@ -1255,7 +996,7 @@ def test_gearysc(
     ----
     adata: anndata.AnnData
         must contain `connectivities` to compute the Geary's C statistic
-    df_score_full: DataFrame
+    df_full_score: DataFrame
         DataFrame with the scores of the cells, contains
         columns `zscore`, `norm_score`, `ctrl_norm_score_{i}`
     groupby: str
@@ -1276,11 +1017,11 @@ def test_gearysc(
             - `ctrl_sd`: standard deviation of the control scores
     """
     assert np.all(
-        df_score_full.index == adata.obs_names
-    ), "adata.obs_names must match df_score_full.index"
-    norm_score = df_score_full["norm_score"]
-    ctrl_norm_score = df_score_full[
-        [col for col in df_score_full.columns if col.startswith(f"ctrl_norm_score_")]
+        df_full_score.index == adata.obs_names
+    ), "adata.obs_names must match df_full_score.index"
+    norm_score = df_full_score["norm_score"]
+    ctrl_norm_score = df_full_score[
+        [col for col in df_full_score.columns if col.startswith(f"ctrl_norm_score_")]
     ]
     n_null = ctrl_norm_score.shape[1]
     df_meta = adata.obs.copy()
@@ -1364,6 +1105,7 @@ def test_gearysc(
     return df_rls
 
 
+# @Kangcheng: could you review
 def gearys_c(adata, vals):
     """Compute Geary's C statistics for an AnnData
     Adopted from https://github.com/ivirshup/scanpy/blob/metrics/scanpy/metrics/_gearys_c.py
@@ -1414,3 +1156,223 @@ def gearys_c(adata, vals):
     C = numer / denom
 
     return C
+
+
+def _pearson_corr(mat_X, mat_Y):
+    """Pearson's correlation between every columns in mat_X and mat_Y
+
+    Args
+    ----
+    mat_X (N,M1): np.ndarray
+    mat_Y (N,M2): np.ndarray
+
+    Returns
+    -------
+    mat_corr: (M1,M2): np.ndarray
+        Correlation matrix
+    """
+
+    # If sparse, use _pearson_corr_sparse
+    if sp.sparse.issparse(mat_X) | sp.sparse.issparse(mat_Y):
+        return _pearson_corr_sparse(mat_X, mat_Y)
+
+    # Reshape
+    if len(mat_X.shape) == 1:
+        mat_X = mat_X.reshape([-1, 1])
+    if len(mat_Y.shape) == 1:
+        mat_Y = mat_Y.reshape([-1, 1])
+
+    mat_X = (mat_X - mat_X.mean(axis=0)) / mat_X.std(axis=0).clip(min=1e-8)
+    mat_Y = (mat_Y - mat_Y.mean(axis=0)) / mat_Y.std(axis=0).clip(min=1e-8)
+    mat_corr = mat_X.T.dot(mat_Y) / mat_X.shape[0]
+    mat_corr = np.array(mat_corr, dtype=np.float32)
+
+    if (mat_X.shape[1] == 1) | (mat_Y.shape[1] == 1):
+        return mat_corr.reshape([-1])
+    else:
+        return mat_corr
+
+
+def _pearson_corr_sparse(mat_X, mat_Y):
+    """Pearson's correlation between every columns in mat_X and mat_Y (sparse matrix)
+
+    Args
+    ----
+    mat_X (N,M1): sp.sparse
+    mat_Y (N,M2): sp.sparse
+
+    Returns
+    -------
+    mat_corr: (M1,M2): np.ndarray
+        Correlation matrix
+    """
+
+    # Reshape
+    if len(mat_X.shape) == 1:
+        mat_X = mat_X.reshape([-1, 1])
+    if len(mat_Y.shape) == 1:
+        mat_Y = mat_Y.reshape([-1, 1])
+
+    # Convert to sparse matrix if not already sparse
+    if sp.sparse.issparse(mat_X) is False:
+        mat_X = sp.sparse.csr_matrix(mat_X)
+    if sp.sparse.issparse(mat_Y) is False:
+        mat_Y = sp.sparse.csr_matrix(mat_Y)
+
+    # Compute v_mean,v_var
+    v_X_mean, v_X_var = pp._get_mean_var(mat_X, axis=0)
+    v_X_sd = np.sqrt(v_X_var).clip(min=1e-8)
+    v_Y_mean, v_Y_var = pp._get_mean_var(mat_Y, axis=0)
+    v_Y_sd = np.sqrt(v_Y_var).clip(min=1e-8)
+
+    mat_corr = mat_X.T.dot(mat_Y) / mat_X.shape[0]
+    mat_corr = mat_corr - v_X_mean.reshape([-1, 1]).dot(v_Y_mean.reshape([1, -1]))
+    mat_corr = mat_corr / v_X_sd.reshape([-1, 1]).dot(v_Y_sd.reshape([1, -1]))
+    mat_corr = np.array(mat_corr, dtype=np.float32)
+
+    if (mat_X.shape[1] == 1) | (mat_Y.shape[1] == 1):
+        return mat_corr.reshape([-1])
+    else:
+        return mat_corr
+
+
+##############################################################################
+############################## Archived functions ############################
+##############################################################################
+def correlate_gene(
+    data, trs_name="trs_ez", suffix="", corr_opt="pearson", cov_list=None, copy=False
+):
+
+    """Compute the correlation between gene expressions and TRS
+
+    Args
+    ----
+    data (n_cell, n_gene) : AnnData
+        adata.X should contain size-normalized log1p transformed count data
+    trs_name : str
+        The variable to correlate gene expression with. Should be one column in data.obs.
+    suffix : str
+        The name of the added gene-wise correlation would be 'trs_corr'+suffix.
+    corr_opt : str
+        Option for computing the correlation
+        'pearson': Pearson's correlation
+        'spearman': Spearman's correlation
+    cov_list : list of str
+        Covariates to control for.
+        The covariates are first centered and then regressed out from
+            both trs_name and the gene expression before computing the correlation.
+        Elements in cov_list should be present in data.obs.columns
+    copy : bool
+        If to make copy of the AnnData object
+
+    Returns
+    -------
+    adata (AnnData):
+        Add the columns 'scdrs_corr'+suffix to data.var
+    """
+
+    adata = data.copy() if copy else data
+
+    # Check options
+    corr_opt_list = ["pearson", "spearman"]
+    if corr_opt not in corr_opt_list:
+        raise ValueError(
+            "# compute_scdrs_corr: corr_opt not in [%s]"
+            % ", ".join([str(x) for x in corr_opt_list])
+        )
+    if trs_name not in adata.obs.columns:
+        raise ValueError("# compute_scdrs_corr: %s not in data.obs.columns" % trs_name)
+    if cov_list is not None:
+        temp_list = list(set(cov_list) - set(adata.obs.columns))
+        if len(temp_list) > 0:
+            raise ValueError(
+                "# compute_scdrs_corr: covariates %s not in data.obs.columns"
+                % ",".join(temp_list)
+            )
+
+    # Get data
+    mat_X = data.X.toarray()
+    v_trs = data.obs[trs_name].values.copy()
+
+    # Regress out covariates
+    if cov_list is not None:
+        mat_cov = adata.obs[cov_list].values.copy()
+        mat_cov = mat_cov - mat_cov.mean(axis=0)
+        v_trs = pp.reg_out(v_trs, mat_cov)
+        mat_X = pp.reg_out(mat_X, mat_cov)
+
+    # Compute correlation
+    if corr_opt == "pearson":
+        v_corr = _pearson_corr(mat_X, v_trs)
+
+    if corr_opt == "spearman":
+        v_corr = _spearman_corr(mat_X, v_trs)
+
+    adata.var["scdrs_corr" + suffix] = v_corr
+
+    return adata if copy else None
+
+
+def _spearman_corr(mat_X, mat_Y):
+    """Spearman's correlation between every columns in mat_X and mat_Y
+
+    Args
+    ----
+    mat_X (N,M1): np.ndarray
+    mat_Y (N,M2): np.ndarray
+
+    Returns
+    -------
+    mat_corr (M1,M2): np.ndarray
+        Correlation matrix
+    """
+
+    # Reshape
+    if len(mat_X.shape) == 1:
+        mat_X = mat_X.reshape([-1, 1])
+    if len(mat_Y.shape) == 1:
+        mat_Y = mat_Y.reshape([-1, 1])
+
+    mat_X = _get_rank(mat_X, axis=0)
+    mat_Y = _get_rank(mat_Y, axis=0)
+
+    mat_X = (mat_X - mat_X.mean(axis=0)) / mat_X.std(axis=0).clip(min=1e-8)
+    mat_Y = (mat_Y - mat_Y.mean(axis=0)) / mat_Y.std(axis=0).clip(min=1e-8)
+    mat_corr = mat_X.T.dot(mat_Y) / mat_X.shape[0]
+
+    if (mat_X.shape[1] == 1) | (mat_Y.shape[1] == 1):
+        return mat_corr.reshape([-1])
+    else:
+        return mat_corr
+
+
+def _get_rank(mat_X, axis=0):
+    """Get rank for each row/columns of the given matrix
+
+    Args
+    ----
+    mat_X (N,M): np.ndarray
+    axis: int
+        axis=0: column-wise rank (across rows)
+        axis=1: row-wise rank (across columns)
+    Returns
+    -------
+    mat_rank  (N,M): np.ndarray
+        Rank matrix
+    """
+
+    if axis == 0:
+        mat_X = np.argsort(mat_X, axis=0)
+        mat_rank = np.empty_like(mat_X)
+        temp_v = np.arange(mat_X.shape[0])
+        for i_col in range(mat_X.shape[1]):
+            mat_rank[mat_X[:, i_col], i_col] = temp_v
+
+    if axis == 1:
+        mat_X = np.argsort(mat_X, axis=1)
+        mat_rank = np.empty_like(mat_X)
+        temp_v = np.arange(mat_X.shape[1])
+        for i_row in range(mat_X.shape[0]):
+            mat_rank[i_row, mat_X[i_row, :]] = temp_v
+
+    return mat_rank
