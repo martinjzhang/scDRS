@@ -71,12 +71,12 @@ def test_munge_gs_cli():
     # pval_file and zscore_file
     temp_df = pd.DataFrame(
         data={
-            "GENE": ["OR4F5", "DAZ1", "BPY2B"],
             "HEIGHT": [0.02, np.nan, 0.4],
             "BMI": [0.8, 0.02, np.nan],
         }
     )
-    temp_df.to_csv(os.path.join(tmp_dir_path, "pval_file.tsv"), sep="\t", index=False)
+    temp_df.index = ["OR4F5", "DAZ1", "BPY2B"]
+    temp_df.to_csv(os.path.join(tmp_dir_path, "pval_file.tsv"), sep="\t", index=True)
     temp_df = pd.DataFrame(
         data={
             "GENE": ["OR4F5", "DAZ1", "BPY2B"],
@@ -111,6 +111,8 @@ def test_munge_gs_cli():
             )
 
             # Check results
+            print('Generated .gs file:')
+            print(temp_df)
             err_msg = "input_file=%s, %s" % (input_file, selection)
             assert list(temp_df.index) == ["HEIGHT", "BMI"], err_msg
             assert temp_df.loc["HEIGHT", "GENESET"] == "OR4F5:2.0537", err_msg
@@ -151,15 +153,18 @@ def test_downstream_cli():
             task,
             "--flag-filter-data False",
             "--flag-raw-count False",
+            "--knn-n-neighbors 10",
+            "--knn-n-pcs 40",
             f"--out-folder {tmp_dir_path}",
         ]
         subprocess.check_call(" ".join(cmds), shell=True)
 
     # Check consistency between computed results and reference results
     for prefix in ["toydata_gs_human", "toydata_gs_mouse"]:
-        for suffix in ["scdrs_ct.cell_type", "scdrs_gene", "scdrs_var"]:
+        for suffix in ["scdrs_group.cell_type", "scdrs_gene", "scdrs_cell_corr"]:
             res_path = os.path.join(tmp_dir_path, f"{prefix}.{suffix}")
-            ref_res_path = os.path.join(REF_RES_DIR, f"{prefix}.{suffix}")
+            suffix_ref = suffix.replace("scdrs_group", "scdrs_ct").replace("scdrs_cell_corr", "scdrs_var")
+            ref_res_path = os.path.join(REF_RES_DIR, f"{prefix}.{suffix_ref}")
             df_res = pd.read_csv(res_path, sep="\t", index_col=0)
             df_ref_res = pd.read_csv(ref_res_path, sep="\t", index_col=0)
             # only test common columns between `df_res` and `df_ref_res`

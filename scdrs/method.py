@@ -699,64 +699,57 @@ def score_cell_scanpy(adata, gene_list):
 ##############################################################################
 ######################## Code for downstream analysis ########################
 ##############################################################################
-# TODO: review
 def downstream_group_analysis(
     adata: anndata.AnnData,
-    df_drs: pd.DataFrame,
+    df_full_score: pd.DataFrame,
     group_cols: List[str],
     fdr_thresholds: List[float] = [0.05, 0.1, 0.2],
 ) -> Dict[str, pd.DataFrame]:
     """
-    Perform the group-level downstream analysis for scDRS results, including
-    1. Proportion of FDR < 0.1 cells in each group
-    2. Group-level trait association
-    3. Group-level heterogeneity
+    scDRS group-level analysis
 
-    To perform group-level heterogeneity analysis, if the nearest neighbor graph
-    "connectivities" is not presented in the adata project, it will be generated using
-    sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
+    For each annotation in `group_cols` and each group of cells in the annotation, compute:
+    1. Proportion of FDR < 0.1 cells.
+    2. Group-level trait association.
+    3. Group-level heterogeneity.
+
+    `connectivities` is expected in `adata.obsp` for the group-level heterogeneity analysis.
+    Recommended parameters: `sc.pp.neighbors(adata, n_neighbors=15, n_pcs=20)`.
 
     Parameters
     ----------
     adata : anndata.AnnData
-        AnnData object
-    df_drs : pd.DataFrame
-        scDRS results dataframe for a single trait
-    group_cols : str
-        Column name in adata.obs used to define the groups
+        Single-cell data of shape (n_cell, n_gene). Assumed
+        to be size-factor-normalized and log1p-transformed.
+    df_full_score : pd.DataFrame
+        scDRS `.full_score` results of a single trait.
+    group_cols : list of str
+        List of column names in adata.obs used to define cell groups.
 
     Returns
     -------
-    Dict[str, pd.DataFrame]
-        Group-level statistics (n_group x n_stats) keyed by the group names
+    dict_df_res : Dict[str, pd.DataFrame]
+        Group-level statistics (n_group, n_stats) keyed by the group names.
     """
 
-    if "connectivities" not in adata.obsp:
-        sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
-        print(
-            "Compute connectivities with `sc.pp.neighbors`"
-            "because `connectivities` is not found in adata.obsp"
-        )
+    assert (
+        "connectivities" in adata.obsp
+    ), "Expect `connectivities` in `adata.obsp`; run `sc.pp.neighbors` first"
 
-    # common cell_list
-    cell_list = sorted(set(adata.obs_names) & set(df_drs.index))
-    control_list = [x for x in df_drs.columns if x.startswith("ctrl_norm_score")]
+    assert (
+        len(set(group_cols) - set(adata.obs)) == 0
+    ), "Missing group_cols variables from `adata.obs.columns`."
+
+    # Align cells between `adata` and `df_full_score`.
+    cell_list = sorted(set(adata.obs_names) & set(df_full_score.index))
+    control_list = [x for x in df_full_score.columns if x.startswith("ctrl_norm_score")]
     n_ctrl = len(control_list)
     df_reg = adata.obs.loc[cell_list, group_cols].copy()
     df_reg = df_reg.join(
-        df_drs.loc[cell_list, ["norm_score"] + control_list + ["pval"]]
+        df_full_score.loc[cell_list, ["norm_score"] + control_list + ["pval"]]
     )
 
-    # Check group_cols
-    missed_group_cols = [col for col in group_cols if col not in adata.obs.columns]
-    if len(missed_group_cols) > 0:
-        raise ValueError(
-            f"Following `group_cols` not in adata.obs.columns: {','.join(missed_group_cols)}"
-        )
-
-    # Cell type-disease analysis: association + heterogeneity
-
-    # dictionary of results group_col -> df_res
+    # Group-level analysis; dict_df_res : group_col -> df_res
     dict_df_res = {}
     for group_col in group_cols:
         group_list = sorted(set(adata.obs[group_col]))
@@ -802,7 +795,7 @@ def downstream_group_analysis(
             mc_z = (score_q95 - v_ctrl_score_q95.mean()) / v_ctrl_score_q95.std()
             df_res.loc[group, ["assoc_mcp", "assoc_mcz"]] = [mc_p, mc_z]
 
-        # Heterogeneity
+        # Heterogeneity @Kangcheng: could you review
         df_rls = scdrs.method.test_gearysc(
             adata[cell_list], df_reg.loc[cell_list, :], groupby=group_col
         )
@@ -818,7 +811,7 @@ def downstream_group_analysis(
 
 # TODO: review
 def downstream_corr_analysis(
-    adata: anndata.AnnData, df_drs: pd.DataFrame, var_cols: List[str]
+    adata: anndata.AnnData, df_full_score: pd.DataFrame, var_cols: List[str]
 ) -> pd.DataFrame:
     """
     Perform the correlation between cell-level variables with scDRS scores and
@@ -829,7 +822,7 @@ def downstream_corr_analysis(
     ----------
     adata : anndata.AnnData
         AnnData object
-    df_drs : pd.DataFrame
+    df_full_score : pd.DataFrame
         scDRS results dataframe
     var_cols : List[str]
         Column name of cell-level variables in adata.obs
@@ -840,11 +833,11 @@ def downstream_corr_analysis(
         Correlation results (n_var x n_stats)
     """
 
-    cell_list = sorted(set(adata.obs_names) & set(df_drs.index))
-    control_list = [x for x in df_drs.columns if x.startswith("ctrl_norm_score")]
+    cell_list = sorted(set(adata.obs_names) & set(df_full_score.index))
+    control_list = [x for x in df_full_score.columns if x.startswith("ctrl_norm_score")]
     n_ctrl = len(control_list)
     df_reg = adata.obs.loc[cell_list, var_cols].copy()
-    df_reg = df_reg.join(df_drs.loc[cell_list, ["norm_score"] + control_list])
+    df_reg = df_reg.join(df_full_score.loc[cell_list, ["norm_score"] + control_list])
 
     # Check var_cols
     missed_var_cols = [col for col in var_cols if col not in adata.obs.columns]
@@ -873,7 +866,7 @@ def downstream_corr_analysis(
 
 # TODO: review
 def downstream_gene_analysis(
-    adata: anndata.AnnData, df_drs: pd.DataFrame
+    adata: anndata.AnnData, df_full_score: pd.DataFrame
 ) -> pd.DataFrame:
     """
     Perform the correlation between gene-level variables with scDRS scores and
@@ -884,7 +877,7 @@ def downstream_gene_analysis(
     ----------
     adata : anndata.AnnData
         AnnData object
-    df_drs : pd.DataFrame
+    df_full_score : pd.DataFrame
         scDRS results dataframe
 
     Returns
@@ -893,9 +886,9 @@ def downstream_gene_analysis(
         Correlation results (n_gene x n_stats)
     """
 
-    cell_list = sorted(set(adata.obs_names) & set(df_drs.index))
-    control_list = [x for x in df_drs.columns if x.startswith("ctrl_norm_score")]
-    df_reg = df_drs.loc[cell_list, ["norm_score"] + control_list]
+    cell_list = sorted(set(adata.obs_names) & set(df_full_score.index))
+    control_list = [x for x in df_full_score.columns if x.startswith("ctrl_norm_score")]
+    df_reg = df_full_score.loc[cell_list, ["norm_score"] + control_list]
 
     mat_expr = adata[cell_list].X.copy()
     v_corr = scdrs.method._pearson_corr(mat_expr, df_reg["norm_score"].values)
@@ -989,9 +982,10 @@ def group_stats(
 ##############################################################################
 ##################### Subroutines for downstream analysis ####################
 ##############################################################################
+# @Kangcheng: could you review
 def test_gearysc(
     adata: anndata.AnnData,
-    df_score_full: pd.DataFrame,
+    df_full_score: pd.DataFrame,
     groupby: str,
     opt="control_distribution_match",
 ) -> pd.DataFrame:
@@ -1002,7 +996,7 @@ def test_gearysc(
     ----
     adata: anndata.AnnData
         must contain `connectivities` to compute the Geary's C statistic
-    df_score_full: DataFrame
+    df_full_score: DataFrame
         DataFrame with the scores of the cells, contains
         columns `zscore`, `norm_score`, `ctrl_norm_score_{i}`
     groupby: str
@@ -1023,11 +1017,11 @@ def test_gearysc(
             - `ctrl_sd`: standard deviation of the control scores
     """
     assert np.all(
-        df_score_full.index == adata.obs_names
-    ), "adata.obs_names must match df_score_full.index"
-    norm_score = df_score_full["norm_score"]
-    ctrl_norm_score = df_score_full[
-        [col for col in df_score_full.columns if col.startswith(f"ctrl_norm_score_")]
+        df_full_score.index == adata.obs_names
+    ), "adata.obs_names must match df_full_score.index"
+    norm_score = df_full_score["norm_score"]
+    ctrl_norm_score = df_full_score[
+        [col for col in df_full_score.columns if col.startswith(f"ctrl_norm_score_")]
     ]
     n_null = ctrl_norm_score.shape[1]
     df_meta = adata.obs.copy()
@@ -1111,6 +1105,7 @@ def test_gearysc(
     return df_rls
 
 
+# @Kangcheng: could you review
 def gearys_c(adata, vals):
     """Compute Geary's C statistics for an AnnData
     Adopted from https://github.com/ivirshup/scanpy/blob/metrics/scanpy/metrics/_gearys_c.py
