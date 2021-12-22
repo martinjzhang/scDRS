@@ -55,7 +55,7 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
 
     Returns
     -------
-    `data.X` will be updated as the covariate-corrected data in normal mode 
+    `data.X` will be updated as the covariate-corrected data in normal mode
     and will stay untouched in the implicit covariate correctoin mode.
     Preprocessing information is stored in `data.uns["SCDRS_PARAM"]`.
 
@@ -129,9 +129,9 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
         v_resid = reg_out(np.ones(n_cell), df_cov.values)
         if (v_resid ** 2).mean() > 0.01:
             df_cov["SCDRS_CONST"] = 1
-        
+
         # Gene mean: numpy.ndarray of shape (n_gene,)
-        v_gene_mean = np.array(adata.X.mean(axis=0)).flatten()  
+        v_gene_mean = np.array(adata.X.mean(axis=0)).flatten()
         if flag_sparse:
             # Sparse mode: save correction information
             mat_beta = np.linalg.solve(
@@ -166,14 +166,13 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
         implicit_cov_corr = False
         if n_chunk is None:
             n_chunk = 20
-            
 
     df_gene, df_cell = compute_stats(
         adata,
         n_mean_bin=n_mean_bin,
         n_var_bin=n_var_bin,
         implicit_cov_corr=implicit_cov_corr,
-        n_chunk = n_chunk,
+        n_chunk=n_chunk,
     )
 
     adata.uns["SCDRS_PARAM"]["GENE_STATS"] = df_gene
@@ -183,7 +182,9 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
 
 
 # fixit: specify n_chunk for _get_mean_var_implicit_cov_corr
-def compute_stats(adata, implicit_cov_corr=False, n_mean_bin=20, n_var_bin=20, n_chunk=20):
+def compute_stats(
+    adata, implicit_cov_corr=False, n_mean_bin=20, n_var_bin=20, n_chunk=20
+):
     """
     Compute gene-level and cell-level statstics used for scDRS analysis. `adata`
     should be log-scale. It has two modes. In the normal mode, it computes
@@ -258,7 +259,9 @@ def compute_stats(adata, implicit_cov_corr=False, n_mean_bin=20, n_var_bin=20, n
         del temp_X
     else:
         # Implicit covariate correction mode
-        df_gene["mean"], df_gene["var"] = _get_mean_var_implicit_cov_corr(adata, axis=0, n_chunk=n_chunk)
+        df_gene["mean"], df_gene["var"] = _get_mean_var_implicit_cov_corr(
+            adata, axis=0, n_chunk=n_chunk
+        )
         df_gene["ct_mean"], df_gene["ct_var"] = _get_mean_var_implicit_cov_corr(
             adata, transform_func=np.expm1, axis=0, n_chunk=n_chunk
         )
@@ -301,7 +304,9 @@ def compute_stats(adata, implicit_cov_corr=False, n_mean_bin=20, n_var_bin=20, n
         df_cell["mean"], df_cell["var"] = _get_mean_var(adata.X, axis=1)
     else:
         # Implicit covariate correction mode
-        df_cell["mean"], df_cell["var"] = _get_mean_var_implicit_cov_corr(adata, axis=1, n_chunk=n_chunk)
+        df_cell["mean"], df_cell["var"] = _get_mean_var_implicit_cov_corr(
+            adata, axis=1, n_chunk=n_chunk
+        )
 
     return df_gene, df_cell
 
@@ -324,14 +329,14 @@ def reg_out(mat_Y, mat_X):
     mat_Y_resid (n_sample, n_response) : np.ndarray
         Response variable residual
     """
-    
+
     if sparse.issparse(mat_X):
         mat_X = mat_X.toarray()
     else:
         mat_X = np.array(mat_X)
     if len(mat_X.shape) == 1:
         mat_X = mat_X.reshape([-1, 1])
-    
+
     if sparse.issparse(mat_Y):
         mat_Y = mat_Y.toarray()
     else:
@@ -394,8 +399,8 @@ def _get_mean_var_implicit_cov_corr(adata, axis=0, transform_func=None, n_chunk=
         "SCDRS_PARAM" in adata.uns
     ), "adata.uns['SCDRS_PARAM'] not found, run `preprocess` before calling this function"
 
-    n_obs, n_gene = adata.shape    
-    
+    n_obs, n_gene = adata.shape
+
     # COV INFO: cov_mat: (n_cell, n_cov) cov_beta (n_cov, n_gene)
     cell_list = list(adata.obs_names)
     cov_list = list(adata.uns["SCDRS_PARAM"]["COV_MAT"])

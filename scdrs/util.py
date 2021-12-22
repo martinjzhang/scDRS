@@ -25,7 +25,27 @@ def convert_species_name(species):
         return "mmusculus"
     if species in ["Human", "human", "Homo_sapiens", "homo_sapiens", "hsapiens"]:
         return "hsapiens"
-    raise ValueError("species name %s not supported" % species)
+    raise ValueError("species name '%s' is not supported" % species)
+
+
+def str_or_list_like(x):
+    """Determine if x is list-list (list, tuple) using duck-typing.
+
+    Here is a set of Attributes for different classes
+    |         x          |      type(x)       |    x.strip    | x.__getitem__ |  x.__iter__   |
+    |         aa         |   <class 'str'>    |     True      |     True      |     True      |
+    |     ['a', 'b']     |   <class 'list'>   |     False     |     True      |     True      |
+    |     ('a', 'b')     |  <class 'tuple'>   |     False     |     True      |     True      |
+    |     {'b', 'a'}     |   <class 'set'>    |     False     |     False     |     True      |
+    |  {'a': 1, 'b': 2}  |   <class 'dict'>   |     False     |     True      |     True      |
+    """
+
+    if hasattr(x, "strip"):
+        return "str"
+    elif hasattr(x, "__getitem__") or hasattr(x, "__iter__"):
+        return "list_like"
+    else:
+        return "others"
 
 
 def load_h5ad(
@@ -49,7 +69,6 @@ def load_h5ad(
     anndata.AnnData
         AnnData object
     """
-    # Load .h5ad file
     adata = read_h5ad(h5ad_file)
     if flag_filter_data:
         sc.pp.filter_cells(adata, min_genes=250)
@@ -57,53 +76,44 @@ def load_h5ad(
     if flag_raw_count:
         sc.pp.normalize_per_cell(adata, counts_per_cell_after=1e4)
         sc.pp.log1p(adata)
-    print(
-        "scdrs.util.load_scdrs_data: --h5ad_file loaded: n_cell=%d, n_gene=%d"
-        % (adata.shape[0], adata.shape[1])
-    )
     return adata
 
 
 def load_scdrs_score(
     score_file: str, obs_names: List[str] = None
 ) -> Dict[str, pd.DataFrame]:
-    """Load drs scores, could be multiple score files
+    """Load scDRS scores. Use "@" to specify all matched files,
+    e.g., score_file_folder/@.full_score.gz
 
     Parameters
     ----------
     score_file : str
-        Either path to a single score file, such as /path/to/trait.full_score.gz
-        or a file pattern for multiple score files, such as /path/to/@.full_score.gz
+        Path to scDRS `.full_score.gz` file. Use '@' to specify multiple file names,
+        e.g., `score_file_path/@.full_score.gz`. However, `score_file_path` should
+        not contain '@'.
     obs_names : List[str]
-        List of cell names used to assess the overlap between the score file and the
-        cell list. If provided, score file with less than 10% overlap will be skipped.
+        Expected list of cells. Score files with less than 10% overlap with this list
+        will be skipped.
 
     Returns
     -------
     Dict[str, pd.DataFrame]
-        Dictionary of score dataframes, keyed by trait name
+        Dictionary of score dataframes, keyed by trait name.
     """
     assert score_file.endswith(
         "full_score.gz"
-    ), "score_file should be a full_score.gz file"
+    ), "Expect scDRS .full_score.gz files for score_file"
 
-    if "@" not in score_file:
-        # Single score file
-        score_file_list = [score_file]
-    else:
-        # Potentially multiple score files
-        score_file_pattern = score_file.split(os.path.sep)[-1]
-        score_dir = score_file.replace(os.path.sep + score_file_pattern, "")
-        score_file_list = [
-            x
-            for x in os.listdir(score_dir)
-            if fnmatch.fnmatch(x, score_file_pattern.replace("@", "*"))
-        ]
-        print("Infer score_dir=%s" % score_dir)
-        print(
-            "Find %s score_files: %s"
-            % (len(score_file_list), ",".join(score_file_list))
-        )
+    # Get score_dir and score_file_list for potentially multiple score files
+    score_file_pattern = score_file.split(os.path.sep)[-1]
+    score_dir = score_file.replace(os.path.sep + score_file_pattern, "")
+    score_file_list = [
+        x
+        for x in os.listdir(score_dir)
+        if fnmatch.fnmatch(x, score_file_pattern.replace("@", "*"))
+    ]
+    print("Score file folder: %s" % score_dir)
+    print("Find %d score files: %s" % (len(score_file_list), ",".join(score_file_list)))
 
     dict_score = {}
     for score_file in score_file_list:
@@ -111,18 +121,17 @@ def load_scdrs_score(
             score_dir + os.path.sep + score_file, sep="\t", index_col=0
         )
         if obs_names is not None:
-            # if a list of cells is provided
-            # Sanity check between the overlap of adata and score file
+            # Check overlap of cells between score_file and obs_names
             n_cell_overlap = len(set(obs_names) & set(temp_df.index))
             if n_cell_overlap < 0.1 * len(obs_names):
                 print(
-                    "WARNING: %s skipped, %d/%d cells in adata"
+                    "WARNING: %s skipped, containing %d/%d target cells"
                     % (score_file, n_cell_overlap, len(obs_names))
                 )
                 continue
         dict_score[score_file.replace(".full_score.gz", "")] = temp_df.copy()
 
-    print("--score_file loaded: n_trait=%d" % (len(dict_score)))
+    print("Read %d legit score files" % (len(dict_score)))
     return dict_score
 
 
@@ -132,15 +141,19 @@ def load_homolog_mapping(src_species: str, dst_species: str) -> dict:
     Parameters
     ----------
     src_species : str
-        Source species, must be either 'mmusculus' or 'hsapiens'
+        Source species. One of 'mmusculus', 'mouse', 'hsapiens', or 'human'.
     dst_species : str
-        Destination species, must be either 'mmusculus' or 'hsapiens'
+        Destination species. One of 'mmusculus', 'mouse', 'hsapiens', or 'human'.
+        Cannot be the same as `src_species`.
 
     Returns
     -------
     dict
-        Dictionary of gene homologs
+        Dictionary of gene homologs (gene symbol).
     """
+
+    src_species = convert_species_name(src_species)
+    dst_species = convert_species_name(dst_species)
 
     assert src_species != dst_species, "src and dst cannot be the same"
 
@@ -170,21 +183,22 @@ def load_gs(
     dst_species: str = None,
     to_intersect: List[str] = None,
 ) -> dict:
-    """Load the gene set file
+    """Load the gene set file (.gs file)
 
     Parameters
     ----------
     gs_path : str
         Path to the gene set file with the following two columns, separated by tab:
         - 'TRAIT'
-        - 'GENESET': (1) <gene1>,<gene2>,... each gene will be weighted uniformly or
+        - 'GENESET':
+            (1) <gene1>,<gene2>,... each gene will be weighted uniformly or
             (2) <gene1>:<weight1>,<gene2>:<weight2>,... each gene will be weighted by its weight
     src_species : str, default None
         Source species, must be either 'mmusculus' or 'hsapiens' if not None
     dst_species : str, default None
         Destination species, must be either 'mmusculus' or 'hsapiens' if not None
     to_intersect : List[str], default None
-        List of gene sets to intersect with the read gene set file
+        Gene list to intersect with the input .gs file
 
 
     Returns
@@ -201,7 +215,8 @@ def load_gs(
         dst_species is None
     ), "src_species and dst_species must be both None or not None"
 
-    # dict_map is only needed when src_species and dst_species are not None and different
+    # Load homolog map dict_map; only needed when src_species and dst_species
+    # are not None and different.
     if ((src_species is not None) & (dst_species is not None)) and (
         src_species != dst_species
     ):
@@ -233,11 +248,13 @@ def load_gs(
 
         # Intersect with other gene sets
         if to_intersect is not None:
+            to_intersect = set(to_intersect)
             dict_weights = {g: w for g, w in dict_weights.items() if g in to_intersect}
 
+        gene_list = list(dict_weights.keys())
         dict_gs[trait] = (
-            list(dict_weights.keys()),
-            list(dict_weights.values()),
+            gene_list,
+            [dict_weights[g] for g in gene_list],
         )
 
     return dict_gs
@@ -324,10 +341,17 @@ def qqplot(x, y, quantiles=None, interpolation="nearest", ax=None, **kwargs):
 
 
 def zsc2pval(zsc):
-    return 1 - sp.stats.norm.cdf(zsc)
+    """
+    Convert z-score to one-sided p-value. Accurate up to `zsc=36` and `pval=4.2e-284`.
+    """
+    #     return 1 - sp.stats.norm.cdf(zsc)
+    return sp.stats.norm.cdf(-zsc)  # This is more accurate
 
 
 def pval2zsc(pval):
+    """
+    Convert one-sided p-value to z-score. Accurate up to `zsc=36` and `pval=4.2e-284`.
+    """
     return -sp.stats.norm.ppf(pval)
 
 
