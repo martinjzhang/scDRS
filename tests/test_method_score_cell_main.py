@@ -23,6 +23,9 @@ def load_toy_data():
     REF_COV_FILE = os.path.join(
         DATA_PATH, "data/toydata_gs_mouse.ref_Ctrl20_CovConstCovariate.score.gz"
     )
+    REF_COV_FILE_FULL = os.path.join(
+        DATA_PATH, "data/toydata_gs_mouse.ref_Ctrl20_CovConstCovariate.full_score.gz"
+    )
 
     assert os.path.exists(H5AD_FILE), "built-in data toydata_mouse.h5ad missing"
     assert os.path.exists(COV_FILE), "built-in data toydata_mouse.cov missing"
@@ -33,6 +36,9 @@ def load_toy_data():
     assert os.path.exists(
         REF_COV_FILE
     ), "built-in data toydata_gs_mouse.ref_Ctrl20_CovConstCovariate.score.gz missing"
+    assert os.path.exists(
+        REF_COV_FILE_FULL
+    ), "built-in data toydata_gs_mouse.ref_Ctrl20_CovConstCovariate.full_score.gz missing"
 
     adata = read_h5ad(H5AD_FILE)
     df_cov = pd.read_csv(COV_FILE, sep="\t", index_col=0)
@@ -41,6 +47,7 @@ def load_toy_data():
     dic_res_ref = {
         "REF_NOCOV": pd.read_csv(REF_NOCOV_FILE, sep="\t", index_col=0),
         "REF_COV": pd.read_csv(REF_COV_FILE, sep="\t", index_col=0),
+        "REF_COV_FULL": pd.read_csv(REF_COV_FILE_FULL, sep="\t", index_col=0),
     }
 
     return adata, df_cov, df_gs, dic_res_ref

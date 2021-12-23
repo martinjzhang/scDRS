@@ -636,7 +636,6 @@ def perform_downstream(
                 adata=adata, df_full_score=dict_df_score[trait], var_cols=corr_analysis
             )
             df_res.to_csv(
-                #                 os.path.join(out_folder, f"{trait}.scdrs_var"), sep="\t", index=True
                 os.path.join(out_folder, f"{trait}.scdrs_cell_corr"),
                 sep="\t",
                 index=True,
