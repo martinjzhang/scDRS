@@ -25,14 +25,14 @@ for rep_i in $(seq 0 19); do
     OUT_FOLDER=~/holyscratch/continuous_weights_experiment/score_file/rep${rep_i}/${GS_PREFIX}.${WEIGHT_OPT}
     mkdir -p ${OUT_FOLDER}
 
-    python3 /n/holystore01/LABS/price_lab/Users/khou/scDRS-revision/compute_score.py \
+    scdrs compute_score \
         --h5ad_file $H5AD_FILE \
         --h5ad_species mouse \
         --cov_file $COV_FILE \
         --weight_opt $WEIGHT_OPT \
         --gs_file $GS_FILE \
         --gs_species human\
-        --flag_filter True\
+        --flag_filter_data True\
         --flag_raw_count True\
         --flag_return_ctrl_raw_score False\
         --flag_return_ctrl_norm_score True\
