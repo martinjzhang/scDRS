@@ -152,7 +152,7 @@ def main(args):
     # Compute connectivities if need to do cell type-level analysis
     if (len(CELLTYPE_LIST) > 0) & ("connectivities" not in adata.obsp):
         sc.pp.pca(adata, n_comps=20)
-        sc.pp.neighbors(adata, n_neighbors=5, n_pcs=20)
+        sc.pp.neighbors(adata, n_neighbors=15, n_pcs=20)
         print(
             "Compute connectivities with `sc.pp.neighbors` because `connectivities` is not found in adata.obsp"
         )
