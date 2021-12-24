@@ -114,9 +114,9 @@ def test_munge_gs_cli():
             print('Generated .gs file:')
             print(temp_df)
             err_msg = "input_file=%s, %s" % (input_file, selection)
-            assert list(temp_df.index) == ["HEIGHT", "BMI"], err_msg
-            assert temp_df.loc["HEIGHT", "GENESET"] == "OR4F5:2.0537", err_msg
+            assert list(temp_df.index) == ["BMI", "HEIGHT"], err_msg
             assert temp_df.loc["BMI", "GENESET"] == "DAZ1:2.0537", err_msg
+            assert temp_df.loc["HEIGHT", "GENESET"] == "OR4F5:2.0537", err_msg
 
     tmp_dir.cleanup()
 
@@ -135,8 +135,8 @@ def test_downstream_cli():
     # Load toy data
     ROOT_DIR = scdrs.__path__[0]
     H5AD_FILE = os.path.join(ROOT_DIR, "data/toydata_mouse.h5ad")
-    SCORE_FILE = os.path.join(ROOT_DIR, "data/res/@.full_score.gz")
-    REF_RES_DIR = os.path.join(ROOT_DIR, "data/res")
+    SCORE_FILE = os.path.join(ROOT_DIR, "data/@.full_score.gz")
+    REF_RES_DIR = os.path.join(ROOT_DIR, "data/")
 
     tmp_dir = tempfile.TemporaryDirectory()
     tmp_dir_path = tmp_dir.name
@@ -153,26 +153,23 @@ def test_downstream_cli():
             task,
             "--flag-filter-data False",
             "--flag-raw-count False",
-            "--knn-n-neighbors 10",
-            "--knn-n-pcs 40",
+            "--knn-n-neighbors 15",
+            "--knn-n-pcs 20",
             f"--out-folder {tmp_dir_path}",
         ]
         subprocess.check_call(" ".join(cmds), shell=True)
 
     # Check consistency between computed results and reference results
-    for prefix in ["toydata_gs_human", "toydata_gs_mouse"]:
+    for prefix in ["toydata_gs_mouse.ref_Ctrl20_CovConstCovariate"]:
         for suffix in ["scdrs_group.cell_type", "scdrs_gene", "scdrs_cell_corr"]:
             res_path = os.path.join(tmp_dir_path, f"{prefix}.{suffix}")
-            suffix_ref = suffix.replace("scdrs_group", "scdrs_ct").replace("scdrs_cell_corr", "scdrs_var")
-            ref_res_path = os.path.join(REF_RES_DIR, f"{prefix}.{suffix_ref}")
+            ref_res_path = os.path.join(REF_RES_DIR, f"{prefix}.{suffix}")
             df_res = pd.read_csv(res_path, sep="\t", index_col=0)
             df_ref_res = pd.read_csv(ref_res_path, sep="\t", index_col=0)
-            # only test common columns between `df_res` and `df_ref_res`
-            common_cols = set(df_res.columns) & set(df_ref_res.columns)
-            assert np.allclose(
-                df_res[common_cols].values, df_ref_res[common_cols].values
-            )
             print(df_res)
+            assert np.allclose(
+                df_res.values, df_ref_res.values
+            ), '%s, %s'%(prefix, suffix)
 
     tmp_dir.cleanup()
     return

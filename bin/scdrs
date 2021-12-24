@@ -117,60 +117,65 @@ def compute_score(
 
     header = get_cli_head()
     header += "Call: scdrs compute-score \\\n"
-    header += "--h5ad_file %s\\\n" % H5AD_FILE
-    header += "--h5ad_species %s\\\n" % H5AD_SPECIES
-    header += "--cov_file %s\\\n" % COV_FILE
-    header += "--gs_file %s\\\n" % GS_FILE
-    header += "--gs_species %s\\\n" % GS_SPECIES
-    header += "--ctrl_match_opt %s\\\n" % CTRL_MATCH_OPT
-    header += "--weight_opt %s\\\n" % WEIGHT_OPT
-    header += "--flag_filter_data %s\\\n" % FLAG_FILTER_DATA
-    header += "--flag_raw_count %s\\\n" % FLAG_RAW_COUNT
-    header += "--n_ctrl %d\\\n" % N_CTRL
-    header += "--flag_return_ctrl_raw_score %s\\\n" % FLAG_RETURN_CTRL_RAW_SCORE
-    header += "--flag_return_ctrl_norm_score %s\\\n" % FLAG_RETURN_CTRL_NORM_SCORE
-    header += "--out_folder %s\n" % OUT_FOLDER
+    header += "--h5ad-file %s\\\n" % H5AD_FILE
+    header += "--h5ad-species %s\\\n" % H5AD_SPECIES
+    header += "--cov-file %s\\\n" % COV_FILE
+    header += "--gs-file %s\\\n" % GS_FILE
+    header += "--gs-species %s\\\n" % GS_SPECIES
+    header += "--ctrl-match-opt %s\\\n" % CTRL_MATCH_OPT
+    header += "--weight-opt %s\\\n" % WEIGHT_OPT
+    header += "--flag-filter-data %s\\\n" % FLAG_FILTER_DATA
+    header += "--flag-raw-count %s\\\n" % FLAG_RAW_COUNT
+    header += "--n-ctrl %d\\\n" % N_CTRL
+    header += "--flag-return-ctrl-raw-score %s\\\n" % FLAG_RETURN_CTRL_RAW_SCORE
+    header += "--flag-return-ctrl-norm-score %s\\\n" % FLAG_RETURN_CTRL_NORM_SCORE
+    header += "--out-folder %s\n" % OUT_FOLDER
     print(header)
 
     # Check options
     if H5AD_SPECIES != GS_SPECIES:
         if H5AD_SPECIES not in ["mmusculus", "hsapiens"]:
             raise ValueError(
-                "--h5ad_species needs to be one of [mmusculus, hsapiens] "
-                "unless --h5ad_species==--gs_species"
+                "--h5ad-species needs to be one of [mmusculus, hsapiens] "
+                "unless --h5ad-species==--gs-species"
             )
         if GS_SPECIES not in ["mmusculus", "hsapiens"]:
             raise ValueError(
-                "--gs_species needs to be one of [mmusculus, hsapiens] "
-                "unless --h5ad_species==--gs_species"
+                "--gs-species needs to be one of [mmusculus, hsapiens] "
+                "unless --h5ad-species==--gs-species"
             )
     if CTRL_MATCH_OPT not in ["mean", "mean_var"]:
-        raise ValueError("--ctrl_match_opt needs to be one of [mean, mean_var]")
+        raise ValueError("--ctrl-match-opt needs to be one of [mean, mean_var]")
     if WEIGHT_OPT not in ["uniform", "vs", "inv_std", "od"]:
-        raise ValueError("--weight_opt needs to be one of [uniform, vs, inv_std, od]")
+        raise ValueError("--weight-opt needs to be one of [uniform, vs, inv_std, od]")
 
     ###########################################################################################
     ######                                     Load data                                 ######
     ###########################################################################################
-    print("Load data:")
+    print("Loading data:")
 
     # Load .h5ad file
     adata = scdrs.util.load_h5ad(
         H5AD_FILE, flag_filter_data=FLAG_FILTER_DATA, flag_raw_count=FLAG_RAW_COUNT
     )
-
     print(
-        "--h5ad_file loaded: n_cell=%d, n_gene=%d (sys_time=%0.1fs)"
+        "--h5ad-file loaded: n_cell=%d, n_gene=%d (sys_time=%0.1fs)"
         % (adata.shape[0], adata.shape[1], time.time() - sys_start_time)
     )
+    print("First 3 cells: %s" % (str(list(adata.obs_names[:3]))))
+    print("First 5 genes: %s" % (str(list(adata.var_names[:5]))))
 
     # Load .cov file
     if COV_FILE is not None:
         df_cov = pd.read_csv(COV_FILE, sep="\t", index_col=0)
         print(
-            "--cov_file loaded: covariates=[%s] (sys_time=%0.1fs)"
-            % (", ".join(df_cov.columns), time.time() - sys_start_time)
+            "--cov-file loaded: covariates=%s (sys_time=%0.1fs)"
+            % (str(list(df_cov.columns)), time.time() - sys_start_time)
         )
+        for col in df_cov.columns:
+            print(
+                "First 5 values for '%s': %s" % (col, str(list(df_cov[col].values[:5])))
+            )
     else:
         df_cov = None
 
@@ -183,19 +188,28 @@ def compute_score(
     )
 
     print(
-        "--gs_file loaded: n_geneset=%d (sys_time=%0.1fs)"
+        "--gs-file loaded: n_trait=%d (sys_time=%0.1fs)"
         % (len(dict_gs), time.time() - sys_start_time)
     )
+    print("Print info for first 3 traits:")
+    for gs in list(dict_gs)[:3]:
+        print(
+            "First 3 elements for '%s': %s, %s"
+            % (gs, str(dict_gs[gs][0][:3]), str(dict_gs[gs][1][:3]))
+        )
+    print("")
 
     ###########################################################################################
     ######                                  Computation                                  ######
     ###########################################################################################
 
     # Preprocess
+    print("Preprocessing:")
     scdrs.preprocess(adata, cov=df_cov, n_mean_bin=20, n_var_bin=20, copy=False)
+    print("")
 
     # Compute score
-    print("Compute score:")
+    print("Computing scDRS score:")
     for trait in dict_gs:
         gene_list, gene_weights = dict_gs[trait]
         if len(gene_list) < 10:
@@ -234,7 +248,7 @@ def compute_score(
         n_rej_01 = (v_fdr < 0.1).sum()
         n_rej_02 = (v_fdr < 0.2).sum()
         print(
-            "Gene set %s (n_gene=%d): %d/%d FDR<0.1 cells, %d/%d FDR<0.2 cells (sys_time=%0.1fs)"
+            "Trait=%s, n_gene=%d: %d/%d FDR<0.1 cells, %d/%d FDR<0.2 cells (sys_time=%0.1fs)"
             % (
                 trait,
                 len(gene_list),
@@ -357,7 +371,16 @@ def munge_gs(
     ######                                     Load data                                 ######
     ###########################################################################################
     if pval_file is not None:
-        df_pval = pd.read_csv(pval_file, sep="\t", index_col=0)
+        df_pval = pd.read_csv(pval_file, sep="\t", index_col=0) 
+        print(
+        "--pval-file loaded: n_gene=%d, n_trait=%d (sys_time=%0.1fs)"
+        % (df_pval.shape[0], df_pval.shape[1], time.time() - sys_start_time)
+        )        
+        print("Print info for the first 3 traits and first 10 genes")
+        print("%-20s"%"Traits", str(list(df_pval.columns[:3])))
+        for gene in df_pval.index[:10]:
+            print('%-20s'%gene, str(list(df_pval.loc[gene, df_pval.columns[:3]])))
+       
         # Check range
         max_ = df_pval.max(skipna=True).max()
         min_ = df_pval.min(skipna=True).min()
@@ -365,9 +388,19 @@ def munge_gs(
             print("--pval-file values are all between 0 and 1. Seems fine.")
         else:
             print("Warning: pval-file are not all between 0 and 1.")
+        print("")
 
     if zscore_file is not None:
         df_zscore = pd.read_csv(zscore_file, sep="\t", index_col=0)
+        print(
+        "--zscore-file loaded: n_gene=%d, n_trait=%d (sys_time=%0.1fs)"
+        % (df_zscore.shape[0], df_zscore.shape[1], time.time() - sys_start_time)
+        )        
+        print("Print info for the first 3 traits and first 10 genes")
+        print("%-20s"%"Traits", str(list(df_zscore.columns[:3])))
+        for gene in df_zscore.index[:10]:
+            print('%-20s'%gene, str(list(df_zscore.loc[gene, df_zscore.columns[:3]])))   
+        
         # Check range
         max_ = df_zscore.max(skipna=True).max()
         min_ = df_zscore.min(skipna=True).min()
@@ -377,20 +410,17 @@ def munge_gs(
             print("Warning: zscore-file values are all between 0 and 1.")
 
         df_pval = df_zscore.copy()
-        #         for col in df_pval.columns[1:]:
         for col in df_pval:
             df_pval[col] = scdrs.util.zsc2pval(df_zscore[col])
+        print("")
 
-    #     gene_col = df_pval.columns[0]
-    trait_list = list(df_pval.columns)
-
+    trait_list = sorted(df_pval.columns)
     ###########################################################################################
     ######                                  Computation                                  ######
     ###########################################################################################
     dict_gene_weights = {"TRAIT": [], "GENESET": []}
     for trait in trait_list:
         # Drop missing p-values
-        #         df_trait_pval = df_pval[[gene_col, trait]].copy()
         df_trait_pval = df_pval[[trait]].copy()
         df_trait_pval.dropna(axis=0, inplace=True)
 
@@ -413,10 +443,8 @@ def munge_gs(
 
         # Select `n_gene` genes with the smallest p-values
         df_trait_pval.sort_values(trait, ascending=True, inplace=True)
-        #         df_trait_pval = df_trait_pval.iloc[:n_gene].reset_index(drop=True)
         df_trait_pval = df_trait_pval.iloc[:n_gene]
 
-        #         gene_list = df_trait_pval[gene_col].values
         gene_list = df_trait_pval.index
         gene_pvals = df_trait_pval[trait].values.clip(min=1e-100)
 
@@ -455,15 +483,15 @@ def perform_downstream(
     
     `scdrs perform-downstream` supports 3 types of analyses:
     
-    --group_analysis: for a given cell-group-level annotation (e.g., tissue or cell type), assess cell 
+    --group-analysis: for a given cell-group-level annotation (e.g., tissue or cell type), assess cell 
         group-disease association (control-score-based MC tests using 5% quantile) and within-cell
         group disease-association heterogeneity (control-score-based MC tests using Geary's C).
         
-    --corr_analysis: for a given individual cell-level annotation (e.g., T cell effectorness gradient),
+    --corr-analysis: for a given individual cell-level annotation (e.g., T cell effectorness gradient),
         assess association between disease and the individual cell-level variable (control-score-based 
         MC tests using Pearson's correlation).
     
-    --gene_analysis: compute correlation between each gene and the scDRS disease score. 
+    --gene-analysis: compute correlation between each gene and the scDRS disease score. 
 
     Parameters
     ----------
@@ -580,13 +608,22 @@ def perform_downstream(
         "--h5ad-file loaded: n_cell=%d, n_gene=%d (sys_time=%0.1fs)"
         % (adata.shape[0], adata.shape[1], time.time() - sys_start_time)
     )
+    print("First 3 cells: %s" % (str(list(adata.obs_names[:3]))))
+    print("First 5 genes: %s" % (str(list(adata.var_names[:5]))))
 
-    dict_df_score = scdrs.util.load_scdrs_score(score_file)
+    dict_score = scdrs.util.load_scdrs_score(score_file)
     print(
         "--score-file loaded: n_trait=%d (sys_time=%0.1fs)"
-        % (len(dict_df_score), time.time() - sys_start_time)
+        % (len(dict_score), time.time() - sys_start_time)
     )
-
+    assert len(dict_score)>0, "Expect at least 1 score file."
+    print("Print info for the first trait, first 3 cells, and first 8 columns:")
+    trait = list(dict_score)[0]
+    print("%-20s"%"Trait", trait)
+    print('%-20s'%'Cells', str(list(dict_score[trait].index[:3])))
+    for col in dict_score[trait].columns[:8]:
+        print('%-20s'%col, str(dict_score[trait][col].values[:3]))
+    
     # Check cols in `group_analysis` are also in `adata.obs`
     if group_analysis is not None:
         assert (
@@ -598,22 +635,30 @@ def perform_downstream(
         assert (
             len(set(corr_analysis) - set(adata.obs)) == 0
         ), "Missing --corr-analysis variables from `adata.obs.columns`."
-
+    print("")
     ###########################################################################################
     ######                                  Computation                                  ######
     ###########################################################################################
     if group_analysis is not None:
+        print("Performing scDRS group-analysis")
         # Compute KNN if not present in `adata`
         if "connectivities" not in adata.obsp:
+            if knn_n_pcs > (min(adata.shape) - 1):
+                print(
+                    "`knn_n_pcs`=%d > `min(adata.shape)-1`=%d; set `knn_n_pcs`=%d"
+                    % (knn_n_pcs, min(adata.shape) - 1, min(adata.shape) - 1)
+                )
+                knn_n_pcs = min(adata.shape) - 1
+            sc.pp.pca(adata, n_comps=knn_n_pcs)
             sc.pp.neighbors(adata, n_neighbors=knn_n_neighbors, n_pcs=knn_n_pcs)
             print(
-                "`connectivities` is not found in `adata.obsp`; run `sc.pp.neighbors` first"
+                "`connectivities` not found in `adata.obsp`; run `sc.pp.neighbors` first"
             )
         # scDRS group-level analysis
-        for trait in dict_df_score:
+        for trait in dict_score:
             dict_df_res = scdrs.method.downstream_group_analysis(
                 adata=adata,
-                df_full_score=dict_df_score[trait],
+                df_full_score=dict_score[trait],
                 group_cols=group_analysis,
             )
             for group_col in group_analysis:
@@ -629,14 +674,15 @@ def perform_downstream(
                 "Finish group-analysis for %s (sys_time=%0.1fs)"
                 % (trait, time.time() - sys_start_time)
             )
+        print("")
 
     if corr_analysis is not None:
-        for trait in dict_df_score:
+        print("Performing scDRS corr-analysis")
+        for trait in dict_score:
             df_res = scdrs.method.downstream_corr_analysis(
-                adata=adata, df_full_score=dict_df_score[trait], var_cols=corr_analysis
+                adata=adata, df_full_score=dict_score[trait], var_cols=corr_analysis
             )
             df_res.to_csv(
-                #                 os.path.join(out_folder, f"{trait}.scdrs_var"), sep="\t", index=True
                 os.path.join(out_folder, f"{trait}.scdrs_cell_corr"),
                 sep="\t",
                 index=True,
@@ -645,11 +691,13 @@ def perform_downstream(
                 "Finish corr-analysis for %s (sys_time=%0.1fs)"
                 % (trait, time.time() - sys_start_time)
             )
-
+        print("")
+        
     if gene_analysis is not None:
-        for trait in dict_df_score:
+        print("Performing scDRS gene-analysis")
+        for trait in dict_score:
             df_res = scdrs.method.downstream_gene_analysis(
-                adata=adata, df_full_score=dict_df_score[trait]
+                adata=adata, df_full_score=dict_score[trait]
             )
             # save results
             df_res.to_csv(
@@ -659,6 +707,7 @@ def perform_downstream(
                 "Finish gene-analysis for %s (sys_time=%0.1fs)"
                 % (trait, time.time() - sys_start_time)
             )
+        print("")
 
     return
 

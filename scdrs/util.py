@@ -13,11 +13,7 @@ from typing import List, Dict
 import scdrs
 from anndata import read_h5ad
 import fnmatch
-
-
-def check_import():
-    print("# test: scdrs")
-    return
+import matplotlib.patches as patches
 
 
 def convert_species_name(species):
@@ -82,7 +78,7 @@ def load_h5ad(
 def load_scdrs_score(
     score_file: str, obs_names: List[str] = None
 ) -> Dict[str, pd.DataFrame]:
-    """Load scDRS scores. Use "@" to specify all matched files,
+    """Load scDRS scores. Use "@" to specify multiple files,
     e.g., score_file_folder/@.full_score.gz
 
     Parameters
@@ -131,7 +127,6 @@ def load_scdrs_score(
                 continue
         dict_score[score_file.replace(".full_score.gz", "")] = temp_df.copy()
 
-    print("Read %d legit score files" % (len(dict_score)))
     return dict_score
 
 
@@ -358,9 +353,6 @@ def pval2zsc(pval):
 # ================================================================================
 # Plotting utilities
 # ================================================================================
-import matplotlib.patches as patches
-
-
 def small_squares(ax, pos, size=1, linewidth=0.8):
     """
     Draw many small squares on ax, given the positions of

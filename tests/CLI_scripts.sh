@@ -8,6 +8,7 @@ COV_FILE=../scdrs/data/toydata_mouse.cov
 GS_FILE_MOUSE=../scdrs/data/toydata_mouse.gs
 GS_FILE_HUMAN=../scdrs/data/toydata_human.gs
 OUT_FOLDER=../scdrs/data/res.from_scripts
+# OUT_FOLDER=../scdrs/data/res.from_scripts_nocov
 SCORE_FILE=${OUT_FOLDER}/@.full_score.gz
 
 python3 ../compute_score.py \

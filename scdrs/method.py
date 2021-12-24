@@ -738,7 +738,7 @@ def downstream_group_analysis(
 
     assert (
         len(set(group_cols) - set(adata.obs)) == 0
-    ), "Missing group_cols variables from `adata.obs.columns`."
+    ), "Missing `group_cols` variables from `adata.obs.columns`."
 
     # Align cells between `adata` and `df_full_score`.
     cell_list = sorted(set(adata.obs_names) & set(df_full_score.index))
@@ -809,14 +809,15 @@ def downstream_group_analysis(
     return dict_df_res
 
 
-# TODO: review
 def downstream_corr_analysis(
     adata: anndata.AnnData, df_full_score: pd.DataFrame, var_cols: List[str]
 ) -> pd.DataFrame:
     """
-    Perform the correlation between cell-level variables with scDRS scores and
-    assign p-values and z-scores based on Monte Carlo estimates by comparing the
-    correlation between trait scores and control scores.
+    scDRS cell-level correlation analysis
+
+    For a given individual cell-level annotation (e.g., T cell effectorness gradient),
+    assess association between disease and the individual cell-level variable
+    (control-score-based Monte Carlo tests using Pearson's correlation).
 
     Parameters
     ----------
@@ -833,18 +834,15 @@ def downstream_corr_analysis(
         Correlation results (n_var x n_stats)
     """
 
+    assert (
+        len(set(var_cols) - set(adata.obs)) == 0
+    ), "Missing `var_cols` variables from `adata.obs.columns`."
+
     cell_list = sorted(set(adata.obs_names) & set(df_full_score.index))
     control_list = [x for x in df_full_score.columns if x.startswith("ctrl_norm_score")]
     n_ctrl = len(control_list)
     df_reg = adata.obs.loc[cell_list, var_cols].copy()
     df_reg = df_reg.join(df_full_score.loc[cell_list, ["norm_score"] + control_list])
-
-    # Check var_cols
-    missed_var_cols = [col for col in var_cols if col not in adata.obs.columns]
-    if len(missed_var_cols) > 0:
-        raise ValueError(
-            f"Following `var_cols` not in adata.obs.columns: {','.join(missed_var_cols)}"
-        )
 
     # Variable-disease correlation
     col_list = ["n_ctrl", "corr_mcp", "corr_mcz"]
@@ -852,10 +850,7 @@ def downstream_corr_analysis(
     for var_col in var_cols:
         corr_ = np.corrcoef(df_reg[var_col], df_reg["norm_score"])[0, 1]
         v_corr_ = np.array(
-            [
-                np.corrcoef(df_reg[var_col], df_reg["ctrl_norm_score_%d" % x])[0, 1]
-                for x in np.arange(n_ctrl)
-            ]
+            [np.corrcoef(df_reg[var_col], df_reg[x])[0, 1] for x in control_list]
         )
         mc_p = ((v_corr_ >= corr_).sum() + 1) / (v_corr_.shape[0] + 1)
         mc_z = (corr_ - v_corr_.mean()) / v_corr_.std()
@@ -864,14 +859,13 @@ def downstream_corr_analysis(
     return df_res
 
 
-# TODO: review
 def downstream_gene_analysis(
     adata: anndata.AnnData, df_full_score: pd.DataFrame
 ) -> pd.DataFrame:
     """
-    Perform the correlation between gene-level variables with scDRS scores and
-    assign p-values and z-scores based on Monte Carlo estimates by comparing the
-    correlation between trait scores and control scores.
+    scDRS gene-level correlation analysis
+
+    Compute correlation between each gene and the scDRS disease score.
 
     Parameters
     ----------
@@ -888,7 +882,7 @@ def downstream_gene_analysis(
 
     cell_list = sorted(set(adata.obs_names) & set(df_full_score.index))
     control_list = [x for x in df_full_score.columns if x.startswith("ctrl_norm_score")]
-    df_reg = df_full_score.loc[cell_list, ["norm_score"] + control_list]
+    df_reg = df_full_score.loc[cell_list, ["norm_score"]]
 
     mat_expr = adata[cell_list].X.copy()
     v_corr = scdrs.method._pearson_corr(mat_expr, df_reg["norm_score"].values)
@@ -899,84 +893,6 @@ def downstream_gene_analysis(
     df_res.sort_values("CORR", ascending=False, inplace=True)
     df_res["RANK"] = np.arange(df_res.shape[0])
     return df_res
-
-
-# TODO: remove this function
-def group_stats(
-    df_drs: pd.DataFrame,
-    adata: anndata.AnnData,
-    group_col: str,
-    stats=["assoc", "hetero"],
-) -> pd.DataFrame:
-    """compute group-level statistics for scDRS results
-
-    Parameters
-    ----------
-    df_drs : pd.DataFrame
-        scDRS results dataframe
-    adata : anndata.AnnData
-        AnnData object
-    group_col : str
-        Column name of group column in adata.obs
-    stats : list, optional
-        statistics to compute, by default ["assoc", "hetero"]
-
-    Returns
-    -------
-    pd.DataFrame
-        Group-level statistics (n_group x n_stats)
-    """
-
-    assert group_col in adata.obs.columns, "group_col not in adata.obs"
-    # stats must be contained in ["fdr_prop", "assoc", "hetero"]
-    assert set(stats).issubset(
-        set(["assoc", "hetero"])
-    ), "stats must be contained in ['assoc', 'hetero']"
-    group_list = np.unique(adata.obs[group_col])
-    col_list = ["n_cell", "n_ctrl", "fdr_prop"]
-
-    df = adata.obs[[group_col]].join(df_drs)
-    for stat in stats:
-        col_list.extend([stat + "_pval", stat + "_zsc"])
-    df_stats = pd.DataFrame(index=group_list, columns=col_list, dtype=float)
-
-    norm_score = df["norm_score"].values
-    ctrl_norm_score = df[
-        [col for col in df.columns if col.startswith(f"ctrl_norm_score_")]
-    ].values
-    n_ctrl = ctrl_norm_score.shape[1]
-
-    v_fdr = multipletests(df["pval"].values, method="fdr_bh")[1]
-
-    for group in group_list:
-        # Basic info
-        group_index = df[group_col].values == group
-        df_stats.loc[group, "n_cell"] = sum(group_index)
-        df_stats.loc[group, "n_ctrl"] = n_ctrl
-
-        # FDR proportion
-        df_stats.loc[group, "fdr_prop"] = (v_fdr[group_index] < 0.1).mean()
-
-        # association
-        if "assoc" in stats:
-            score_q95 = np.quantile(norm_score[group_index], 0.95)
-            v_ctrl_score_q95 = np.quantile(
-                ctrl_norm_score[group_index, :], 0.95, axis=0
-            )
-            mc_p = ((v_ctrl_score_q95 >= score_q95).sum() + 1) / (
-                v_ctrl_score_q95.shape[0] + 1
-            )
-            mc_z = (score_q95 - v_ctrl_score_q95.mean()) / v_ctrl_score_q95.std()
-            df_stats.loc[group, ["assoc_pval", "assoc_zsc"]] = [mc_p, mc_z]
-
-    # Heterogeneity
-    if "hetero" in stats:
-        df_rls = test_gearysc(adata, df, groupby=group_col)
-        for group in group_list:
-            mc_p, mc_z = df_rls.loc[group, ["pval", "zsc"]]
-            df_stats.loc[group, ["hetero_pval", "hetero_zsc"]] = [mc_p, mc_z]
-
-    return df_stats
 
 
 ##############################################################################
@@ -1171,7 +1087,6 @@ def _pearson_corr(mat_X, mat_Y):
     mat_corr: (M1,M2): np.ndarray
         Correlation matrix
     """
-
     # If sparse, use _pearson_corr_sparse
     if sp.sparse.issparse(mat_X) | sp.sparse.issparse(mat_Y):
         return _pearson_corr_sparse(mat_X, mat_Y)
@@ -1376,3 +1291,82 @@ def _get_rank(mat_X, axis=0):
             mat_rank[i_row, mat_X[i_row, :]] = temp_v
 
     return mat_rank
+
+
+# @Kangcheng: this is the archived section.
+# Remove it if you want but it can stay here for a while.
+def group_stats(
+    df_drs: pd.DataFrame,
+    adata: anndata.AnnData,
+    group_col: str,
+    stats=["assoc", "hetero"],
+) -> pd.DataFrame:
+    """compute group-level statistics for scDRS results
+
+    Parameters
+    ----------
+    df_drs : pd.DataFrame
+        scDRS results dataframe
+    adata : anndata.AnnData
+        AnnData object
+    group_col : str
+        Column name of group column in adata.obs
+    stats : list, optional
+        statistics to compute, by default ["assoc", "hetero"]
+
+    Returns
+    -------
+    pd.DataFrame
+        Group-level statistics (n_group x n_stats)
+    """
+
+    assert group_col in adata.obs.columns, "group_col not in adata.obs"
+    # stats must be contained in ["fdr_prop", "assoc", "hetero"]
+    assert set(stats).issubset(
+        set(["assoc", "hetero"])
+    ), "stats must be contained in ['assoc', 'hetero']"
+    group_list = np.unique(adata.obs[group_col])
+    col_list = ["n_cell", "n_ctrl", "fdr_prop"]
+
+    df = adata.obs[[group_col]].join(df_drs)
+    for stat in stats:
+        col_list.extend([stat + "_pval", stat + "_zsc"])
+    df_stats = pd.DataFrame(index=group_list, columns=col_list, dtype=float)
+
+    norm_score = df["norm_score"].values
+    ctrl_norm_score = df[
+        [col for col in df.columns if col.startswith(f"ctrl_norm_score_")]
+    ].values
+    n_ctrl = ctrl_norm_score.shape[1]
+
+    v_fdr = multipletests(df["pval"].values, method="fdr_bh")[1]
+
+    for group in group_list:
+        # Basic info
+        group_index = df[group_col].values == group
+        df_stats.loc[group, "n_cell"] = sum(group_index)
+        df_stats.loc[group, "n_ctrl"] = n_ctrl
+
+        # FDR proportion
+        df_stats.loc[group, "fdr_prop"] = (v_fdr[group_index] < 0.1).mean()
+
+        # association
+        if "assoc" in stats:
+            score_q95 = np.quantile(norm_score[group_index], 0.95)
+            v_ctrl_score_q95 = np.quantile(
+                ctrl_norm_score[group_index, :], 0.95, axis=0
+            )
+            mc_p = ((v_ctrl_score_q95 >= score_q95).sum() + 1) / (
+                v_ctrl_score_q95.shape[0] + 1
+            )
+            mc_z = (score_q95 - v_ctrl_score_q95.mean()) / v_ctrl_score_q95.std()
+            df_stats.loc[group, ["assoc_pval", "assoc_zsc"]] = [mc_p, mc_z]
+
+    # Heterogeneity
+    if "hetero" in stats:
+        df_rls = test_gearysc(adata, df, groupby=group_col)
+        for group in group_list:
+            mc_p, mc_z = df_rls.loc[group, ["pval", "zsc"]]
+            df_stats.loc[group, ["hetero_pval", "hetero_zsc"]] = [mc_p, mc_z]
+
+    return df_stats
