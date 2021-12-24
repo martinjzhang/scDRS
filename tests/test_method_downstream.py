@@ -226,43 +226,67 @@ def test_pearson_corr():
     for i in range(2):
         for j in range(2):
             mat_corr_true[i, j] = np.corrcoef(mat_X[:, i], mat_Y[:, j])[0, 1]
-
-    mat_corr = scdrs.method._pearson_corr_sparse(mat_X, mat_Y)
+    
+    # Basic
+    mat_corr = scdrs.method._pearson_corr(mat_X, mat_Y)
     err_msg = (
         "`mat_X` and `mat_Y`: ave_abs_dif=%0.2e"
         % np.absolute(mat_corr - mat_corr_true).mean()
     )
     assert np.allclose(mat_corr, mat_corr_true), err_msg
-
-    mat_corr = scdrs.method._pearson_corr_sparse(mat_X_sparse, mat_Y_sparse)
+    
+    # Sparse vs. dense
+    mat_corr = scdrs.method._pearson_corr(mat_X_sparse, mat_Y_sparse)
     err_msg = (
         "`mat_X_sparse` and `mat_Y_sparse`: ave_abs_dif=%0.2e"
         % np.absolute(mat_corr - mat_corr_true).mean()
     )
     assert np.allclose(mat_corr, mat_corr_true), err_msg
 
-    mat_corr = scdrs.method._pearson_corr_sparse(mat_X_sparse, mat_Y)
+    mat_corr = scdrs.method._pearson_corr(mat_X_sparse, mat_Y)
     err_msg = (
         "`mat_X_sparse` and `mat_Y`: ave_abs_dif=%0.2e"
         % np.absolute(mat_corr - mat_corr_true).mean()
     )
     assert np.allclose(mat_corr, mat_corr_true), err_msg
 
-    mat_corr = scdrs.method._pearson_corr_sparse(mat_X, mat_Y_sparse)
+    mat_corr = scdrs.method._pearson_corr(mat_X, mat_Y_sparse)
     err_msg = (
         "`mat_X` and `mat_Y_sparse`: ave_abs_dif=%0.2e"
         % np.absolute(mat_corr - mat_corr_true).mean()
     )
     assert np.allclose(mat_corr, mat_corr_true), err_msg
-
-    mat_corr = scdrs.method._pearson_corr_sparse(mat_X[:, 0], mat_Y_sparse)
+    
+    # 1D vs. nD
+    mat_corr = scdrs.method._pearson_corr(mat_X[:, 0], mat_Y[:, 0])
+    err_msg = (
+        "`mat_X[:,0]` and `mat_Y[:,0]`: ave_abs_dif=%0.2e"
+        % np.absolute(mat_corr - mat_corr_true[0, 0]).mean()
+    )
+    assert np.allclose(mat_corr, mat_corr_true[0, 0]), err_msg
+    
+    mat_corr = scdrs.method._pearson_corr(mat_X[:, 0], mat_Y)
+    err_msg = (
+        "`mat_X[:,0]` and `mat_Y`: ave_abs_dif=%0.2e"
+        % np.absolute(mat_corr - mat_corr_true[0, :]).mean()
+    )
+    assert np.allclose(mat_corr, mat_corr_true[0, :]), err_msg
+    
+    mat_corr = scdrs.method._pearson_corr(mat_X, mat_Y[:, 0])
+    err_msg = (
+        "`mat_X` and `mat_Y[:,0]`: ave_abs_dif=%0.2e"
+        % np.absolute(mat_corr - mat_corr_true[:, 0]).mean()
+    )
+    assert np.allclose(mat_corr, mat_corr_true[:, 0]), err_msg
+    
+    mat_corr = scdrs.method._pearson_corr(mat_X[:, 0], mat_Y_sparse)
     err_msg = (
         "`mat_X[:,0]` and `mat_Y_sparse`: ave_abs_dif=%0.2e"
         % np.absolute(mat_corr - mat_corr_true[0, :]).mean()
     )
     assert np.allclose(mat_corr, mat_corr_true[0, :]), err_msg
 
-    mat_corr = scdrs.method._pearson_corr_sparse(mat_X, mat_Y_sparse[:, 0])
+    mat_corr = scdrs.method._pearson_corr(mat_X, mat_Y_sparse[:, 0])
     err_msg = (
         "`mat_X` and `mat_Y_sparse[:, 0]`: ave_abs_dif=%0.2e"
         % np.absolute(mat_corr - mat_corr_true[:, 0]).mean()

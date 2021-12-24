@@ -281,12 +281,12 @@ def test_compute_raw_score_sparse_cov_uniform():
     return
 
 
-def test_compute_overdispersion_score():
+def test_compute_overdispersion_score_cov():
     """
-    Test scdrs.method._compute_overdispersion_score: dense+cov
+    Test scdrs.method._compute_overdispersion_score: sparse+cov and dense+cov
     """
 
-    # Sparse + cov
+    # Sparse+cov
     adata, df_cov, df_gs, dic_res_ref = load_toy_data()
     adata = adata[:, :100].copy()
     gene_list = list(adata.var_names[[0, 55, 27, 80, 2]])
@@ -327,6 +327,59 @@ def test_compute_overdispersion_score():
     assert np.allclose(v_raw_score_sparse, v_raw_score_true, rtol=1e-4), err_msg
 
     err_msg = "Dense+cov+od: avg_abs_score_dif=%0.2e" % (
+        np.absolute(v_raw_score_dense - v_raw_score_true).mean(),
+    )
+    assert np.allclose(v_raw_score_dense, v_raw_score_true, rtol=1e-4), err_msg
+
+    return
+
+
+def test_compute_overdispersion_score_nocov():
+    """
+    Test scdrs.method._compute_overdispersion_score: sparse+nocov and dense+nocov
+    """
+
+    # Sparse+nocov
+    adata, df_cov, df_gs, dic_res_ref = load_toy_data()
+    adata = adata[:, :100].copy()
+    gene_list = list(adata.var_names[[0, 55, 27, 80, 2]])
+    gene_weight = [1.1, 2.3, 1.8, 0.2, 3]
+
+    scdrs.pp.preprocess(adata, cov=None)
+    v_raw_score_sparse, v_score_weight = scdrs.method._compute_raw_score(
+        adata, gene_list, gene_weight, "od"
+    )
+
+    # Dense+nocov
+    adata, df_cov, df_gs, dic_res_ref = load_toy_data()
+    adata = adata[:, :100].copy()
+    gene_list = list(adata.var_names[[0, 55, 27, 80, 2]])
+    gene_weight = [1.1, 2.3, 1.8, 0.2, 3]
+
+    adata.X = adata.X.toarray()
+    scdrs.pp.preprocess(adata, cov=None)
+    v_raw_score_dense, v_score_weight = scdrs.method._compute_raw_score(
+        adata, gene_list, gene_weight, "od"
+    )
+
+    # True val (from dense+cov)
+    mat_X = adata[:, gene_list].X.toarray()
+
+    v_mean = adata.uns["SCDRS_PARAM"]["GENE_STATS"].loc[gene_list, "mean"].values
+    v_var_tech = (
+        adata.uns["SCDRS_PARAM"]["GENE_STATS"].loc[gene_list, "var_tech"].values
+    )
+    v_w = np.array(gene_weight) / (v_var_tech + 1e-2)
+    v_w = v_w / v_w.sum()
+
+    v_raw_score_true = (((mat_X - v_mean) ** 2 - v_var_tech) * v_w).sum(axis=1)
+
+    err_msg = "Sparse+nocov+od: avg_abs_score_dif=%0.2e" % (
+        np.absolute(v_raw_score_sparse - v_raw_score_true).mean(),
+    )
+    assert np.allclose(v_raw_score_sparse, v_raw_score_true, rtol=1e-4), err_msg
+
+    err_msg = "Dense+nocov+od: avg_abs_score_dif=%0.2e" % (
         np.absolute(v_raw_score_dense - v_raw_score_true).mean(),
     )
     assert np.allclose(v_raw_score_dense, v_raw_score_true, rtol=1e-4), err_msg
@@ -389,45 +442,6 @@ def test_correct_background_causal_cell():
             v_norm_score[5],
         )
         assert v_norm_score[5] > 3, err_msg
-
-    #         # Check mean and var across cells and across gene sets
-    #         max_abs_cell_mean_dif = np.absolute(mat_ctrl_norm_score.mean(axis=1)).max()
-    #         max_abs_cell_var_dif = np.absolute(mat_ctrl_norm_score.var(axis=1) - 1).max()
-    #         max_abs_gs_mean_dif = np.absolute(mat_ctrl_norm_score.mean(axis=0)).max()
-    #         max_abs_gs_var_dif = np.absolute(mat_ctrl_norm_score.var(axis=0) - 1).max()
-
-    #         err_msg = "Config=%s" % config
-    #         err_msg += (
-    #             "\nCell-wise mean ~ 0, max abs deviation=%0.2e\n"
-    #             % max_abs_cell_mean_dif
-    #         )
-    #         err_msg += (
-    #             "Cell-wise var ~ 1, max abs deviation=%0.2e\n"
-    #             % max_abs_cell_var_dif
-    #         )
-    #         err_msg += (
-    #             "Gene-set-wise mean ~ 0, max abs deviation=%0.2e\n"
-    #             % max_abs_gs_mean_dif
-    #         )
-    #         err_msg += (
-    #             "Gene-set-wise var ~ 1, max abs deviation=%0.2e"
-    #             % max_abs_gs_var_dif
-    #         )
-    #         assert (
-    #             (max_abs_cell_mean_dif < 0.2)
-    #             & (max_abs_cell_var_dif < 0.2)
-    #             & (max_abs_gs_mean_dif < 0.2)
-    #             & (max_abs_gs_var_dif < 0.2)
-    #         ), err_msg
-
-    #         # Consistency of normalized disease score
-    #         err_msg = "Config: %s vs. no-perturb, max_abs_norm_score_dif=%0.2e" % (
-    #             config,
-    #             np.absolute(dic_norm_score[config] - dic_norm_score["no-perturb"]).max(),
-    #         )
-    #         assert (
-    #             np.absolute(dic_norm_score[config] - dic_norm_score["no-perturb"]).max() < 0.1
-    #         ), err_msg
 
     return
 

@@ -1,22 +1,22 @@
 #!/bin/bash
-
-# scDRS CLI examples
-H5AD_FILE=../scdrs/data/toydata_mouse.h5ad
-COV_FILE=../scdrs/data/toydata_mouse.cov
-GS_FILE_MOUSE=../scdrs/data/toydata_mouse.gs
-GS_FILE_HUMAN=../scdrs/data/toydata_human.gs
-OUT_FOLDER=../scdrs/data/res.from_scdrs_cli
-SCORE_FILE=${OUT_FOLDER}/@.full_score.gz
     
-# munge-gs
-scdrs munge-gs\
-    --zscore-file /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/scdrs/data/gwas_gene.zscore_file \
-    --out-file /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/scdrs/data/gwas_gene.gs \
-    --weight zscore\
-    --n-min 5\
-    --n-max 10
+# # munge-gs
+# scdrs munge-gs\
+#     --zscore-file /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/scdrs/data/gwas_gene.zscore_file \
+#     --out-file /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/scdrs/data/gwas_gene.gs \
+#     --weight zscore\
+#     --n-min 5\
+#     --n-max 10
 
-# # scdrs compute-score
+# # scDRS CLI examples
+# H5AD_FILE=../scdrs/data/toydata_mouse.h5ad
+# COV_FILE=../scdrs/data/toydata_mouse.cov
+# GS_FILE_MOUSE=../scdrs/data/toydata_mouse.gs
+# GS_FILE_HUMAN=../scdrs/data/toydata_human.gs
+# OUT_FOLDER=../scdrs/data/res
+# SCORE_FILE=${OUT_FOLDER}/@.full_score.gz
+
+# # scdrs compute-score (for mouse gene set)
 # scdrs compute-score \
 #     --h5ad-file $H5AD_FILE\
 #     --h5ad-species mouse\
@@ -30,7 +30,8 @@ scdrs munge-gs\
 #     --flag-return-ctrl-raw-score False\
 #     --flag-return-ctrl_norm-score True\
 #     --out-folder $OUT_FOLDER
-    
+
+# # scdrs compute-score (for human gene set)
 # scdrs compute-score \
 #     --h5ad-file $H5AD_FILE\
 #     --h5ad-species mouse\
@@ -54,22 +55,6 @@ scdrs munge-gs\
 #     --gene-analysis \
 #     --out-folder $OUT_FOLDER \
 #     --flag-filter-data False \
-#     --flag-raw-count False
-
-# # perform-downstream --corr-analysis
-# scdrs downstream \
-#     --h5ad_file $H5AD_FILE \
-#     --score-file $SCORE_FILE \
-#     --corr-analysis causal_variable,non_causal_variable,covariate \
-#     --out-folder cli/ \
-#     --filter-data False \
-#     --raw-count False
-
-# # perform-downstream --gene-analysis
-# scdrs downstream \
-#     --h5ad_file $H5AD_FILE \
-#     --score-file $SCORE_FILE \
-#     --gene-analysis \
-#     --out-folder cli/ \
-#     --filter-data False \
-#     --raw-count False
+#     --flag-raw-count False \
+#     --knn-n-neighbors 5 \
+#     --knn-n-pcs 20

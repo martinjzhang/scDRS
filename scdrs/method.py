@@ -864,8 +864,8 @@ def downstream_gene_analysis(
 ) -> pd.DataFrame:
     """
     scDRS gene-level correlation analysis
-    
-    Compute correlation between each gene and the scDRS disease score. 
+
+    Compute correlation between each gene and the scDRS disease score.
 
     Parameters
     ----------
@@ -1087,7 +1087,6 @@ def _pearson_corr(mat_X, mat_Y):
     mat_corr: (M1,M2): np.ndarray
         Correlation matrix
     """
-
     # If sparse, use _pearson_corr_sparse
     if sp.sparse.issparse(mat_X) | sp.sparse.issparse(mat_Y):
         return _pearson_corr_sparse(mat_X, mat_Y)

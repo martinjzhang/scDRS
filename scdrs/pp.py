@@ -181,7 +181,6 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
     return adata if copy else None
 
 
-# fixit: specify n_chunk for _get_mean_var_implicit_cov_corr
 def compute_stats(
     adata, implicit_cov_corr=False, n_mean_bin=20, n_var_bin=20, n_chunk=20
 ):
