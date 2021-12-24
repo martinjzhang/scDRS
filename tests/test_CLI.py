@@ -114,9 +114,9 @@ def test_munge_gs_cli():
             print('Generated .gs file:')
             print(temp_df)
             err_msg = "input_file=%s, %s" % (input_file, selection)
-            assert list(temp_df.index) == ["HEIGHT", "BMI"], err_msg
-            assert temp_df.loc["HEIGHT", "GENESET"] == "OR4F5:2.0537", err_msg
+            assert list(temp_df.index) == ["BMI", "HEIGHT"], err_msg
             assert temp_df.loc["BMI", "GENESET"] == "DAZ1:2.0537", err_msg
+            assert temp_df.loc["HEIGHT", "GENESET"] == "OR4F5:2.0537", err_msg
 
     tmp_dir.cleanup()
 

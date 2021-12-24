@@ -1,9 +1,17 @@
 #!/bin/bash
     
-# # munge-gs
+# munge-gs --zscore-file
+scdrs munge-gs\
+    --zscore-file /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/scdrs/data/gwas_gene.zscore_file \
+    --out-file /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/scdrs/data/gwas_gene.from_zscore.gs \
+    --weight zscore\
+    --n-min 5\
+    --n-max 10
+
+# # munge-gs --pval-file
 # scdrs munge-gs\
-#     --zscore-file /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/scdrs/data/gwas_gene.zscore_file \
-#     --out-file /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/scdrs/data/gwas_gene.gs \
+#     --pval-file /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/scdrs/data/gwas_gene.pval_file \
+#     --out-file /n/home11/mjzhang/gwas_informed_scRNAseq/scDRS/scdrs/data/gwas_gene.from_pval.gs \
 #     --weight zscore\
 #     --n-min 5\
 #     --n-max 10

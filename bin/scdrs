@@ -371,7 +371,16 @@ def munge_gs(
     ######                                     Load data                                 ######
     ###########################################################################################
     if pval_file is not None:
-        df_pval = pd.read_csv(pval_file, sep="\t", index_col=0)
+        df_pval = pd.read_csv(pval_file, sep="\t", index_col=0) 
+        print(
+        "--pval-file loaded: n_gene=%d, n_trait=%d (sys_time=%0.1fs)"
+        % (df_pval.shape[0], df_pval.shape[1], time.time() - sys_start_time)
+        )        
+        print("Print info for the first 3 traits and first 10 genes")
+        print("%-20s"%"Traits", str(list(df_pval.columns[:3])))
+        for gene in df_pval.index[:10]:
+            print('%-20s'%gene, str(list(df_pval.loc[gene, df_pval.columns[:3]])))
+       
         # Check range
         max_ = df_pval.max(skipna=True).max()
         min_ = df_pval.min(skipna=True).min()
@@ -379,9 +388,19 @@ def munge_gs(
             print("--pval-file values are all between 0 and 1. Seems fine.")
         else:
             print("Warning: pval-file are not all between 0 and 1.")
+        print("")
 
     if zscore_file is not None:
         df_zscore = pd.read_csv(zscore_file, sep="\t", index_col=0)
+        print(
+        "--zscore-file loaded: n_gene=%d, n_trait=%d (sys_time=%0.1fs)"
+        % (df_zscore.shape[0], df_zscore.shape[1], time.time() - sys_start_time)
+        )        
+        print("Print info for the first 3 traits and first 10 genes")
+        print("%-20s"%"Traits", str(list(df_zscore.columns[:3])))
+        for gene in df_zscore.index[:10]:
+            print('%-20s'%gene, str(list(df_zscore.loc[gene, df_zscore.columns[:3]])))   
+        
         # Check range
         max_ = df_zscore.max(skipna=True).max()
         min_ = df_zscore.min(skipna=True).min()
@@ -391,20 +410,17 @@ def munge_gs(
             print("Warning: zscore-file values are all between 0 and 1.")
 
         df_pval = df_zscore.copy()
-        #         for col in df_pval.columns[1:]:
         for col in df_pval:
             df_pval[col] = scdrs.util.zsc2pval(df_zscore[col])
+        print("")
 
-    #     gene_col = df_pval.columns[0]
-    trait_list = list(df_pval.columns)
-
+    trait_list = sorted(df_pval.columns)
     ###########################################################################################
     ######                                  Computation                                  ######
     ###########################################################################################
     dict_gene_weights = {"TRAIT": [], "GENESET": []}
     for trait in trait_list:
         # Drop missing p-values
-        #         df_trait_pval = df_pval[[gene_col, trait]].copy()
         df_trait_pval = df_pval[[trait]].copy()
         df_trait_pval.dropna(axis=0, inplace=True)
 
@@ -427,10 +443,8 @@ def munge_gs(
 
         # Select `n_gene` genes with the smallest p-values
         df_trait_pval.sort_values(trait, ascending=True, inplace=True)
-        #         df_trait_pval = df_trait_pval.iloc[:n_gene].reset_index(drop=True)
         df_trait_pval = df_trait_pval.iloc[:n_gene]
 
-        #         gene_list = df_trait_pval[gene_col].values
         gene_list = df_trait_pval.index
         gene_pvals = df_trait_pval[trait].values.clip(min=1e-100)
 
