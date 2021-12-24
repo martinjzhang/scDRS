@@ -91,7 +91,8 @@ def test_downstream_group_analysis():
             ]
             v_gc_ctrl[icol] = gearyc_naive(mat_W, v_ctrl_score)
         v_mcp_true[i_ct] = ((v_gc_ctrl <= gc).sum() + 1) / (v_gc_ctrl.shape[0] + 1)
-        v_mcz_true[i_ct] = -(gc - v_gc_ctrl.mean()) / v_gc_ctrl.std()
+        # add ddof=1 to be consistent with the test_gearysc original implementation
+        v_mcz_true[i_ct] = -(gc - v_gc_ctrl.mean()) / v_gc_ctrl.std(ddof=1)
     err_msg = "'hetero_mcp': expect=%s, actual=%s" % (
         str(list(v_mcp_true)),
         str(list(df_res["hetero_mcp"])),
@@ -101,7 +102,7 @@ def test_downstream_group_analysis():
         str(list(v_mcz_true)),
         str(list(df_res["hetero_mcz"])),
     )
-    assert np.allclose(df_res["hetero_mcz"], v_mcz_true, rtol=0.05), err_msg
+    assert np.allclose(df_res["hetero_mcz"], v_mcz_true), err_msg
 
     # Check n_fdr_0.05, n_fdr_0.1, n_fdr_0.2
     for col in ["n_fdr_0.05", "n_fdr_0.1", "n_fdr_0.2"]:
@@ -226,7 +227,7 @@ def test_pearson_corr():
     for i in range(2):
         for j in range(2):
             mat_corr_true[i, j] = np.corrcoef(mat_X[:, i], mat_Y[:, j])[0, 1]
-    
+
     # Basic
     mat_corr = scdrs.method._pearson_corr(mat_X, mat_Y)
     err_msg = (
@@ -234,7 +235,7 @@ def test_pearson_corr():
         % np.absolute(mat_corr - mat_corr_true).mean()
     )
     assert np.allclose(mat_corr, mat_corr_true), err_msg
-    
+
     # Sparse vs. dense
     mat_corr = scdrs.method._pearson_corr(mat_X_sparse, mat_Y_sparse)
     err_msg = (
@@ -256,7 +257,7 @@ def test_pearson_corr():
         % np.absolute(mat_corr - mat_corr_true).mean()
     )
     assert np.allclose(mat_corr, mat_corr_true), err_msg
-    
+
     # 1D vs. nD
     mat_corr = scdrs.method._pearson_corr(mat_X[:, 0], mat_Y[:, 0])
     err_msg = (
@@ -264,21 +265,21 @@ def test_pearson_corr():
         % np.absolute(mat_corr - mat_corr_true[0, 0]).mean()
     )
     assert np.allclose(mat_corr, mat_corr_true[0, 0]), err_msg
-    
+
     mat_corr = scdrs.method._pearson_corr(mat_X[:, 0], mat_Y)
     err_msg = (
         "`mat_X[:,0]` and `mat_Y`: ave_abs_dif=%0.2e"
         % np.absolute(mat_corr - mat_corr_true[0, :]).mean()
     )
     assert np.allclose(mat_corr, mat_corr_true[0, :]), err_msg
-    
+
     mat_corr = scdrs.method._pearson_corr(mat_X, mat_Y[:, 0])
     err_msg = (
         "`mat_X` and `mat_Y[:,0]`: ave_abs_dif=%0.2e"
         % np.absolute(mat_corr - mat_corr_true[:, 0]).mean()
     )
     assert np.allclose(mat_corr, mat_corr_true[:, 0]), err_msg
-    
+
     mat_corr = scdrs.method._pearson_corr(mat_X[:, 0], mat_Y_sparse)
     err_msg = (
         "`mat_X[:,0]` and `mat_Y_sparse`: ave_abs_dif=%0.2e"
