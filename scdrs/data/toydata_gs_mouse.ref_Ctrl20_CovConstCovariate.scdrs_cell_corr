@@ -1,0 +1,4 @@
+	n_ctrl	corr_mcp	corr_mcz
+causal_variable	20.0	0.04761905	3.8643224
+non_causal_variable	20.0	0.33333334	0.3005084
+covariate	20.0	0.2857143	0.52982867

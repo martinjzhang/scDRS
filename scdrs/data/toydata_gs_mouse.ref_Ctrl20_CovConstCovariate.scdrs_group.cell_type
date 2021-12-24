@@ -1,0 +1,3 @@
+	n_cell	n_ctrl	assoc_mcp	assoc_mcz	hetero_mcp	hetero_mcz	n_fdr_0.05	n_fdr_0.1	n_fdr_0.2
+causal_cell	10.0	20.0	0.04761905	11.596751	0.14285715	0.88222706	5.0	5.0	5.0
+non_causal_cell	20.0	20.0	0.85714287	-1.0221674	1.0	-2.3195207	0.0	0.0	0.0
