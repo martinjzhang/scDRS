@@ -2,10 +2,12 @@ import setuptools
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
+    
+exec(open('scdrs/version.py').read())
 
 setuptools.setup(
     name="scdrs",
-    version="1.0.0",
+    version=__version__,
     author="Martin Jinye Zhang, Kangcheng Hou",
     author_email="martinjzhang@gmail.com, kangchenghou@gmail.com",
     description="Single-cell disease-relevance score",

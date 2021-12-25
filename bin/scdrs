@@ -11,13 +11,10 @@ import os
 import time
 
 
-VERSION = "1.0.0"
-
-
 def get_cli_head():
     MASTHEAD = "******************************************************************************\n"
     MASTHEAD += "* Single-cell disease relevance score (scDRS)\n"
-    MASTHEAD += "* Version %s\n" % VERSION
+    MASTHEAD += "* Version %s\n" % scdrs.__version__
     MASTHEAD += "* Martin Jinye Zhang and Kangcheng Hou\n"
     MASTHEAD += "* HSPH / Broad Institute / UCLA\n"
     MASTHEAD += "* MIT License\n"
@@ -371,16 +368,16 @@ def munge_gs(
     ######                                     Load data                                 ######
     ###########################################################################################
     if pval_file is not None:
-        df_pval = pd.read_csv(pval_file, sep="\t", index_col=0) 
+        df_pval = pd.read_csv(pval_file, sep="\t", index_col=0)
         print(
-        "--pval-file loaded: n_gene=%d, n_trait=%d (sys_time=%0.1fs)"
-        % (df_pval.shape[0], df_pval.shape[1], time.time() - sys_start_time)
-        )        
+            "--pval-file loaded: n_gene=%d, n_trait=%d (sys_time=%0.1fs)"
+            % (df_pval.shape[0], df_pval.shape[1], time.time() - sys_start_time)
+        )
         print("Print info for the first 3 traits and first 10 genes")
-        print("%-20s"%"Traits", str(list(df_pval.columns[:3])))
+        print("%-20s" % "Traits", str(list(df_pval.columns[:3])))
         for gene in df_pval.index[:10]:
-            print('%-20s'%gene, str(list(df_pval.loc[gene, df_pval.columns[:3]])))
-       
+            print("%-20s" % gene, str(list(df_pval.loc[gene, df_pval.columns[:3]])))
+
         # Check range
         max_ = df_pval.max(skipna=True).max()
         min_ = df_pval.min(skipna=True).min()
@@ -393,14 +390,14 @@ def munge_gs(
     if zscore_file is not None:
         df_zscore = pd.read_csv(zscore_file, sep="\t", index_col=0)
         print(
-        "--zscore-file loaded: n_gene=%d, n_trait=%d (sys_time=%0.1fs)"
-        % (df_zscore.shape[0], df_zscore.shape[1], time.time() - sys_start_time)
-        )        
+            "--zscore-file loaded: n_gene=%d, n_trait=%d (sys_time=%0.1fs)"
+            % (df_zscore.shape[0], df_zscore.shape[1], time.time() - sys_start_time)
+        )
         print("Print info for the first 3 traits and first 10 genes")
-        print("%-20s"%"Traits", str(list(df_zscore.columns[:3])))
+        print("%-20s" % "Traits", str(list(df_zscore.columns[:3])))
         for gene in df_zscore.index[:10]:
-            print('%-20s'%gene, str(list(df_zscore.loc[gene, df_zscore.columns[:3]])))   
-        
+            print("%-20s" % gene, str(list(df_zscore.loc[gene, df_zscore.columns[:3]])))
+
         # Check range
         max_ = df_zscore.max(skipna=True).max()
         min_ = df_zscore.min(skipna=True).min()
@@ -616,14 +613,14 @@ def perform_downstream(
         "--score-file loaded: n_trait=%d (sys_time=%0.1fs)"
         % (len(dict_score), time.time() - sys_start_time)
     )
-    assert len(dict_score)>0, "Expect at least 1 score file."
+    assert len(dict_score) > 0, "Expect at least 1 score file."
     print("Print info for the first trait, first 3 cells, and first 8 columns:")
     trait = list(dict_score)[0]
-    print("%-20s"%"Trait", trait)
-    print('%-20s'%'Cells', str(list(dict_score[trait].index[:3])))
+    print("%-20s" % "Trait", trait)
+    print("%-20s" % "Cells", str(list(dict_score[trait].index[:3])))
     for col in dict_score[trait].columns[:8]:
-        print('%-20s'%col, str(dict_score[trait][col].values[:3]))
-    
+        print("%-20s" % col, str(dict_score[trait][col].values[:3]))
+
     # Check cols in `group_analysis` are also in `adata.obs`
     if group_analysis is not None:
         assert (
@@ -692,7 +689,7 @@ def perform_downstream(
                 % (trait, time.time() - sys_start_time)
             )
         print("")
-        
+
     if gene_analysis is not None:
         print("Performing scDRS gene-analysis")
         for trait in dict_score:

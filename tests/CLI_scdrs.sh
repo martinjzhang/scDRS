@@ -39,30 +39,30 @@ scdrs compute-score \
     --flag-return-ctrl_norm-score True\
     --out-folder $OUT_FOLDER
 
-# scdrs compute-score (for human gene set)
-scdrs compute-score \
-    --h5ad-file $H5AD_FILE\
-    --h5ad-species mouse\
-    --cov-file $COV_FILE\
-    --gs-file $GS_FILE_HUMAN\
-    --gs-species human\
-    --ctrl-match-opt mean_var\
-    --flag-filter-data False\
-    --flag-raw_count False\
-    --n-ctrl 20\
-    --flag-return-ctrl-raw-score False\
-    --flag-return-ctrl_norm-score True\
-    --out-folder $OUT_FOLDER
+# # scdrs compute-score (for human gene set)
+# scdrs compute-score \
+#     --h5ad-file $H5AD_FILE\
+#     --h5ad-species mouse\
+#     --cov-file $COV_FILE\
+#     --gs-file $GS_FILE_HUMAN\
+#     --gs-species human\
+#     --ctrl-match-opt mean_var\
+#     --flag-filter-data False\
+#     --flag-raw_count False\
+#     --n-ctrl 20\
+#     --flag-return-ctrl-raw-score False\
+#     --flag-return-ctrl_norm-score True\
+#     --out-folder $OUT_FOLDER
 
-# perform-downstream --group-analysis
-scdrs perform-downstream \
-    --h5ad_file $H5AD_FILE \
-    --score-file $SCORE_FILE \
-    --group-analysis cell_type \
-    --corr-analysis causal_variable,non_causal_variable,covariate \
-    --gene-analysis \
-    --out-folder $OUT_FOLDER \
-    --flag-filter-data False \
-    --flag-raw-count False \
-    --knn-n-neighbors 15 \
-    --knn-n-pcs 20
+# # perform-downstream --group-analysis
+# scdrs perform-downstream \
+#     --h5ad_file $H5AD_FILE \
+#     --score-file $SCORE_FILE \
+#     --group-analysis cell_type \
+#     --corr-analysis causal_variable,non_causal_variable,covariate \
+#     --gene-analysis \
+#     --out-folder $OUT_FOLDER \
+#     --flag-filter-data False \
+#     --flag-raw-count False \
+#     --knn-n-neighbors 15 \
+#     --knn-n-pcs 20
