@@ -1,11 +1,8 @@
-import scanpy as sc
 import numpy as np
 import scipy as sp
 from scipy import sparse
 import pandas as pd
 from skmisc.loess import loess
-from tqdm import tqdm
-import scdrs
 
 
 def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=False):

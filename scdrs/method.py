@@ -2,9 +2,7 @@ import scanpy as sc
 import numpy as np
 import scipy as sp
 import pandas as pd
-from skmisc.loess import loess
 from tqdm import tqdm
-import scdrs.pp as pp
 import anndata
 from typing import List, Dict, Tuple
 from statsmodels.stats.multitest import multipletests
@@ -645,7 +643,7 @@ def score_cell_vision(adata, gene_list):
     """
 
     gene_list = sorted(set(gene_list) & set(adata.var_names))
-    v_mean, v_var = pp._get_mean_var(adata.X, axis=1)
+    v_mean, v_var = scdrs.pp._get_mean_var(adata.X, axis=1)
 
     v_score = adata[:, gene_list].X.mean(axis=1)
     v_score = np.array(v_score).reshape([-1])
@@ -796,7 +794,7 @@ def downstream_group_analysis(
             df_res.loc[group, ["assoc_mcp", "assoc_mcz"]] = [mc_p, mc_z]
 
         # Heterogeneity @Kangcheng: could you review
-        df_rls = scdrs.method.test_gearysc(
+        df_rls = test_gearysc(
             adata[cell_list], df_reg.loc[cell_list, :], groupby=group_col
         )
         for ct in group_list:
@@ -885,7 +883,7 @@ def downstream_gene_analysis(
     df_reg = df_full_score.loc[cell_list, ["norm_score"]]
 
     mat_expr = adata[cell_list].X.copy()
-    v_corr = scdrs.method._pearson_corr(mat_expr, df_reg["norm_score"].values)
+    v_corr = _pearson_corr(mat_expr, df_reg["norm_score"].values)
     df_res = pd.DataFrame(
         index=adata.var_names, columns=["CORR", "RANK"], dtype=np.float32
     )
@@ -1135,9 +1133,9 @@ def _pearson_corr_sparse(mat_X, mat_Y):
         mat_Y = sp.sparse.csr_matrix(mat_Y)
 
     # Compute v_mean,v_var
-    v_X_mean, v_X_var = pp._get_mean_var(mat_X, axis=0)
+    v_X_mean, v_X_var = scdrs.pp._get_mean_var(mat_X, axis=0)
     v_X_sd = np.sqrt(v_X_var).clip(min=1e-8)
-    v_Y_mean, v_Y_var = pp._get_mean_var(mat_Y, axis=0)
+    v_Y_mean, v_Y_var = scdrs.pp._get_mean_var(mat_Y, axis=0)
     v_Y_sd = np.sqrt(v_Y_var).clip(min=1e-8)
 
     mat_corr = mat_X.T.dot(mat_Y) / mat_X.shape[0]
@@ -1213,8 +1211,8 @@ def correlate_gene(
     if cov_list is not None:
         mat_cov = adata.obs[cov_list].values.copy()
         mat_cov = mat_cov - mat_cov.mean(axis=0)
-        v_trs = pp.reg_out(v_trs, mat_cov)
-        mat_X = pp.reg_out(mat_X, mat_cov)
+        v_trs = scdrs.pp.reg_out(v_trs, mat_cov)
+        mat_X = scdrs.pp.reg_out(mat_X, mat_cov)
 
     # Compute correlation
     if corr_opt == "pearson":

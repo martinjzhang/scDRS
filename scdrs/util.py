@@ -10,7 +10,6 @@ import anndata
 import matplotlib.transforms as mtrans
 import matplotlib.pyplot as plt
 from typing import List, Dict
-import scdrs
 from anndata import read_h5ad
 import fnmatch
 import matplotlib.patches as patches
