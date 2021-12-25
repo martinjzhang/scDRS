@@ -9,8 +9,8 @@ Import scDRS as::
 
    import scdrs
 
-Individual cell disease-relevance score
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+scDRS individual cell disease-relevance score
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary:: 
    :toctree: reference
@@ -18,13 +18,41 @@ Individual cell disease-relevance score
    scdrs.preprocess
    scdrs.score_cell
 
-Downstream analyses
-~~~~~~~~~~~~~~~~~~~
+scDRS downstream analyses
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary:: 
    :toctree: reference
 
+   scdrs.method.downstream_group_analysis
+   scdrs.method.downstream_corr_analysis
+   scdrs.method.downstream_gene_analysis
+   
+Data loading
+~~~~~~~~~~~~
+
+.. autosummary:: 
+   :toctree: reference
+    
+   scdrs.util.load_h5ad
+   scdrs.util.load_scdrs_score
+   scdrs.util.load_homolog_mapping
+   scdrs.util.load_gs
+   
+Util
+~~~~
+
+.. autosummary:: 
+   :toctree: reference
+    
    scdrs.method.test_gearysc
+   scdrs.method.gearys_c
+   scdrs.method._pearson_corr
+   scdrs.method._pearson_corr_sparse
+   scdrs.pp.compute_stats
+   scdrs.pp.reg_out
+   scdrs.pp._get_mean_var
+   scdrs.pp._get_mean_var_implicit_cov_corr
    scdrs.util.convert_gs_species
 
 .. Data loading

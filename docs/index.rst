@@ -3,7 +3,7 @@ scDRS
 
 scDRS (single-cell disease-relevance score) is a method for associating individual cells in scRNA-seq data with disease GWASs, built on top of `AnnData <https://anndata.readthedocs.io/en/latest/>`_ and `Scanpy <https://scanpy.readthedocs.io/en/stable/>`_.
 
-Check out the bioRxiv manuscript `Zhang*, Hou*, et al. "Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data <https://www.biorxiv.org/content/10.1101/2021.09.24.461597v1>`_.
+Check out the  manuscript `Zhang*, Hou*, et al. "Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data <https://www.biorxiv.org/content/10.1101/2021.09.24.461597v1>`_.
 
 Results for 74 diseases/traits and the TMS FACS data `(cellxgene visualization) <https://scdrs-tms-facs.herokuapp.com/>`_.
 
@@ -17,6 +17,15 @@ Installation
 
    git clone https://github.com/martinjzhang/scDRS.git
    cd scDRS; pip install -e .
+   
+Quick test:
+
+.. code-block:: bash
+
+   python -m pytest tests/test_CLI.py -p no:warnings
+   
+`Install other versions of scDRS <versions>`_
+
 
 
 Usage
@@ -24,30 +33,35 @@ Usage
 
 .. code-block:: python
 
-   import os
-   import pandas as pd
-   from anndata import read_h5ad
-   import scdrs
+    import os
+    import pandas as pd
+    import scdrs
 
-   # Load data
-   DATA_PATH = scdrs.__path__[0]
-   adata = read_h5ad(os.path.join(DATA_PATH, "data/toydata_mouse.h5ad"))
-   df_gs = pd.read_csv(os.path.join(DATA_PATH, "data/toydata_mouse.gs"), sep="\t")
+    DATA_PATH = scdrs.__path__[0]
+    H5AD_FILE = os.path.join(DATA_PATH, "data/toydata_mouse.h5ad")
+    COV_FILE = os.path.join(DATA_PATH, "data/toydata_mouse.cov")
+    GS_FILE = os.path.join(DATA_PATH, "data/toydata_mouse.gs")
 
-   # Compute scDRS gene-level and cell-level statistics
-   scdrs.method.compute_stats(adata)
+    # Load .h5ad file, .cov file, and .gs file
+    adata = scdrs.util.load_h5ad(H5AD_FILE, flag_filter_data=False, flag_raw_count=False)
+    df_cov = pd.read_csv(COV_FILE, sep="\t", index_col=0)
+    df_gs = scdrs.util.load_gs(GS_FILE)
 
-   # Compute scDRS results
-   gene_list = df_gs["GENESET"].values[0].split(",")
-   df_res = scdrs.method.score_cell(adata, gene_list)
-   print(df_res.iloc[:4])
+    # Preproecssing .h5ad data compute scDRS score
+    scdrs.preprocess(adata, cov=df_cov)
+    gene_list = df_gs['toydata_gs_mouse'][0]
+    gene_weight = df_gs['toydata_gs_mouse'][1]
+    df_res = scdrs.score_cell(adata, gene_list, gene_weight=gene_weight, n_ctrl=20)
+
+    print(df_res.iloc[:4])
+
 
 `Jump to an scDRS demo on Cortex data set. <notebooks/quickstart.html>`_
 
 
 Citation
 ========
-If you use scDRS for published work, please cite our manuscript:
+If scDRS is useful for your research, consider citing:
 
 **Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data**
 
@@ -62,6 +76,8 @@ If you use scDRS for published work, please cite our manuscript:
 
    notebooks/quickstart.ipynb
    reference
+   file_format
+   versions
    examples
    downloads
    
