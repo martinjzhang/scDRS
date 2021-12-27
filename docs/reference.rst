@@ -9,8 +9,8 @@ Import scDRS as::
 
    import scdrs
 
-scDRS individual cell disease-relevance score
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Compute scDRS score
+~~~~~~~~~~~~~~~~~~~
 
 .. autosummary:: 
    :toctree: reference
@@ -36,11 +36,11 @@ Data loading
     
    scdrs.util.load_h5ad
    scdrs.util.load_scdrs_score
-   scdrs.util.load_homolog_mapping
    scdrs.util.load_gs
+   scdrs.util.load_homolog_mapping
    
-Util
-~~~~
+Utils
+~~~~~
 
 .. autosummary:: 
    :toctree: reference
@@ -53,8 +53,3 @@ Util
    scdrs.pp.reg_out
    scdrs.pp._get_mean_var
    scdrs.pp._get_mean_var_implicit_cov_corr
-   scdrs.util.convert_gs_species
-
-.. Data loading
-.. ~~~~~~~~~~~~
-.. utility function for downloading data, we can have a function which load commonly used GWAS datasets

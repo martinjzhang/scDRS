@@ -3,11 +3,9 @@ scDRS
 
 scDRS (single-cell disease-relevance score) is a method for associating individual cells in scRNA-seq data with disease GWASs, built on top of `AnnData <https://anndata.readthedocs.io/en/latest/>`_ and `Scanpy <https://scanpy.readthedocs.io/en/stable/>`_.
 
-Check out the  manuscript `Zhang*, Hou*, et al. "Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data <https://www.biorxiv.org/content/10.1101/2021.09.24.461597v1>`_.
+Check out our manuscript `Zhang*, Hou*, et al. "Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data <https://www.biorxiv.org/content/10.1101/2021.09.24.461597v1>`_.
 
-Results for 74 diseases/traits and the TMS FACS data `(cellxgene visualization) <https://scdrs-tms-facs.herokuapp.com/>`_.
-
-Demo for 3 diseases/traits and 3 TMS FACS cell types `(cellxgene visualization) <https://scdrs-demo.herokuapp.com/>`_. 
+Explore results for 74 diseases/traits and the TMS FACS data on `cellxgene <https://scdrs-tms-facs.herokuapp.com/>`_.
 
 
 Installation
@@ -24,12 +22,17 @@ Quick test:
 
    python -m pytest tests/test_CLI.py -p no:warnings
    
-`Install other versions of scDRS <versions>`_
-
+`Install other versions <versions.html>`_
 
 
 Usage
 =====
+
+Use `scDRS command-line interface (CLI) <reference_cli.html>`_ for standard analyses.
+
+Use `scDRS Python API <reference.html>`_ for customized analyses. 
+
+Here is a toy example for computing scDRS scores. 
 
 .. code-block:: python
 
@@ -54,30 +57,49 @@ Usage
     df_res = scdrs.score_cell(adata, gene_list, gene_weight=gene_weight, n_ctrl=20)
 
     print(df_res.iloc[:4])
+    
+Expected results:
 
+.. csv-table::
+   :header: "index", "raw_score", "norm_score", "mc_pval", "pval", "nlog10_pval", "zscore"
+   
+   N1.MAA000586.3_8_M.1.1-1-1            , 4.741197 , 6.3260064 , 0.04761905, 0.0016638935, 2.7788744   , 2.9357162
+   F10.D041911.3_8_M.1.1-1-1             , 4.739066 , 5.916272  , 0.04761905, 0.0016638935, 2.7788744   , 2.9357162
+   A17_B002755_B007347_S17.mm10-plus-7-0 , 4.6366262, 5.5523157 , 0.04761905, 0.0016638935, 2.7788744   , 2.9357162
+   C22_B003856_S298_L004.mus-2-0-1       , 4.6805663, 7.2986684 , 0.04761905, 0.0016638935, 2.7788744   , 2.9357162
+   G12.B002765.3_38_F.1.1-1-1            , 4.640043 , 5.7792473 , 0.04761905, 0.0016638935, 2.7788744   , 2.9357162
+   H5.B003278.3_38_F.1.1-1-1             , 4.4457436, -0.5613674, 0.7619048 , 0.687188    , 0.16292442  , -0.48789537
+   O14.MAA000570.3_8_M.1.1-1-1           , 4.4552336, -1.5821338, 0.95238096, 0.9467554   , 0.023762206 , -1.6141763
+   J21.B000634.3_56_F.1.1-1-1            , 4.4433637, -2.3119287, 1.0       , 0.9916805   , 0.0036282123, -2.3945906
+   E5.B002765.3_38_F.1.1-1-1             , 4.4870768, 1.1566308 , 0.23809524, 0.13311148  , 0.87578446  , 1.1118028
+   K20_B000268_B009896_S260.mm10-plus-4-0, 4.53548  , -3.1656132, 1.0       , 1.0         , -0.0        , -10.0
 
-`Jump to an scDRS demo on Cortex data set. <notebooks/quickstart.html>`_
-
-
-Citation
+Examples
 ========
-If scDRS is useful for your research, consider citing:
+- `Tutorial on a mouse Cortex data set. <notebooks/quickstart.html>`_
+- Coming soon
 
-**Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data**
 
-<author list>
+.. Citation
+   ========
+   If scDRS is useful for your research, consider citing:
+   
+   **Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data**
+   
+   <author list>
 
-*BioRxiv* 2021. <doi>
+   *BioRxiv* 2021. <doi>
 
 
 .. toctree::
    :maxdepth: 2
    :hidden:
 
-   notebooks/quickstart.ipynb
+   reference_cli
    reference
    file_format
    versions
+   notebooks/quickstart.ipynb
    examples
    downloads
    
