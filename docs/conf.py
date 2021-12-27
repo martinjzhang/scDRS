@@ -5,14 +5,10 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+import inspect
+import importlib
 
 
 # -- Project information -----------------------------------------------------
@@ -36,7 +32,7 @@ extensions = [
     "nbsphinx",
     "sphinx.ext.mathjax",
     "sphinx_copybutton",
-    "sphinx.ext.viewcode",
+    "sphinx.ext.linkcode",
     "numpydoc",
 ]
 
@@ -49,6 +45,41 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 autosummary_generate = True
+
+# -- linkcode configuration --------------------------------------------------
+# see https://github.com/readthedocs/sphinx-autoapi/issues/202
+
+code_url = "https://github.com/martinjzhang/scDRS/tree/master/"
+
+
+def linkcode_resolve(domain, info):
+    assert domain == "py", "expected only Python objects"
+
+    mod = importlib.import_module(info["module"])
+    if "." in info["fullname"]:
+        objname, attrname = info["fullname"].split(".")
+        obj = getattr(mod, objname)
+        try:
+            # object is a method of a class
+            obj = getattr(obj, attrname)
+        except AttributeError:
+            # object is an attribute of a class
+            return None
+    else:
+        obj = getattr(mod, info["fullname"])
+
+    try:
+        file = inspect.getsourcefile(obj)
+        lines = inspect.getsourcelines(obj)
+    except TypeError:
+        # e.g. object is a typing.Union
+        return None
+    file = os.path.relpath(file, os.path.abspath(".."))
+    if not file.startswith("scdrs"):
+        return None
+    start, end = lines[1], lines[1] + len(lines[0]) - 1
+
+    return f"{code_url}/{file}#L{start}-L{end}"
 
 
 # -- Options for HTML output -------------------------------------------------
