@@ -30,9 +30,11 @@ def score_cell(
     Preprocessing information `data.uns["SCDRS_PARAM"]` is required
     (run `scdrs.pp.preprocess` first).
 
-    It operates in implicit-covariate-correction mode if both `FLAG_SPARSE`z
+    It operates in implicit-covariate-correction mode if both `FLAG_SPARSE`
     and `FLAG_COV` are `True`, where computations are based on the implicit
-    covariate-corrected data `CORRECTED_X = data.X + COV_MAT * COV_BETA + COV_GENE_MEAN`.
+    covariate-corrected data 
+    
+        `CORRECTED_X = data.X + COV_MAT * COV_BETA + COV_GENE_MEAN`.
 
     It operates in normal mode otherwise, where computations are based on `data.X`,
 
@@ -51,22 +53,24 @@ def score_cell(
         Gene-level statistic used for matching control and disease genes;
         should be in `data.uns["SCDRS_PARAM"]["GENE_STATS"]`.
     n_ctrl : int, default=1000
-        Number of control gene sets
+        Number of control gene sets.
     n_genebin : int, default=200
         Number of bins for dividing genes by ctrl_match_key if
-        `data.uns["SCDRS_PARAM"]["GENE_STATS"][ctrl_match_key]` is a continuous variable
+        `data.uns["SCDRS_PARAM"]["GENE_STATS"][ctrl_match_key]` is a continuous variable.
     weight_opt : str, default="vs"
         Option for computing the raw score
+        
         - 'uniform': average over the genes in the gene_list.
         - 'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct).
         - 'inv_std': weighted average with weights equal to 1/std.
         - 'od': overdispersion score.
+        
     copy : bool, default=False
-        If to make copy of the AnnData object to avoid writing on the orignal data
+        If to make copy of the AnnData object to avoid writing on the orignal data.
     return_raw_ctrl_score : bool, default=False
-        If to return control scores.
+        If to return raw control scores.
     return_norm_ctrl_score : bool, default=False
-        If to return control scores.
+        If to return normalized control scores.
     random_seed : int, default=0
         Random seed.
     verbose : bool, default=False
@@ -76,8 +80,11 @@ def score_cell(
 
     Returns
     -------
+    **RETURNS:**
+    
     df_res : pandas.DataFrame (dtype=np.float32)
         scDRS results of shape (n_cell, n_key) with columns
+        
         - raw_score: raw disease scores.
         - norm_score: normalized disease scores.
         - mc_pval: Monte Carlo p-values based on the normalized control scores of the same cell.
@@ -704,9 +711,10 @@ def downstream_group_analysis(
     fdr_thresholds: List[float] = [0.05, 0.1, 0.2],
 ) -> Dict[str, pd.DataFrame]:
     """
-    scDRS group-level analysis
+    scDRS group-level analysis.
 
     For each annotation in `group_cols` and each group of cells in the annotation, compute:
+    
     1. Proportion of FDR < 0.1 cells.
     2. Group-level trait association.
     3. Group-level heterogeneity.
@@ -720,12 +728,14 @@ def downstream_group_analysis(
         Single-cell data of shape (n_cell, n_gene). Assumed
         to be size-factor-normalized and log1p-transformed.
     df_full_score : pd.DataFrame
-        scDRS `.full_score` results of a single trait.
+        scDRS `.full_score` file for a given trait.
     group_cols : list of str
         List of column names in adata.obs used to define cell groups.
 
     Returns
     -------
+    **RETURNS:**
+    
     dict_df_res : Dict[str, pd.DataFrame]
         Group-level statistics (n_group, n_stats) keyed by the group names.
     """
@@ -811,7 +821,7 @@ def downstream_corr_analysis(
     adata: anndata.AnnData, df_full_score: pd.DataFrame, var_cols: List[str]
 ) -> pd.DataFrame:
     """
-    scDRS cell-level correlation analysis
+    scDRS cell-level correlation analysis.
 
     For a given individual cell-level annotation (e.g., T cell effectorness gradient),
     assess association between disease and the individual cell-level variable
@@ -820,16 +830,19 @@ def downstream_corr_analysis(
     Parameters
     ----------
     adata : anndata.AnnData
-        AnnData object
+        Single-cell data of shape (n_cell, n_gene). Assumed
+        to be size-factor-normalized and log1p-transformed.
     df_full_score : pd.DataFrame
-        scDRS results dataframe
+        scDRS `.full_score` file for a given trait.
     var_cols : List[str]
-        Column name of cell-level variables in adata.obs
+        List of column names in `adata.obs` for continous cell-level variables.
 
     Returns
     -------
+    **RETURNS:**
+    
     pd.DataFrame
-        Correlation results (n_var x n_stats)
+        Correlation results (n_var, n_stats).
     """
 
     assert (
@@ -861,21 +874,24 @@ def downstream_gene_analysis(
     adata: anndata.AnnData, df_full_score: pd.DataFrame
 ) -> pd.DataFrame:
     """
-    scDRS gene-level correlation analysis
+    scDRS gene-level correlation analysis.
 
     Compute correlation between each gene and the scDRS disease score.
 
     Parameters
     ----------
     adata : anndata.AnnData
-        AnnData object
+        Single-cell data of shape (n_cell, n_gene). Assumed
+        to be size-factor-normalized and log1p-transformed.
     df_full_score : pd.DataFrame
-        scDRS results dataframe
+        scDRS `.full_score` file for a given trait.
 
     Returns
     -------
+    **RETURNS:**
+    
     pd.DataFrame
-        Correlation results (n_gene x n_stats)
+        Correlation results (n_gene, n_stats).
     """
 
     cell_list = sorted(set(adata.obs_names) & set(df_full_score.index))
@@ -904,12 +920,12 @@ def test_gearysc(
     opt="control_distribution_match",
 ) -> pd.DataFrame:
     """
-    Compute significance level for Geary's C statistics
+    Compute significance level for Geary's C statistics.
 
-    Args
-    ----
+    Parameters
+    ----------
     adata: anndata.AnnData
-        must contain `connectivities` to compute the Geary's C statistic
+        Must contain `connectivities` to compute the Geary's C statistic.
     df_full_score: DataFrame
         DataFrame with the scores of the cells, contains
         columns `zscore`, `norm_score`, `ctrl_norm_score_{i}`
@@ -923,12 +939,15 @@ def test_gearysc(
 
     Returns
     -------
-    df_rls: DataFrame
+    **RETURNS:**
+    
+    df_rls : DataFrame
         DataFrame with the results of the test with `n_group` rows and 4 columns:
-            - `pval`: significance level of Geary's C
-            - `trait`: Geary's C test statistic of the trait scores
-            - `ctrl_mean`: mean of the control scores
-            - `ctrl_sd`: standard deviation of the control scores
+        
+        - `pval`: significance level of Geary's C
+        - `trait`: Geary's C test statistic of the trait scores
+        - `ctrl_mean`: mean of the control scores
+        - `ctrl_sd`: standard deviation of the control scores
     """
     assert np.all(
         df_full_score.index == adata.obs_names
@@ -1021,28 +1040,28 @@ def test_gearysc(
 
 # @Kangcheng: could you review
 def gearys_c(adata, vals):
-    """Compute Geary's C statistics for an AnnData
+    """
+    Compute Geary's C statistics for an AnnData.
+    
     Adopted from https://github.com/ivirshup/scanpy/blob/metrics/scanpy/metrics/_gearys_c.py
+        
+    :math:`C=\\frac{(N - 1)\\sum_{i,j} w_{i,j} (x_i - x_j)^2}{2W \\sum_i (x_i - \\bar{x})^2}`
 
-    C =
-        \frac{
-            (N - 1)\sum_{i,j} w_{i,j} (x_i - x_j)^2
-        }{
-            2W \sum_i (x_i - \bar{x})^2
-        }
-
-    Args
-    ----
-    adata (AnnData): AnnData object
+    Parameters
+    ----------
+    adata : AnnData object
         adata.obsp["Connectivities] should contain the connectivity graph,
-        with shape `(n_obs, n_obs)`
-    vals (Array-like):
+        with shape (n_obs, n_obs).
+    vals : array-like
         Values to calculate Geary's C for. If one dimensional, should have
-        shape `(n_obs,)`.
+        shape (n_obs,).
 
     Returns
     -------
-        C: the Geary's C statistics
+    **RETURNS:**
+    
+    C : float
+        the Geary's C statistics
     """
     graph = adata.obsp["connectivities"]
     assert graph.shape[0] == graph.shape[1]
@@ -1073,17 +1092,21 @@ def gearys_c(adata, vals):
 
 
 def _pearson_corr(mat_X, mat_Y):
-    """Pearson's correlation between every columns in mat_X and mat_Y
+    """Pearson's correlation between every columns in mat_X and mat_Y.
 
-    Args
-    ----
-    mat_X (N,M1): np.ndarray
-    mat_Y (N,M2): np.ndarray
+    Parameters
+    ----------
+    mat_X : np.ndarray
+        First matrix of shape (N,M1).
+    mat_Y : np.ndarray
+        Second matrix of shape (N,M2).
 
     Returns
     -------
-    mat_corr: (M1,M2): np.ndarray
-        Correlation matrix
+    **RETURNS:**
+    
+    mat_corr : np.ndarray
+        Correlation matrix of shape (M1,M2).
     """
     # If sparse, use _pearson_corr_sparse
     if sp.sparse.issparse(mat_X) | sp.sparse.issparse(mat_Y):
@@ -1109,15 +1132,19 @@ def _pearson_corr(mat_X, mat_Y):
 def _pearson_corr_sparse(mat_X, mat_Y):
     """Pearson's correlation between every columns in mat_X and mat_Y (sparse matrix)
 
-    Args
-    ----
-    mat_X (N,M1): sp.sparse
-    mat_Y (N,M2): sp.sparse
+    Parameters
+    ----------
+    mat_X : np.ndarray
+        First matrix of shape (N,M1).
+    mat_Y : np.ndarray
+        Second matrix of shape (N,M2).
 
     Returns
     -------
-    mat_corr: (M1,M2): np.ndarray
-        Correlation matrix
+    **RETURNS:**
+    
+    mat_corr : np.ndarray
+        Correlation matrix of shape (M1,M2).
     """
 
     # Reshape

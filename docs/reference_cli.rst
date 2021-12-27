@@ -93,7 +93,7 @@ Compute scDRS scores. Generate :code:`.score.gz` and :code:`.full_score.gz` file
         --flag-raw-count True\
         --n-ctrl 1000\
         --flag-return-ctrl-raw-score False\
-        --flag-return-ctrl-norm-score True\
+        --flag-return-ctrl-norm-score True
         
 h5ad_file : str
     Single-cell :code:`.h5ad` file.

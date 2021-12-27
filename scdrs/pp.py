@@ -7,7 +7,7 @@ from skmisc.loess import loess
 
 def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=False):
     """
-    Preprocess single-cell data for scDRS analysis:
+    Preprocess single-cell data for scDRS analysis.
 
         1. Correct covariates by regressing out the covariates (including
         a constant term) and adding back the original mean for each gene.
@@ -52,6 +52,8 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
 
     Returns
     -------
+    **RETURNS:**
+    
     `data.X` will be updated as the covariate-corrected data in normal mode
     and will stay untouched in the implicit covariate correctoin mode.
     Preprocessing information is stored in `data.uns["SCDRS_PARAM"]`.
@@ -68,6 +70,7 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
         Gene-level mean expression.
     GENE_STATS : pandas.DataFrame
         Gene-level statistics of shape (n_gene, 7):
+        
         - "mean" : mean expression in log scale.
         - "var" : expression variance in log scale.
         - "var_tech" : technical variance in log scale.
@@ -75,14 +78,18 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
         - "ct_var" : expression variance in original non-log scale.
         - "ct_var_tech" : technical variance in original non-log scale.
         - "mean_var" : n_mean_bin * n_var_bin mean-variance bins
+        
     CELL_STATS : pandas.DataFrame
         Cell-level statistics of shape (n_cell, 2):
+        
         - "mean" : mean expression in log scale.
         - "var" : variance expression in log scale.
 
 
     Notes
     -----
+    **NOTES**
+    
     Covariate regression:
         adata.X =  cov * beta + resid_X.
     scDRS saves:
@@ -188,7 +195,8 @@ def compute_stats(
     covariate correction has not been performed on `adata.X` but the corresponding
     information is stored in `adata.uns["SCDRS_PARAM"]`. In this case, it computes
     statistics for the covariate-corrected data
-    `transformed_X = adata.X + COV_MAT * COV_BETA + COV_GENE_MEAN`.
+    
+        `transformed_X = adata.X + COV_MAT * COV_BETA + COV_GENE_MEAN`.
 
     Parameters
     ----------
@@ -208,8 +216,11 @@ def compute_stats(
 
     Returns
     -------
+    **RETURNS:**
+    
     df_gene : pandas.DataFrame
         Gene-level statistics of shape (n_gene, 7):
+        
         - "mean" : mean expression in log scale.
         - "var" : variance expression in log scale.
         - "var_tech" : technical variance in log scale.
@@ -219,6 +230,7 @@ def compute_stats(
         - "mean_var" : n_mean_bin * n_var_bin mean-variance bins
     df_cell : pandas.DataFrame
         Cell-level statistics of shape (n_cell, 2):
+        
         - "mean" : mean expression in log scale.
         - "var" : variance expression in log scale.
     """
@@ -311,19 +323,21 @@ def compute_stats(
 ######################## Preprocessing Subroutines ###########################
 ##############################################################################
 def reg_out(mat_Y, mat_X):
-    """Regress mat_X out of mat_Y
+    """Regress mat_X out of mat_Y.
 
-    Args
-    ----
-    mat_Y (n_sample, n_response) : np.ndarray
-        Response variable
-    mat_X (n_sample, n_covariates) : np.ndarray
-        Covariates
+    Parameters
+    ----------
+    mat_Y : np.ndarray
+        Response variable of shape (n_sample, n_response).
+    mat_X : np.ndarray
+        Covariates of shape (n_sample, n_covariates).
 
     Returns
     -------
-    mat_Y_resid (n_sample, n_response) : np.ndarray
-        Response variable residual
+    **RETURNS:**
+    
+    mat_Y_resid : np.ndarray
+        Response variable residual of shape (n_sample, n_response).
     """
 
     if sparse.issparse(mat_X):
@@ -355,6 +369,23 @@ def reg_out(mat_Y, mat_X):
 def _get_mean_var(sparse_X, axis=0):
     """
     Compute mean and var of a sparse / non-sparse matrix.
+    
+    Parameters
+    ----------
+    sparse_X : array_like
+        Data matrix (can be dense/sparse).
+    axis : {0, 1}, default=0
+        Axis along which to compute mean and variance
+        
+    Returns
+    -------
+    **RETURNS:**
+    
+    v_mean : np.ndarray
+        Mean vector.
+    v_var : np.ndarray
+        Variance vector.
+        
     """
 
     if sparse.issparse(sparse_X):
@@ -373,8 +404,10 @@ def _get_mean_var(sparse_X, axis=0):
 def _get_mean_var_implicit_cov_corr(adata, axis=0, transform_func=None, n_chunk=20):
     """
     Compute mean and variance of sparse matrix of the form
-    `adata.X + COV_MAT * COV_BETA + COV_GENE_MEAN`. Computed
-    iteratively over chunks of sparse matrix by converting to
+    
+        `adata.X + COV_MAT * COV_BETA + COV_GENE_MEAN`. 
+        
+    Computed iteratively over chunks of sparse matrix by converting to
     dense matrix and computing mean and variance of dense matrix.
 
     Parameters
@@ -388,6 +421,15 @@ def _get_mean_var_implicit_cov_corr(adata, axis=0, transform_func=None, n_chunk=
     n_chunk : int, default=20
         Number of chunks to split the data into when computing mean and variance
         this will determine the memory usage
+        
+    Returns
+    -------
+    **RETURNS:**
+    
+    v_mean : np.ndarray
+        Mean vector.
+    v_var : np.ndarray
+        Variance vector.
     """
 
     assert axis in [0, 1], "axis must be one of [0, 1]"

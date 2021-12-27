@@ -46,7 +46,7 @@ def str_or_list_like(x):
 def load_h5ad(
     h5ad_file: str, flag_filter_data: bool = False, flag_raw_count: bool = True
 ) -> anndata.AnnData:
-    """Load h5ad file and optionally filter out cells and perform normalization
+    """Load h5ad file and optionally filter out cells and perform normalization.
 
     Parameters
     ----------
@@ -54,13 +54,16 @@ def load_h5ad(
         Path to h5ad file
     flag_filter_data : bool
         If True, filter out cells with
-        sc.pp.filter_cells(adata, min_genes=250)
-        sc.pp.filter_genes(adata, min_cells=50)
+        
+        - sc.pp.filter_cells(adata, min_genes=250)
+        - sc.pp.filter_genes(adata, min_cells=50)
     flag_raw_count : bool
-        If True, perform raw count normalization
+        If True, perform size-factor normalization and log1p transformation.
 
     Returns
     -------
+    **RETURNS:**
+    
     anndata.AnnData
         AnnData object
     """
@@ -77,14 +80,15 @@ def load_h5ad(
 def load_scdrs_score(
     score_file: str, obs_names: List[str] = None
 ) -> Dict[str, pd.DataFrame]:
-    """Load scDRS scores. Use "@" to specify multiple files,
-    e.g., score_file_folder/@.full_score.gz
+    """Load scDRS scores. 
+    
+    Use "@" to specify multiple files, e.g., `score_folder/@.full_score.gz`
 
     Parameters
     ----------
     score_file : str
         Path to scDRS `.full_score.gz` file. Use '@' to specify multiple file names,
-        e.g., `score_file_path/@.full_score.gz`. However, `score_file_path` should
+        e.g., `score_folder/@.full_score.gz`. However, `score_folder` should
         not contain '@'.
     obs_names : List[str]
         Expected list of cells. Score files with less than 10% overlap with this list
@@ -92,6 +96,8 @@ def load_scdrs_score(
 
     Returns
     -------
+    **RETURNS:**
+    
     Dict[str, pd.DataFrame]
         Dictionary of score dataframes, keyed by trait name.
     """
@@ -130,7 +136,7 @@ def load_scdrs_score(
 
 
 def load_homolog_mapping(src_species: str, dst_species: str) -> dict:
-    """Load gene homologs between mouse and human
+    """Load gene homologs between mouse and human.
 
     Parameters
     ----------
@@ -142,6 +148,8 @@ def load_homolog_mapping(src_species: str, dst_species: str) -> dict:
 
     Returns
     -------
+    **RETURNS:**
+    
     dict
         Dictionary of gene homologs (gene symbol).
     """
@@ -177,26 +185,29 @@ def load_gs(
     dst_species: str = None,
     to_intersect: List[str] = None,
 ) -> dict:
-    """Load the gene set file (.gs file)
+    """Load the gene set file (.gs file).
 
     Parameters
     ----------
     gs_path : str
         Path to the gene set file with the following two columns, separated by tab:
+        
         - 'TRAIT'
         - 'GENESET':
-            (1) <gene1>,<gene2>,... each gene will be weighted uniformly or
-            (2) <gene1>:<weight1>,<gene2>:<weight2>,... each gene will be weighted by its weight
-    src_species : str, default None
+          (1) <gene1>,<gene2>,... each gene will be weighted uniformly or
+          (2) <gene1>:<weight1>,<gene2>:<weight2>,... each gene will be weighted by its weight.
+    src_species : str, default=None
         Source species, must be either 'mmusculus' or 'hsapiens' if not None
-    dst_species : str, default None
+    dst_species : str, default=None
         Destination species, must be either 'mmusculus' or 'hsapiens' if not None
-    to_intersect : List[str], default None
-        Gene list to intersect with the input .gs file
+    to_intersect : List[str], default None.
+        Gene list to intersect with the input .gs file.
 
 
     Returns
     -------
+    **RETURNS:**
+    
     dict
         Dictionary of gene sets: {
             trait1: (gene_list, gene_weight),

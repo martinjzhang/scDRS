@@ -38,55 +38,54 @@ def compute_score(
     flag_return_ctrl_norm_score: bool = True,
 ):
     """
-    Single-cell disease relevance score (scDRS)
+    Compute scDRS scores. Generate `.score.gz` and `.full_score.gz` files for each trait.
 
     Parameters
     ----------
     h5ad_file : str
-        Path to the h5ad file.
+        Single-cell .h5ad file.
     h5ad_species : str
-        Species of the h5ad file. one of [hsapiens, mmusculus].
+        Species of h5ad_file. One of "hsapiens", "human", "mmusculus", or "mouse".
     gs_file : str
-        Path to the gs file.
+        scDRS gene set .gs file.
     gs_species : str
-        Species of the gs file. one of [hsapiens, mmusculus].
+        Species of the gs file. One of "hsapiens", "human", "mmusculus", or "mouse".
     out_folder : str
-        Path to the output folder. Save file at <out_folder>/<trait>.score.gz
+        Output folder. Save scDRS score files as `<out_folder>/<trait>.score.gz` and
+        scDRS full score files as `<out_folder>/<trait>.full_score.gz`, where trait 
+        identifier <trait> is from gs_file file.
     cov_file : str, optional
-        Path to the covariate file. The default is None.
+        scDRS covariate .cov file. Default is None.
     ctrl_match_opt : str, optional
-        Control matching option. The default is "mean_var".
+        Control matching option. One of "mean" and "mean_var". Default is "mean_var".
     weight_opt : str, optional
-        Weighting option. The default is "vs".
+        Weighting option. One of "uniform", "vs", "inv_std", and "od". Default is "vs".
     flag_filter_data : bool, optional
-        Flag on whether to apply cell and gene filters to the h5ad_file data.
-        Default is True.
+        If to apply minimal cell and gene filtering to h5ad_file. Default is True.
     flag_raw_count : bool, optional
-        Flag on whether to apply size factor normalization and log1p transformation.
+        If to apply size-factor normalization and log1p-transformation to h5ad_file.
         Default is True.
     n_ctrl : int, optional
-        Number of control gene sets. The default is 1000.
+        Number of control gene sets. Default is 1000.
     flag_return_ctrl_raw_score : bool, optional
-        Flag to return raw control scores. The default is False.
+        If to return raw control scores. Default is False.
     flag_return_ctrl_norm_score : bool, optional
-        Flag to return the normalized control scores. The default is True.
+        If to return normalized control scores. Default is True.
         
     Examples
     --------
     scdrs compute-score \
-        --h5ad_file <h5ad_file>\
-        --h5ad_species mouse\
-        --gs_file <gs_file>\
-        --gs_species human\
-        --out_folder <out_folder>
-        --cov_file <cov_file>\
-        --ctrl_match_opt "mean_var"\
-        --weight_opt "vs"\
-        --flag_filter_data True\
-        --flag_raw_count True\
-        --n_ctrl 1000\
-        --flag_return_ctrl_raw_score False\
-        --flag_return_ctrl_norm_score True\
+        --h5ad-file <h5ad_file>\
+        --h5ad-species mouse\
+        --gs-file <gs_file>\
+        --gs-species human\
+        --out-folder <out_folder>\
+        --cov-file <cov_file>\
+        --flag-filter-data True\
+        --flag-raw-count True\
+        --n-ctrl 1000\
+        --flag-return-ctrl-raw-score False\
+        --flag-return-ctrl-norm-score True
     """
 
     sys_start_time = time.time()
@@ -270,7 +269,7 @@ def munge_gs(
     n_max: int = 1000,
 ):
     """
-    CLI for converting a .tsv GWAS gene statistics file to an scDRS .gs file.
+    Convert a .tsv GWAS gene statistics file to an scDRS .gs file.
     
     Input file (`pval_file` or `zscore_file`) format: 
     - .tsv file 
@@ -297,32 +296,34 @@ def munge_gs(
     
     Parameters
     ----------
-    pval_file : str
-        Path to the p-value file. One of `pval_file` and `zscore_file` is expected.
-    zscore_file : str
-        Path to the z-score file. One of `pval_file` and `zscore_file` is expected.
-    weight : str
-        Gene weight options. One of 'zscore' or 'uniform'.
-    fdr : float
-        FDR threshold. 
-    fwer : float
-        FWER threshold.
-    n_min : int
-        Minimum number of genes for each gene set.
-    n_max : int
-        Maximum number of genes for each gene set.
     out_file : str
         Path to the output .gs file.
+    pval_file : str, optional
+        P-value file. A .tsv file with first column corresponding to genes and other columns 
+        corresponding to p-values of traits (one trait per column). One of `pval_file` and 
+        `zscore_file` is expected. Default is None.
+    zscore_file : str, optional
+        Z-score file. A .tsv file with first column corresponding to genes and other columns 
+        corresponding to z-scores of traits (one trait per column). One of `pval_file` and 
+        `zscore_file` is expected. Default is None.
+    weight : str, optional
+        Gene weight options. One of "zscore" or "uniform". Default is "zscore".
+    fdr : float, optional
+        FDR threshold. Default is None. E.g., `--fdr 0.05`
+    fwer : float, optional
+        FWER threshold. Default is None. E.g., `--fwer 0.05`
+    n_min : int, optional
+        Minimum number of genes for each gene set. Default is 100. E.g., `--n-min 100`
+    n_max : int, optional
+        Maximum number of genes for each gene set. Default is 1000. E.g., `--n-min 1000`
+    
 
     Examples
     --------
     scdrs munge-gs \
-        --pval-file <pval_file> \
         --out_file <out> \
+        --pval-file <pval_file> \
         --weight <weight> \
-        --fdr <fdr> \
-        --fwer <fwer> \
-        --n-min <n_min> \
         --n-max <n_max>
     """
 
@@ -476,49 +477,51 @@ def perform_downstream(
     knn_n_pcs: int = 20,
 ):
     """
-    CLI for downstream analysis using precomputed scDRS scores. 
+    Perform scDRS downstream analyses based on precomputed scDRS `.full_score.gz` files.
     
-    `scdrs perform-downstream` supports 3 types of analyses:
-    
-    --group-analysis: for a given cell-group-level annotation (e.g., tissue or cell type), assess cell 
+    --group-analysis
+        For a given cell-group-level annotation (e.g., tissue or cell type), assess cell 
         group-disease association (control-score-based MC tests using 5% quantile) and within-cell
         group disease-association heterogeneity (control-score-based MC tests using Geary's C).
         
-    --corr-analysis: for a given individual cell-level annotation (e.g., T cell effectorness gradient),
-        assess association between disease and the individual cell-level variable (control-score-based 
-        MC tests using Pearson's correlation).
+    --corr-analysis
+        For a given individual cell-level variable (e.g., T cell effectorness gradient), assess 
+        association between disease and the individual cell-level variable (control-score-based 
+        MC tests using Pearson’s correlation).
     
-    --gene-analysis: compute correlation between each gene and the scDRS disease score. 
+    --gene-analysis: 
+        Compute Pearson’s correlation between expression of each gene and the scDRS disease score.
 
     Parameters
     ----------
-    h5ad_file: str
-        Path to the h5ad file.
-    score_file: str
-        Path to scDRS `.full_score.gz` file. Use '@' to specify multiple file names,
-        e.g., `score_file_path/@.full_score.gz`. However, `score_file_path` should
-        not contain '@'.
-    out_folder: str
-        Path to the output folder. 
-    group_analysis: str
-        Comma-seperated column names for variables in `adata.obs.columns` representing 
-        cell-group-level annotations (e.g., cell types or tissues).
-    corr_analysis: str
-        Comma-seperated column names for variables in `adata.obs.columns` representing variables of
-        interest (e.g., age, sex) to correlate with scDRS scores. 
-    gene_analysis: str
-        Flag to perform the gene prioritization by correlating gene expression with scDRS
-        scores. No parameters are needed. Specify by `--gene-analysis`.
-    flag_filter_data: bool
-        Flag on whether to apply cell and gene filters to the h5ad_file data.
+    h5ad_file : str
+        Single-cell .h5ad file.
+    score_file : str
+        scDRS .full_score.gz file. Use “@” to specify multiple file names, e.g.,
+        <score_folder>/@.full_score.gz. However, <score_folder> should not contain “@”.
+    out_folder : str
+        Output folder.
+    group_analysis : str, optional
+        Comma-seperated column names for cell group annotations in adata.obs.columns, 
+        e.g., cell types or tissues. Results are saved as <out_folder>/<trait>.scdrs_group.<annot>, 
+        one file per annotation. Default is None.
+    corr_analysis : str, optional
+        Comma-seperated column names for continuous annotations in adata.obs.columns, 
+        e.g., T cell effectorness gradient. Results are saved as 
+        <out_folder>/<trait>.scdrs_cell_corr for all variables. Default is None.
+    gene_analysis : str, optional
+        Flag to perform the gene prioritization by correlating gene expression with scDRS scores.
+        Specifying --gene-analysis without any arguments. Results are saved as 
+        <out_folder>/<trait>.scdrs_gene for all genes. Default is None.
+    flag_filter_data : bool, optional
+        If to apply minimal cell and gene filtering to h5ad_file. Default is True.
+    flag_raw_count : bool, optional
+        If to apply size-factor normalization and log1p-transformation to h5ad_file.
         Default is True.
-    flag_raw_count: bool
-        Flag on whether to apply size factor normalization and log1p transformation.
-        Default is True.
-    knn_n_neighbors: int
+    knn_n_neighbors : int, optional
         `n_neighbors` for computing KNN graph using `sc.pp.neighbors`.
         Default is 15 (consistent with the TMS pipeline).
-    knn_n_pcs: int
+    knn_n_pcs : int, optional
         `n_pcs` for computing KNN graph using `sc.pp.neighbors`.
         Default is 20 (consistent with the TMS pipeline).
         
@@ -528,8 +531,8 @@ def perform_downstream(
         --h5ad-file <h5ad_file>\
         --score-file <score_file>\
         --out-folder <out_folder>\
-        --cell-type cell_type \
-        --cell-variable causal_variable,non_causal_variable,covariate\
+        --group-analysis cell_type \
+        --corr-analysis causal_variable,non_causal_variable,covariate\
         --gene-analysis\
         --flag-filter-data True\
         --flag-raw-count True
