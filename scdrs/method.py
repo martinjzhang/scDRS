@@ -79,9 +79,7 @@ def score_cell(
         File path prefix for saving intermediate results.
 
     Returns
-    -------
-    **RETURNS:**
-    
+    -------    
     df_res : pandas.DataFrame (dtype=np.float32)
         scDRS results of shape (n_cell, n_key) with columns
         
@@ -733,9 +731,7 @@ def downstream_group_analysis(
         List of column names in adata.obs used to define cell groups.
 
     Returns
-    -------
-    **RETURNS:**
-    
+    -------    
     dict_df_res : Dict[str, pd.DataFrame]
         Group-level statistics (n_group, n_stats) keyed by the group names.
     """
@@ -838,10 +834,8 @@ def downstream_corr_analysis(
         List of column names in `adata.obs` for continous cell-level variables.
 
     Returns
-    -------
-    **RETURNS:**
-    
-    pd.DataFrame
+    -------    
+    df_res : pd.DataFrame
         Correlation results (n_var, n_stats).
     """
 
@@ -887,10 +881,8 @@ def downstream_gene_analysis(
         scDRS `.full_score` file for a given trait.
 
     Returns
-    -------
-    **RETURNS:**
-    
-    pd.DataFrame
+    -------    
+    df_res : pd.DataFrame
         Correlation results (n_gene, n_stats).
     """
 
@@ -924,23 +916,21 @@ def test_gearysc(
 
     Parameters
     ----------
-    adata: anndata.AnnData
+    adata : anndata.AnnData
         Must contain `connectivities` to compute the Geary's C statistic.
-    df_full_score: DataFrame
+    df_full_score : DataFrame
         DataFrame with the scores of the cells, contains
         columns `zscore`, `norm_score`, `ctrl_norm_score_{i}`
-    groupby: str
+    groupby : str
         Column name of the groupby variable.
-    opt: str
+    opt : str
         Options:
             - "control_distribution_match":
                 The distribution of the scores of the control scores is similar to
                 the distribution of the scores of the disease scores.
 
     Returns
-    -------
-    **RETURNS:**
-    
+    -------    
     df_rls : DataFrame
         DataFrame with the results of the test with `n_group` rows and 4 columns:
         
@@ -1057,11 +1047,9 @@ def gearys_c(adata, vals):
         shape (n_obs,).
 
     Returns
-    -------
-    **RETURNS:**
-    
+    -------    
     C : float
-        the Geary's C statistics
+        Geary's C statistics.
     """
     graph = adata.obsp["connectivities"]
     assert graph.shape[0] == graph.shape[1]
@@ -1102,9 +1090,7 @@ def _pearson_corr(mat_X, mat_Y):
         Second matrix of shape (N,M2).
 
     Returns
-    -------
-    **RETURNS:**
-    
+    -------    
     mat_corr : np.ndarray
         Correlation matrix of shape (M1,M2).
     """
@@ -1140,9 +1126,7 @@ def _pearson_corr_sparse(mat_X, mat_Y):
         Second matrix of shape (N,M2).
 
     Returns
-    -------
-    **RETURNS:**
-    
+    -------    
     mat_corr : np.ndarray
         Correlation matrix of shape (M1,M2).
     """

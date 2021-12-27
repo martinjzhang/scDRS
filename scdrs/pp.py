@@ -51,13 +51,11 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
 
 
     Returns
-    -------
-    **RETURNS:**
-    
-    `data.X` will be updated as the covariate-corrected data in normal mode
-    and will stay untouched in the implicit covariate correctoin mode.
-    Preprocessing information is stored in `data.uns["SCDRS_PARAM"]`.
-
+    -------    
+    Overview:
+        `data.X` will be updated as the covariate-corrected data in normal mode
+        and will stay untouched in the implicit covariate correctoin mode.
+        Preprocessing information is stored in `data.uns["SCDRS_PARAM"]`.
     FLAG_SPARSE : bool
         If data.X is sparse.
     FLAG_COV : bool
@@ -87,9 +85,7 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
 
 
     Notes
-    -----
-    **NOTES**
-    
+    -----    
     Covariate regression:
         adata.X =  cov * beta + resid_X.
     scDRS saves:
@@ -215,9 +211,7 @@ def compute_stats(
         using _get_mean_var_implicit_cov_corr.
 
     Returns
-    -------
-    **RETURNS:**
-    
+    -------   
     df_gene : pandas.DataFrame
         Gene-level statistics of shape (n_gene, 7):
         
@@ -333,9 +327,7 @@ def reg_out(mat_Y, mat_X):
         Covariates of shape (n_sample, n_covariates).
 
     Returns
-    -------
-    **RETURNS:**
-    
+    -------    
     mat_Y_resid : np.ndarray
         Response variable residual of shape (n_sample, n_response).
     """
@@ -378,9 +370,7 @@ def _get_mean_var(sparse_X, axis=0):
         Axis along which to compute mean and variance
         
     Returns
-    -------
-    **RETURNS:**
-    
+    -------    
     v_mean : np.ndarray
         Mean vector.
     v_var : np.ndarray
@@ -423,9 +413,7 @@ def _get_mean_var_implicit_cov_corr(adata, axis=0, transform_func=None, n_chunk=
         this will determine the memory usage
         
     Returns
-    -------
-    **RETURNS:**
-    
+    -------    
     v_mean : np.ndarray
         Mean vector.
     v_var : np.ndarray

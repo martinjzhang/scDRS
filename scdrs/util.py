@@ -61,11 +61,9 @@ def load_h5ad(
         If True, perform size-factor normalization and log1p transformation.
 
     Returns
-    -------
-    **RETURNS:**
-    
-    anndata.AnnData
-        AnnData object
+    -------    
+    adata : anndata.AnnData
+        Single-cell data.
     """
     adata = read_h5ad(h5ad_file)
     if flag_filter_data:
@@ -95,11 +93,9 @@ def load_scdrs_score(
         will be skipped.
 
     Returns
-    -------
-    **RETURNS:**
-    
-    Dict[str, pd.DataFrame]
-        Dictionary of score dataframes, keyed by trait name.
+    -------    
+    dict_score : Dict[str, pd.DataFrame]
+        Dictionary of scDRS full score DataFrames, keyed by trait name.
     """
     assert score_file.endswith(
         "full_score.gz"
@@ -147,10 +143,8 @@ def load_homolog_mapping(src_species: str, dst_species: str) -> dict:
         Cannot be the same as `src_species`.
 
     Returns
-    -------
-    **RETURNS:**
-    
-    dict
+    -------    
+    dic_map : dict
         Dictionary of gene homologs (gene symbol).
     """
 
@@ -205,13 +199,11 @@ def load_gs(
 
 
     Returns
-    -------
-    **RETURNS:**
-    
-    dict
+    -------    
+    dict_gs : dict
         Dictionary of gene sets: {
-            trait1: (gene_list, gene_weight),
-            trait2: (gene_list, gene_weight),
+            trait1: (gene_list, gene_weight_list),
+            trait2: (gene_list, gene_weight_list),
             ...
         }
     """
