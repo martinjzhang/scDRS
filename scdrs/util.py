@@ -677,3 +677,10 @@ def p_2_str_num(p_, n_ctrl):
         return "P=%0.3f" % p_
     else:
         return "P<%0.3f" % (1 / n_ctrl)
+    
+    
+def reorder_col(df_sim):
+    mat_condensed_dist = sp.spatial.distance.squareform(1-df_sim)
+    mat_linkage = sp.cluster.hierarchy.linkage(mat_condensed_dist, method='average')
+    reordered_col_list = list(df_sim.columns[sp.cluster.hierarchy.leaves_list(mat_linkage)])
+    return reordered_col_list
