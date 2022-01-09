@@ -17,9 +17,9 @@ COV_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/tabula_muris_sen
 GS_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/gs_file/magma_10kb_top1000_zscore.75_traits.batch/batch$BATCH_NUM.gs
 OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/score.tms_facs_with_cov.magma_10kb_top1000_zscore
 
-# uniform
-GS_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/gs_file/magma_10kb_top1000_uniform.75_traits.batch/batch$BATCH_NUM.gs
-OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/score.tms_facs_with_cov.magma_10kb_top1000_uniform.debug
+# # uniform
+# GS_FILE=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/gs_file/magma_10kb_top1000_uniform.75_traits.batch/batch$BATCH_NUM.gs
+# OUT_FOLDER=/n/holystore01/LABS/price_lab/Users/mjzhang/scDRS_data/score_file/score.tms_facs_with_cov.magma_10kb_top1000_uniform.debug
 
 scdrs compute-score \
     --h5ad_file $H5AD_FILE\
