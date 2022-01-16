@@ -31,6 +31,7 @@ def compute_score(
     cov_file: str = None,
     ctrl_match_opt: str = "mean_var",
     weight_opt: str = "vs",
+    adj_prop: str = None,
     flag_filter_data: bool = True,
     flag_raw_count: bool = True,
     n_ctrl: int = 1000,
@@ -60,6 +61,10 @@ def compute_score(
         Control matching option. One of "mean" and "mean_var". Default is "mean_var".
     weight_opt : str, optional
         Weighting option. One of "uniform", "vs", "inv_std", and "od". Default is "vs".
+    adj_prop : str, optional
+        Cell group annotation (e.g., cell type) in `adata.obs.columns` used for adjusting 
+        for cell group proportions. Cells are inversely weighted by the corresponding 
+        group size.Default is None.
     flag_filter_data : bool, optional
         If to apply minimal cell and gene filtering to h5ad_file. Default is True.
     flag_raw_count : bool, optional
@@ -100,6 +105,7 @@ def compute_score(
     GS_SPECIES = gs_species
     CTRL_MATCH_OPT = ctrl_match_opt
     WEIGHT_OPT = weight_opt
+    ADJ_PROP = adj_prop
     FLAG_FILTER_DATA = flag_filter_data
     FLAG_RAW_COUNT = flag_raw_count
     N_CTRL = n_ctrl
@@ -120,6 +126,7 @@ def compute_score(
     header += "--gs-species %s\\\n" % GS_SPECIES
     header += "--ctrl-match-opt %s\\\n" % CTRL_MATCH_OPT
     header += "--weight-opt %s\\\n" % WEIGHT_OPT
+    header += "--adj-prop %s\\\n" % ADJ_PROP
     header += "--flag-filter-data %s\\\n" % FLAG_FILTER_DATA
     header += "--flag-raw-count %s\\\n" % FLAG_RAW_COUNT
     header += "--n-ctrl %d\\\n" % N_CTRL
@@ -201,7 +208,7 @@ def compute_score(
 
     # Preprocess
     print("Preprocessing:")
-    scdrs.preprocess(adata, cov=df_cov, n_mean_bin=20, n_var_bin=20, copy=False)
+    scdrs.preprocess(adata, cov=df_cov, adj_prop=ADJ_PROP, n_mean_bin=20, n_var_bin=20, copy=False)
     print("")
 
     # Compute score
