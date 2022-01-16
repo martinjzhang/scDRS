@@ -5,7 +5,9 @@ import pandas as pd
 from skmisc.loess import loess
 
 
-def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=False):
+def preprocess(
+    data, cov=None, adj_prop=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=False
+):
     """
     Preprocess single-cell data for scDRS analysis.
 
@@ -23,12 +25,18 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
     In normal mode, `data.X` is replaced by the covariate-corrected data.
 
     In implicit-covariate-correction mode, the covariate correction information
-    is stored in data.uns["SCDRS_PARAM"] but is not explicitly applied to
+    is stored in `data.uns["SCDRS_PARAM"]` but is not explicitly applied to
     `data.X`, so that `data.X` is always sparse. Subsequent computations on
     the covariate-corrected data are based on the original data `data.X` and
     the covariate correction information. Specifically,
 
         CORRECTED_X = data.X + COV_MAT * COV_BETA + COV_GENE_MEAN
+
+    The `adj_prop` option is used for adjusting for cell group proportions,
+    where each cell is inversely weighted proportional to its corresponding
+    cell group size for computing expression mean and variance for genes.
+    For stability, the smallest group size is set to be at least 1% of the
+    largest group size.
 
 
     Parameters
@@ -39,6 +47,9 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
     cov : pandas.DataFrame, default=None
         Covariates of shape (n_cell, n_cov). Should contain
         a constant term and have values for at least 75% cells.
+    adj_prop : str, default=None
+        Cell group annotation (e.g., cell type) used for adjusting for cell group proportions.
+        `adj_prop` should be present in `data.obs.columns`.
     n_mean_bin : int, default=20
         Number of mean-expression bins for matching control genes.
     n_var_bin : int, default=20
@@ -51,7 +62,7 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
 
 
     Returns
-    -------    
+    -------
     Overview:
         `data.X` will be updated as the covariate-corrected data in normal mode
         and will stay untouched in the implicit covariate correctoin mode.
@@ -68,7 +79,7 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
         Gene-level mean expression.
     GENE_STATS : pandas.DataFrame
         Gene-level statistics of shape (n_gene, 7):
-        
+
         - "mean" : mean expression in log scale.
         - "var" : expression variance in log scale.
         - "var_tech" : technical variance in log scale.
@@ -76,16 +87,16 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
         - "ct_var" : expression variance in original non-log scale.
         - "ct_var_tech" : technical variance in original non-log scale.
         - "mean_var" : n_mean_bin * n_var_bin mean-variance bins
-        
+
     CELL_STATS : pandas.DataFrame
         Cell-level statistics of shape (n_cell, 2):
-        
+
         - "mean" : mean expression in log scale.
         - "var" : variance expression in log scale.
 
 
     Notes
-    -----    
+    -----
     Covariate regression:
         adata.X =  cov * beta + resid_X.
     scDRS saves:
@@ -102,7 +113,12 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
     # Parameters and flags
     flag_sparse = sparse.issparse(adata.X)
     flag_cov = cov is not None
-    adata.uns["SCDRS_PARAM"] = {"FLAG_SPARSE": flag_sparse, "FLAG_COV": flag_cov}
+    flag_adj_prop = adj_prop is not None
+    adata.uns["SCDRS_PARAM"] = {
+        "FLAG_SPARSE": flag_sparse,
+        "FLAG_COV": flag_cov,
+        "FLAG_ADJ_PROP": flag_adj_prop,
+    }
 
     # Update adata.X
     if flag_sparse:
@@ -167,11 +183,31 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
         if n_chunk is None:
             n_chunk = 20
 
+    if flag_adj_prop:
+        err_msg = "'adj_prop'=%s not in 'adata.obs.columns'" % adj_prop
+        assert adj_prop in adata.obs, err_msg
+        err_msg = (
+            "On average <10 cells per group, maybe `%s` is not categorical?" % adj_prop
+        )
+        assert adata.obs[adj_prop].unique().shape[0] < 0.1 * n_cell, err_msg
+
+        temp_df = adata.obs[[adj_prop]].copy()
+        temp_df["cell"] = 1
+        temp_df = temp_df.groupby(adj_prop).agg({"cell": len})
+        temp_df["cell"].clip(lower=int(0.01 * temp_df["cell"].max()), inplace=True)
+        temp_dic = {x: n_cell / temp_df.loc[x, "cell"] for x in temp_df.index}
+
+        cell_weight = np.array([temp_dic[x] for x in adata.obs[adj_prop]])
+        cell_weight = cell_weight / cell_weight.mean()
+    else:
+        cell_weight = None
+
     df_gene, df_cell = compute_stats(
         adata,
+        implicit_cov_corr=implicit_cov_corr,
+        cell_weight=cell_weight,
         n_mean_bin=n_mean_bin,
         n_var_bin=n_var_bin,
-        implicit_cov_corr=implicit_cov_corr,
         n_chunk=n_chunk,
     )
 
@@ -182,7 +218,12 @@ def preprocess(data, cov=None, n_mean_bin=20, n_var_bin=20, n_chunk=None, copy=F
 
 
 def compute_stats(
-    adata, implicit_cov_corr=False, n_mean_bin=20, n_var_bin=20, n_chunk=20
+    adata,
+    implicit_cov_corr=False,
+    cell_weight=None,
+    n_mean_bin=20,
+    n_var_bin=20,
+    n_chunk=20,
 ):
     """
     Compute gene-level and cell-level statstics used for scDRS analysis. `adata`
@@ -191,8 +232,8 @@ def compute_stats(
     covariate correction has not been performed on `adata.X` but the corresponding
     information is stored in `adata.uns["SCDRS_PARAM"]`. In this case, it computes
     statistics for the covariate-corrected data
-    
-        `transformed_X = adata.X + COV_MAT * COV_BETA + COV_GENE_MEAN`.
+
+        `transformed_X = adata.X + COV_MAT * COV_BETA + COV_GENE_MEAN`
 
     Parameters
     ----------
@@ -202,6 +243,9 @@ def compute_stats(
         If True, compute statistics for the implicit corrected data
         `adata.X + COV_MAT * COV_BETA + COV_GENE_MEAN`. Otherwise, compute
         for the original data `adata.X`.
+    cell_weight : array_like, default=None
+        Cell weights of length `adata.shape[0]` for cells in `adata`,
+        used for computing weighted gene-level statistics.
     n_mean_bin : int, default=20
         Number of mean-expression bins for matching control genes.
     n_var_bin : int, default=20
@@ -211,10 +255,10 @@ def compute_stats(
         using _get_mean_var_implicit_cov_corr.
 
     Returns
-    -------   
+    -------
     df_gene : pandas.DataFrame
         Gene-level statistics of shape (n_gene, 7):
-        
+
         - "mean" : mean expression in log scale.
         - "var" : variance expression in log scale.
         - "var_tech" : technical variance in log scale.
@@ -224,7 +268,7 @@ def compute_stats(
         - "mean_var" : n_mean_bin * n_var_bin mean-variance bins
     df_cell : pandas.DataFrame
         Cell-level statistics of shape (n_cell, 2):
-        
+
         - "mean" : mean expression in log scale.
         - "var" : variance expression in log scale.
     """
@@ -250,22 +294,26 @@ def compute_stats(
     # Gene-level statistics
     if not implicit_cov_corr:
         # Normal mode
-        df_gene["mean"], df_gene["var"] = _get_mean_var(adata.X, axis=0)
+        df_gene["mean"], df_gene["var"] = _get_mean_var(
+            adata.X, axis=0, weights=cell_weight
+        )
         # Get the mean and var for the non-log-scale size-factor-normalized counts
         # It is highly correlated to the non-size-factor-normalized counts
         if sparse.issparse(adata.X):  # sp sparse matrix
             temp_X = adata.X.copy().expm1()  # exp(X)-1 to get ct matrix from logct
         else:
             temp_X = np.expm1(adata.X)  # numpy ndarray
-        df_gene["ct_mean"], df_gene["ct_var"] = _get_mean_var(temp_X, axis=0)
+        df_gene["ct_mean"], df_gene["ct_var"] = _get_mean_var(
+            temp_X, axis=0, weights=cell_weight
+        )
         del temp_X
     else:
         # Implicit covariate correction mode
         df_gene["mean"], df_gene["var"] = _get_mean_var_implicit_cov_corr(
-            adata, axis=0, n_chunk=n_chunk
+            adata, axis=0, n_chunk=n_chunk, weights=cell_weight
         )
         df_gene["ct_mean"], df_gene["ct_var"] = _get_mean_var_implicit_cov_corr(
-            adata, transform_func=np.expm1, axis=0, n_chunk=n_chunk
+            adata, transform_func=np.expm1, axis=0, n_chunk=n_chunk, weights=cell_weight
         )
 
     # Borrowed from scanpy _highly_variable_genes_seurat_v3
@@ -291,14 +339,12 @@ def compute_stats(
         )
     v_mean_bin = pd.qcut(df_gene["mean"], n_mean_bin, labels=False, duplicates="drop")
     df_gene["mean_var"] = ""
-    for bin_ in set(v_mean_bin):
+    for bin_ in sorted(set(v_mean_bin)):
         ind_select = v_mean_bin == bin_
         v_var_bin = pd.qcut(
             df_gene.loc[ind_select, "var"], n_var_bin, labels=False, duplicates="drop"
         )
-        df_gene.loc[ind_select, "mean_var"] = [
-            "%s.%s" % (x, y) for x, y in zip(v_mean_bin[ind_select], v_var_bin)
-        ]
+        df_gene.loc[ind_select, "mean_var"] = ["%d.%d" % (bin_, x) for x in v_var_bin]
 
     # Cell-level statistics
     if not implicit_cov_corr:
@@ -327,7 +373,7 @@ def reg_out(mat_Y, mat_X):
         Covariates of shape (n_sample, n_covariates).
 
     Returns
-    -------    
+    -------
     mat_Y_resid : np.ndarray
         Response variable residual of shape (n_sample, n_response).
     """
@@ -358,45 +404,97 @@ def reg_out(mat_Y, mat_X):
     return mat_Y_resid
 
 
-def _get_mean_var(sparse_X, axis=0):
+def _get_mean_var(sparse_X, axis=0, weights=None):
     """
     Compute mean and var of a sparse / non-sparse matrix.
-    
+
     Parameters
     ----------
     sparse_X : array_like
         Data matrix (can be dense/sparse).
     axis : {0, 1}, default=0
-        Axis along which to compute mean and variance
-        
+        Axis along which to compute mean and variance.
+    weights : array_like, default=None
+        Weights of length `sparse_X.shape[axis]`.
+
     Returns
-    -------    
+    -------
     v_mean : np.ndarray
         Mean vector.
     v_var : np.ndarray
         Variance vector.
-        
+
     """
 
-    if sparse.issparse(sparse_X):
-        v_mean = sparse_X.mean(axis=axis)
-        v_mean = np.array(v_mean).reshape([-1])
-        v_var = sparse_X.power(2).mean(axis=axis)
-        v_var = np.array(v_var).reshape([-1])
-        v_var = v_var - v_mean ** 2
+    if weights is None:
+        if sparse.issparse(sparse_X):
+            # Sparse + unweighted
+            v_mean = sparse_X.mean(axis=axis)
+            v_mean = np.array(v_mean).reshape([-1])
+            v_var = sparse_X.power(2).mean(axis=axis)
+            v_var = np.array(v_var).reshape([-1])
+            v_var = v_var - v_mean ** 2
+        else:
+            # Dense + unweighted
+            sparse_X = np.array(sparse_X)
+            v_mean = np.mean(sparse_X, axis=axis)
+            v_var = np.var(sparse_X, axis=axis)
+
     else:
-        v_mean = np.mean(sparse_X, axis=axis)
-        v_var = np.var(sparse_X, axis=axis)
+        weights = np.array(weights)
+        if sparse.issparse(sparse_X):
+            # Sparse + weighted
+            v_mean = _weighted_sparse_average(sparse_X, weights, axis=axis)
+            v_var = _weighted_sparse_average(sparse_X.power(2), weights, axis=axis)
+            v_var = v_var - v_mean ** 2
+        else:
+            # Dense + weighted
+            sparse_X = np.array(sparse_X)
+            v_mean = np.average(sparse_X, axis=axis, weights=weights)
+            v_var = np.average(np.square(sparse_X), axis=axis, weights=weights)
+            v_var = v_var - v_mean ** 2
 
     return v_mean, v_var
 
 
-def _get_mean_var_implicit_cov_corr(adata, axis=0, transform_func=None, n_chunk=20):
+def _weighted_sparse_average(sparse_X, weights, axis=0):
+    """
+    Compute weighted mean for a sparse matrix.
+
+    Parameters
+    ----------
+    sparse_X : array_like
+        Sparse data matrix.
+    weights : array_like
+        Weights of length `sparse_X.shape[axis]`.
+    axis : {0, 1}, default=0
+        Axis along which to compute mean.
+
+    Returns
+    -------
+    v_mean : np.ndarray
+        Mean vector.
+    """
+
+    if axis == 0:
+        v_mean = sparse_X.T.multiply(weights).mean(axis=1)
+        v_mean = np.array(v_mean).reshape([-1]) / np.mean(weights)
+        return v_mean
+
+    if axis == 1:
+        v_mean = sparse_X.multiply(weights).mean(axis=1)
+        v_mean = np.array(v_mean).reshape([-1]) / np.mean(weights)
+        return v_mean
+
+
+def _get_mean_var_implicit_cov_corr(
+    adata, axis=0, weights=None, transform_func=None, n_chunk=20
+):
     """
     Compute mean and variance of sparse matrix of the form
-    
-        `adata.X + COV_MAT * COV_BETA + COV_GENE_MEAN`. 
-        
+
+        `adata.X + COV_MAT * COV_BETA + COV_GENE_MEAN`.
+
     Computed iteratively over chunks of sparse matrix by converting to
     dense matrix and computing mean and variance of dense matrix.
 
@@ -406,14 +504,16 @@ def _get_mean_var_implicit_cov_corr(adata, axis=0, transform_func=None, n_chunk=
         Annotated data matrix (n_obs, n_vars)
     axis : {0, 1}, default=0
         Axis along which to compute mean and variance
+    weights : array_like, default=None
+        Weights of length `adata.shape[axis]`.
     transform_func : function, default=None
         Function to transform the data before computing mean and variance
     n_chunk : int, default=20
         Number of chunks to split the data into when computing mean and variance
         this will determine the memory usage
-        
+
     Returns
-    -------    
+    -------
     v_mean : np.ndarray
         Mean vector.
     v_var : np.ndarray
@@ -438,6 +538,9 @@ def _get_mean_var_implicit_cov_corr(adata, axis=0, transform_func=None, n_chunk=
     if transform_func is None:
         transform_func = lambda x: x
 
+    if weights is not None:
+        weights = np.array(weights)
+
     # mean / var of transform_func(X + cov_mat @ cov_beta + mean)
     if axis == 0:
         # output would have the shape of (n_gene, )
@@ -453,8 +556,9 @@ def _get_mean_var_implicit_cov_corr(adata, axis=0, transform_func=None, n_chunk=
                 + gene_mean[start:stop]
             )
             chunk_X = transform_func(chunk_X)
-            v_mean[start:stop] = np.mean(chunk_X, axis).A1
-            v_var[start:stop] = np.var(chunk_X, axis).A1
+            v_mean[start:stop], v_var[start:stop] = _get_mean_var(
+                chunk_X, axis=axis, weights=weights
+            )
             start = stop
 
     elif axis == 1:
@@ -469,9 +573,9 @@ def _get_mean_var_implicit_cov_corr(adata, axis=0, transform_func=None, n_chunk=
                 adata.X[start:stop, :] + cov_mat[start:stop] @ cov_beta + gene_mean
             )
             chunk_X = transform_func(chunk_X)
-
-            v_mean[start:stop] = np.mean(chunk_X, axis=axis).A1
-            v_var[start:stop] = np.var(chunk_X, axis=axis).A1
+            v_mean[start:stop], v_var[start:stop] = _get_mean_var(
+                chunk_X, axis=axis, weights=weights
+            )
             start = stop
 
     return v_mean, v_var

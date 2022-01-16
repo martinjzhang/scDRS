@@ -114,7 +114,7 @@ def test_preprocess_dense_nocov():
 
 def test_preprocess_consistency():
     """
-    Test scdrs.pp.preprocess: consistenty between sparse+cov and dense+cov
+    Test scdrs.pp.preprocess: consistency between sparse+cov and dense+cov
     """
     adata, df_cov, df_gs, dic_res_ref = load_toy_data()
     adata_sparse = adata[:, :50].copy()
@@ -163,7 +163,7 @@ def test_preprocess_consistency():
 
 def test_preprocess_consistency_nocov():
     """
-    Test scdrs.pp.preprocess: consistenty between sparse+nocov and dense+nocov
+    Test scdrs.pp.preprocess: consistency between sparse+nocov and dense+nocov
     """
     adata, df_cov, df_gs, dic_res_ref = load_toy_data()
     adata_sparse = adata[:, :50].copy()
