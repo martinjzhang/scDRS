@@ -4,7 +4,7 @@ scDRS (single-cell disease-relevance score) is a method for associating individu
 
 Check out our manuscript [Zhang*, Hou*, et al. “Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data](https://www.biorxiv.org/content/10.1101/2021.09.24.461597v1).
 
-Read the [documentation](https://martinjzhang.github.io/scDRS/), including [Installation](https://martinjzhang.github.io/scDRS/index.html#installation), [Usage](https://martinjzhang.github.io/scDRS/index.html#usage), [Command-line inferface (CLI)](https://martinjzhang.github.io/scDRS/reference_cli.html#), [File formats](https://martinjzhang.github.io/scDRS/file_format.html), etc. 
+Read the [documentation](https://martinjzhang.github.io/scDRS/): [installation](https://martinjzhang.github.io/scDRS/index.html#installation), [usage](https://martinjzhang.github.io/scDRS/index.html#usage), [command-line interface (CLI)](https://martinjzhang.github.io/scDRS/reference_cli.html#), [file formats](https://martinjzhang.github.io/scDRS/file_format.html), etc. 
 
 ### Versions
 - v1.0.0: current version. 
