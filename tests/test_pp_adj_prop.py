@@ -10,7 +10,12 @@ import scdrs
 
 def load_toy_data_adj_prop():
     """
-    Toy data for checking `adj_prop`
+    Toy data for checking `adj_prop`.
+
+        - Simulated data with 1000 cells, 100 gene, and 2 cell types.
+        - ct1 : first 100 cells; genes 1-50 i.i.d. i.i.d. uniform [1,3]; genes 51-100 are i.i.d. uniform [0,1].
+        - ct2 : the rest 900 cells; genes 1-50 i.i.d. i.i.d. uniform [0,1]; genes 51-100 are i.i.d. uniform [1,3].
+
     """
     np.random.seed(0)
     n_cell, n_cell_ct1, n_gene = 1000, 100, 100
