@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -n 4                # Number of cores (-n)
 #SBATCH -N 1                # Ensure that all cores are on one Node (-N)
-#SBATCH -t 0-12:00          # Runtime in D-HH:MM, minimum of 10 minutes
+#SBATCH -t 0-4:00          # Runtime in D-HH:MM, minimum of 10 minutes
 #SBATCH -p shared   # Partition to submit to
 #SBATCH --mem=32000           # Memory pool for all cores (see also --mem-per-cpu)
 #SBATCH --array=0           # Memory pool for all cores (see also --mem-per-cpu)
