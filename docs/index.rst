@@ -100,7 +100,6 @@ Examples
    file_format
    versions
    notebooks/quickstart.ipynb
-   examples
    downloads
    
 

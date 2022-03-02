@@ -799,7 +799,7 @@ def downstream_group_analysis(
             mc_z = (score_q95 - v_ctrl_score_q95.mean()) / v_ctrl_score_q95.std()
             df_res.loc[group, ["assoc_mcp", "assoc_mcz"]] = [mc_p, mc_z]
 
-        # Heterogeneity @Kangcheng: could you review
+        # Heterogeneity
         df_rls = test_gearysc(
             adata[cell_list], df_reg.loc[cell_list, :], groupby=group_col
         )
@@ -904,7 +904,6 @@ def downstream_gene_analysis(
 ##############################################################################
 ##################### Subroutines for downstream analysis ####################
 ##############################################################################
-# @Kangcheng: could you review
 def test_gearysc(
     adata: anndata.AnnData,
     df_full_score: pd.DataFrame,
@@ -1028,7 +1027,6 @@ def test_gearysc(
     return df_rls
 
 
-# @Kangcheng: could you review
 def gearys_c(adata, vals):
     """
     Compute Geary's C statistics for an AnnData.

@@ -109,6 +109,10 @@ out_folder : str
     :code:`<trait>` is from :code:`gs_file` file.
 cov_file : str, optional
     scDRS covariate :code:`.cov` file. Default is :code:`None`.
+adj_prop : str, optional
+    Cell group annotation (e.g., cell type) in :code:`adata.obs.columns` used for adjusting 
+    for cell group proportions. Cells are inversely weighted by the corresponding 
+    group size. Default is :code:`None`.
 flag_filter_data : bool, optional
     If to apply minimal cell and gene filtering to :code:`h5ad_file`. Default is :code:`True`.
 flag_raw_count : bool, optional
