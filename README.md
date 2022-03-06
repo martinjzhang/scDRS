@@ -2,23 +2,28 @@
 
 scDRS (single-cell disease-relevance score) is a method for associating individual cells in single-cell RNA-seq data with disease GWASs, built on top of [AnnData](https://anndata.readthedocs.io/en/latest/) and [Scanpy](https://scanpy.readthedocs.io/en/stable/). 
 
-Check out our manuscript [Zhang*, Hou*, et al. “Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data](https://www.biorxiv.org/content/10.1101/2021.09.24.461597v1).
+Check out our manuscript [Zhang*, Hou*, et al. “Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](https://www.biorxiv.org/content/10.1101/2021.09.24.461597v2).
 
 Read the [documentation](https://martinjzhang.github.io/scDRS/): [installation](https://martinjzhang.github.io/scDRS/index.html#installation), [usage](https://martinjzhang.github.io/scDRS/index.html#usage), [command-line interface (CLI)](https://martinjzhang.github.io/scDRS/reference_cli.html#), [file formats](https://martinjzhang.github.io/scDRS/file_format.html), etc. 
 
-### Versions
+### Software version
 - v1.0.0: current version. 
 - [beta](https://github.com/martinjzhang/scDRS/tree/v0.1): version for the initial submission.
 
 
 ### Code and data to reproduce results of the paper
-- Data are at [figshare](https://figshare.com/projects/Single-cell_Disease_Relevance_Score_scDRS_/118902) with details in the [experiments](./experiments) folder.
-- Download [GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080?file=30853708) (**.gs** files) for 74 diseases and complex traits.
-- Download [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_092121_score_file_tmsfacs/16664077) (**.score.gz** and **.full_score.gz** files) for TMS FACS + 74 diseases/trait.
+See [scDRS_paper](https://github.com/martinjzhang/scDRS_paper) for more details ([experiments](./experiments) folder is deprecated). Data are at [figshare](https://figshare.com/projects/Single-cell_Disease_Relevance_Score_scDRS_/118902). 
+- Download [GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_030122/19312583?file=34300898) (**.gs** files) for 74 diseases and complex traits.
+- Download [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_030122_score_file_tmsfacs/19312607) (**.score.gz** and **.full_score.gz** files) for TMS FACS + 74 diseases/trait.
+
+Older versions
+- Initial submission: [GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080?file=30853708) and [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_092121_score_file_tmsfacs/16664077).
+
 
 ### Explore scDRS results via [cellxgene](https://chanzuckerberg.github.io/cellxgene/)
 - Demo for [3 TMS FACS cell types and 3 diseases/traits](https://scdrs-demo.herokuapp.com/).
 - Results for [110,096 TMS FACS cells and 74 diseases/traits](https://scdrs-tms-facs.herokuapp.com/).
+- Download [h5ad files](https://figshare.com/articles/dataset/scdrs_cellxgene/15065061) for cellxgene.
 
 | <img src="./docs/images/cellxgene.tmsfacs.png" alt="cellxgene" style="width:100%"> | <img src="./docs/images/cellxgene.tmsfacs_ibd.png" alt="cellxgene" style="width:100%"> |
 | :--------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------: |
