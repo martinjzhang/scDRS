@@ -7,8 +7,9 @@ Check out our manuscript [Zhang*, Hou*, et al. “Polygenic enrichment distingui
 Read the [documentation](https://martinjzhang.github.io/scDRS/): [installation](https://martinjzhang.github.io/scDRS/index.html#installation), [usage](https://martinjzhang.github.io/scDRS/index.html#usage), [command-line interface (CLI)](https://martinjzhang.github.io/scDRS/reference_cli.html#), [file formats](https://martinjzhang.github.io/scDRS/file_format.html), etc. 
 
 ### Software version
-- v1.0.0: current version. 
-- [beta](https://github.com/martinjzhang/scDRS/tree/v0.1): version for the initial submission.
+- v1.0.1: current version. 
+- [v1.0.0](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.0): stable version used in revision 1. 
+- [v0.1](https://github.com/martinjzhang/scDRS/tree/v0.1): stable version used in the initial submission.
 
 
 ### Code and data to reproduce results of the paper
