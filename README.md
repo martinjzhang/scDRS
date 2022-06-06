@@ -10,7 +10,7 @@ Check out [instructions](https://github.com/martinjzhang/scDRS/issues/2) for mak
 <!---
 - v1.0.1: current version. Currently identical to `v1.0.0` but may evolve when we incorporate more suggestions.
 --->
-- v1.0.1: identical to `v1.0.0` except documentation, minted for publication.
+- v1.0.1: current version, identical to `v1.0.0` except documentation, minted for publication.
 - [v1.0.0](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.0): stable version used in revision 1. Results are identical to `v0.1` for binary gene sets. Changes with respect to `v0.1`:
     -  scDRS command-line interface (CLI) instead of `.py` scripts for calling scDRS in bash, including `scdrs munge-gs`, `scdrs compute-score`, and `scdrs perform-downstream`.
     -  More efficient in memory use due to the use of sparse matrix throughout the computation.
@@ -30,7 +30,7 @@ Check out [instructions](https://github.com/martinjzhang/scDRS/issues/2) for mak
 
 
 ## References
-[Zhang*, Hou*, et al. “Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](https://www.biorxiv.org/content/10.1101/2021.09.24.461597v2), accepted in principle at Nat Genet.
+[Zhang*, Hou*, et al. “Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](https://www.biorxiv.org/content/10.1101/2021.09.24.461597v2), accepted in principle at Nat Genet, 2022.
 
 ### Code and data to reproduce results of the paper
 See [scDRS_paper](https://github.com/martinjzhang/scDRS_paper) for more details ([experiments](./experiments) folder is deprecated). Data are at [figshare](https://figshare.com/projects/Single-cell_Disease_Relevance_Score_scDRS_/118902). 
