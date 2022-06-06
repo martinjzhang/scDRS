@@ -7,7 +7,10 @@ Read the [documentation](https://martinjzhang.github.io/scDRS/): [installation](
 Check out [instructions](https://github.com/martinjzhang/scDRS/issues/2) for making customized gene sets using MAGMA. 
 
 ### Software version
+<!---
 - v1.0.1: current version. Currently identical to `v1.0.0` but may evolve when we incorporate more suggestions.
+--->
+- v1.0.1: identical to `v1.0.0` except documentation, minted for publication.
 - [v1.0.0](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.0): stable version used in revision 1. Results are identical to `v0.1` for binary gene sets. Changes with respect to `v0.1`:
     -  scDRS command-line interface (CLI) instead of `.py` scripts for calling scDRS in bash, including `scdrs munge-gs`, `scdrs compute-score`, and `scdrs perform-downstream`.
     -  More efficient in memory use due to the use of sparse matrix throughout the computation.
