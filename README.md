@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/278546123.svg)](https://zenodo.org/badge/latestdoi/278546123)
+
 <!--# scDRS <!-- omit in toc -->
 
 scDRS (single-cell disease-relevance score) is a method for associating individual cells in single-cell RNA-seq data with disease GWASs, built on top of [AnnData](https://anndata.readthedocs.io/en/latest/) and [Scanpy](https://scanpy.readthedocs.io/en/stable/). 
