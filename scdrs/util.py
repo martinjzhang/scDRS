@@ -54,14 +54,14 @@ def load_h5ad(
         Path to h5ad file
     flag_filter_data : bool
         If True, filter out cells with
-        
+
         - sc.pp.filter_cells(adata, min_genes=250)
         - sc.pp.filter_genes(adata, min_cells=50)
     flag_raw_count : bool
         If True, perform size-factor normalization and log1p transformation.
 
     Returns
-    -------    
+    -------
     adata : anndata.AnnData
         Single-cell data.
     """
@@ -78,8 +78,8 @@ def load_h5ad(
 def load_scdrs_score(
     score_file: str, obs_names: List[str] = None
 ) -> Dict[str, pd.DataFrame]:
-    """Load scDRS scores. 
-    
+    """Load scDRS scores.
+
     Use "@" to specify multiple files, e.g., `score_folder/@.full_score.gz`
 
     Parameters
@@ -93,7 +93,7 @@ def load_scdrs_score(
         will be skipped.
 
     Returns
-    -------    
+    -------
     dict_score : Dict[str, pd.DataFrame]
         Dictionary of scDRS full score DataFrames, keyed by trait name.
     """
@@ -143,7 +143,7 @@ def load_homolog_mapping(src_species: str, dst_species: str) -> dict:
         Cannot be the same as `src_species`.
 
     Returns
-    -------    
+    -------
     dic_map : dict
         Dictionary of gene homologs (gene symbol).
     """
@@ -184,22 +184,21 @@ def load_gs(
     Parameters
     ----------
     gs_path : str
-        Path to the gene set file with the following two columns, separated by tab:
-        
-        - 'TRAIT'
-        - 'GENESET':
-          (1) <gene1>,<gene2>,... each gene will be weighted uniformly or
-          (2) <gene1>:<weight1>,<gene2>:<weight2>,... each gene will be weighted by its weight.
+        Path to the gene set file with two columns 'TRAIT' and 'GENESET', separated by tab.
+        'TRAIT' column contain trait names. 'GENESET' column contain gene names (matching
+        expression matrix) and gene weights (for weighted gene set). For unweighted gene set,
+        the 'GENESET' column contains only gene names separated by comma, e.g.,
+        "<gene1>,<gene2>,<gene3>". For weighted gene set, the 'GENESET' column contains
+        gene names and weights, e.g., "<gene1>:<weight1>,<gene2>:<weight2>,<gene3>:<weight3>".
     src_species : str, default=None
         Source species, must be either 'mmusculus' or 'hsapiens' if not None
     dst_species : str, default=None
         Destination species, must be either 'mmusculus' or 'hsapiens' if not None
-    to_intersect : List[str], default None.
+    to_intersect : List[str], default=None.
         Gene list to intersect with the input .gs file.
 
-
     Returns
-    -------    
+    -------
     dict_gs : dict
         Dictionary of gene sets: {
             trait1: (gene_list, gene_weight_list),
@@ -257,6 +256,40 @@ def load_gs(
     return dict_gs
 
 
+def save_gs(gs_path: str, dict_gs: dict) -> None:
+    """Save gene set file (.gs file).
+
+    Parameters
+    ----------
+    gs_path : str
+        Path to the gene set file with two columns 'TRAIT' and 'GENESET', separated by tab.
+        'TRAIT' column contain trait names. 'GENESET' column contain gene names (matching
+        expression matrix) and gene weights (for weighted gene set). For unweighted gene set,
+        the 'GENESET' column contains only gene names separated by comma, e.g.,
+        "<gene1>,<gene2>,<gene3>". For weighted gene set, the 'GENESET' column contains
+        gene names and weights, e.g., "<gene1>:<weight1>,<gene2>:<weight2>,<gene3>:<weight3>".
+    dict_gs : dict
+        Dictionary of gene sets: {
+            trait1: (gene_list, gene_weight_list),
+            trait2: (gene_list, gene_weight_list),
+            ...
+        }
+    """
+    df_gs: Dict = {
+        "TRAIT": [],
+        "GENESET": [],
+    }
+    for trait in dict_gs:
+        df_gs["TRAIT"].append(trait)
+        if isinstance(dict_gs[trait], tuple):
+            df_gs["GENESET"].append(
+                ",".join([g + ":" + str(w) for g, w in zip(*dict_gs[trait])])
+            )
+        else:
+            df_gs["GENESET"].append(",".join(dict_gs[trait]))
+    pd.DataFrame(df_gs).to_csv(gs_path, sep="\t", index=False)
+
+
 def test_overlap(list1, list2, list_background):
     """
     Test overlap of two gene sets using Fisher's exact test
@@ -289,44 +322,44 @@ def test_overlap(list1, list2, list_background):
         or_ub = np.exp(np.log(oddsratio) + 1.96 * se_log_or)
         or_lb = np.exp(np.log(oddsratio) - 1.96 * se_log_or)
         return pvalue, oddsratio, or_ub, or_lb
-    
 
-def meta_analysis(effects, se, method='random', weights=None):
+
+def meta_analysis(effects, se, method="random", weights=None):
     """
     Random effect meta-analysis. From Omer Weissbrod
     """
 
-    assert method in ['fixed', 'random']
+    assert method in ["fixed", "random"]
     d = effects
-    variances = se**2
-    
-    #compute random-effects variance tau2
+    variances = se ** 2
+
+    # compute random-effects variance tau2
     vwts = 1.0 / variances
-    fixedsumm = vwts.dot(d) / vwts.sum()    
-    Q = np.sum(((d - fixedsumm)**2) / variances)
-    df = len(d)-1
-    tau2 = np.maximum(0, (Q-df) / (vwts.sum() - vwts.dot(vwts) / vwts.sum()))
-    
-    #defing weights
+    fixedsumm = vwts.dot(d) / vwts.sum()
+    Q = np.sum(((d - fixedsumm) ** 2) / variances)
+    df = len(d) - 1
+    tau2 = np.maximum(0, (Q - df) / (vwts.sum() - vwts.dot(vwts) / vwts.sum()))
+
+    # defing weights
     if weights is None:
-        if method == 'fixed':
+        if method == "fixed":
             wt = 1.0 / variances
         else:
             wt = 1.0 / (variances + tau2)
     else:
         wt = weights
-    
-    #compute summtest
+
+    # compute summtest
     summ = wt.dot(d) / wt.sum()
-    if method == 'fixed':
-        varsum = np.sum(wt*wt*variances) / (np.sum(wt)**2)
+    if method == "fixed":
+        varsum = np.sum(wt * wt * variances) / (np.sum(wt) ** 2)
     else:
-        varsum = np.sum(wt*wt*(variances+tau2)) / (np.sum(wt)**2)
+        varsum = np.sum(wt * wt * (variances + tau2)) / (np.sum(wt) ** 2)
     ###summtest = summ / np.sqrt(varsum)
-    
-    summary=summ
-    se_summary=np.sqrt(varsum)
-    
+
+    summary = summ
+    se_summary = np.sqrt(varsum)
+
     return summary, se_summary
 
 
@@ -438,10 +471,14 @@ def plot_group_stats(
         trait_list = list(dict_df_stats.keys())
         # compile df_fdr_prop, df_assoc_fdr, df_hetero_fdr from dict_df_stats
         df_fdr_prop = pd.concat(
-            [dict_df_stats[trait]["fdr_prop"] for trait in trait_list], axis=1
+            [
+                dict_df_stats[trait]["n_fdr_0.1"] / dict_df_stats[trait]["n_cell"]
+                for trait in trait_list
+            ],
+            axis=1,
         ).T
         df_assoc_fdr = pd.concat(
-            [dict_df_stats[trait]["assoc_pval"] for trait in trait_list], axis=1
+            [dict_df_stats[trait]["assoc_mcp"] for trait in trait_list], axis=1
         ).T
         df_assoc_fdr = pd.DataFrame(
             multipletests(df_assoc_fdr.values.flatten(), method="fdr_bh")[1].reshape(
@@ -451,7 +488,7 @@ def plot_group_stats(
             columns=df_assoc_fdr.columns,
         )
         df_hetero_fdr = pd.concat(
-            [dict_df_stats[trait]["hetero_pval"] for trait in trait_list], axis=1
+            [dict_df_stats[trait]["hetero_mcp"] for trait in trait_list], axis=1
         ).T
         df_hetero_fdr = pd.DataFrame(
             multipletests(df_hetero_fdr.values.flatten(), method="fdr_bh")[1].reshape(
@@ -716,10 +753,12 @@ def p_2_str_num(p_, n_ctrl):
         return "P=%0.3f" % p_
     else:
         return "P<%0.3f" % (1 / n_ctrl)
-    
-    
+
+
 def reorder_col(df_sim):
-    mat_condensed_dist = sp.spatial.distance.squareform(1-df_sim)
-    mat_linkage = sp.cluster.hierarchy.linkage(mat_condensed_dist, method='average')
-    reordered_col_list = list(df_sim.columns[sp.cluster.hierarchy.leaves_list(mat_linkage)])
+    mat_condensed_dist = sp.spatial.distance.squareform(1 - df_sim)
+    mat_linkage = sp.cluster.hierarchy.linkage(mat_condensed_dist, method="average")
+    reordered_col_list = list(
+        df_sim.columns[sp.cluster.hierarchy.leaves_list(mat_linkage)]
+    )
     return reordered_col_list
