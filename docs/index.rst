@@ -15,7 +15,7 @@ Installation
 
    git clone https://github.com/martinjzhang/scDRS.git
    cd scDRS
-   git checkout -b rv1 v1.0.0
+   git checkout -b pub v1.0.1
    pip install -e .
    
 Quick test:
@@ -23,6 +23,14 @@ Quick test:
 .. code-block:: bash
 
    python -m pytest tests/test_CLI.py -p no:warnings
+   
+Install via `PyPI <https://pypi.org/project/scdrs/1.0.1/#description>`_
+
+.. code-block:: bash
+
+    pip install scdrs==1.0.1
+    
+Quick test for PyPI installation: open Python (>=3.5) and run the code in the Usage section.
    
 `Install other versions <versions.html>`_
 

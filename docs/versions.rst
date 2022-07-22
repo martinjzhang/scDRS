@@ -1,13 +1,15 @@
 Versions
 ========
 
-v1.0.1: current version
+v1.0.1: publication (072222)
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
    git clone https://github.com/martinjzhang/scDRS.git
-   cd scDRS; pip install -e .
+   cd scDRS 
+   git checkout -b pub v1.0.1
+   pip install -e .
    
 Quick test:
 
