@@ -3,6 +3,48 @@ import scipy as sp
 from scipy import sparse
 import pandas as pd
 from skmisc.loess import loess
+from typing import List
+
+
+def category2dummy(
+    df: pd.DataFrame, cols: List[str] = None, verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Convert categorical variables in a dataframe to binary dummy variables.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe to convert
+    cols : List[str], optional
+        Columns to convert, by default None (columns are then selected automatically)
+
+    Returns
+    -------
+    pd.DataFrame
+        Converted dataframe
+    """
+    df = df.copy()
+
+    if cols is None:
+        cols = list(set(df.columns) - set(df._get_numeric_data().columns))
+
+    added_cols = []
+    for col in cols:
+        # create study dummies variables
+        dummies = pd.get_dummies(df[col], drop_first=True)
+        dummies.columns = [f"{col}_{s}" for s in dummies.columns]
+        dummies.loc[df[col].isnull(), dummies.columns] = np.nan
+        added_cols.extend(dummies.columns)
+        df = pd.concat([df, dummies], axis=1)
+        df = df.drop(columns=[col])
+    if (len(added_cols) > 0) and verbose:
+        print(
+            "scdrs.pp.category2dummy: ",
+            f"Detected categorical columns: {','.join(cols)}, "
+            f"and added dummy columns:: {','.join(added_cols)}",
+        )
+    return df
 
 
 def preprocess(
@@ -139,6 +181,7 @@ def preprocess(
 
         df_cov = pd.DataFrame(index=adata.obs_names)
         df_cov = df_cov.join(cov)
+        df_cov = category2dummy(df=df_cov, verbose=True)
         df_cov.fillna(df_cov.mean(), inplace=True)
 
         # Add const term if df_cov does not already have it (or a linear combination of it)
