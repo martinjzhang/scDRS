@@ -769,6 +769,7 @@ def downstream_group_analysis(
             res_cols.append(f"n_fdr_{fdr_threshold}")
 
         df_res = pd.DataFrame(index=group_list, columns=res_cols, dtype=np.float32)
+        df_res.index.name = "group"
 
         df_fdr = pd.DataFrame(
             {"fdr": multipletests(df_reg["pval"].values, method="fdr_bh")[1]},

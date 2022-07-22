@@ -1,15 +1,31 @@
 import scdrs
-
 import pandas as pd
 import scanpy as sc
-
 from anndata import AnnData
-
-import matplotlib.pyplot as plt
-import os
+import os, subprocess, tempfile
 
 CORTEX_URL = "https://storage.googleapis.com/linnarsson-lab-www-blobs/blobs/cortex/expression_mRNA_17-Aug-2014.txt"
-SUPP_TABLE_URL = "https://www.dropbox.com/s/qojbzu5zln33j7f/supp_tables.xlsx?dl=1"
+
+# save to files
+if not os.path.exists("data/"):
+    os.makedirs("data/")
+
+# download gene set
+with tempfile.TemporaryDirectory() as tmpdir:
+    subprocess.check_call(
+        f"wget https://figshare.com/ndownloader/files/34300898 -O {tmpdir}/geneset.zip "
+        + f"&& unzip {tmpdir}/geneset.zip -d {tmpdir} "
+        + f"&& mv {tmpdir}/gs_file/magma_10kb_top1000_zscore.74_traits.rv1.gs data/gwas.gs",
+        shell=True,
+    )
+
+with tempfile.TemporaryDirectory() as tmpdir:
+    subprocess.check_call(
+        f"wget https://figshare.com/ndownloader/files/34300925 -O {tmpdir}/data.zip "
+        + f"&& unzip {tmpdir}/data.zip -d {tmpdir} "
+        + f"&& mv {tmpdir}/single_cell_data/zeisel_2015/geneset.gs data/spatial.gs",
+        shell=True,
+    )
 
 # meta information
 df_meta = pd.read_csv(CORTEX_URL, nrows=10, sep="\t", header=None)
@@ -57,18 +73,18 @@ df_cov = pd.DataFrame(index=adata.obs.index)
 df_cov["const"] = 1
 df_cov["n_genes"] = adata.obs["n_genes"]
 
-# load gene sets
-df_gs = pd.read_excel(SUPP_TABLE_URL, sheet_name="ST6 MAGMA gene sets", index_col=0)
-df_gs = df_gs.loc[["PASS_Schizophrenia_Pardinas2018", "UKB_460K.body_HEIGHTz"], :]
-df_gs = scdrs.util.convert_gs_species(df_gs)
-df_gs = df_gs.rename(
-    index={"PASS_Schizophrenia_Pardinas2018": "SCZ", "UKB_460K.body_HEIGHTz": "Height"}
+# format gene sets
+dict_gwas_gs = scdrs.util.load_gs(
+    "data/gwas.gs", src_species="human", dst_species="mouse"
 )
+dict_spatial_gs = scdrs.util.load_gs("data/spatial.gs")
 
-# save to files
-if not os.path.exists("data/"):
-    os.makedirs("data/")
+dict_gs = {
+    "SCZ": dict_gwas_gs["PASS_Schizophrenia_Pardinas2018"],
+    "Height": dict_gwas_gs["UKB_460K.body_HEIGHTz"],
+    "Dorsal": dict_spatial_gs["spatial_dorsal"],
+}
 
 adata.write_h5ad("data/expr.h5ad")
 df_cov.to_csv("data/cov.tsv", sep="\t")
-df_gs.reset_index().to_csv("data/geneset.gs", sep="\t", index=False)
+scdrs.util.save_gs("data/geneset.gs", dict_gs)

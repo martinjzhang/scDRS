@@ -119,19 +119,19 @@ def compute_score(
 
     header = get_cli_head()
     header += "Call: scdrs compute-score \\\n"
-    header += "--h5ad-file %s\\\n" % H5AD_FILE
-    header += "--h5ad-species %s\\\n" % H5AD_SPECIES
-    header += "--cov-file %s\\\n" % COV_FILE
-    header += "--gs-file %s\\\n" % GS_FILE
-    header += "--gs-species %s\\\n" % GS_SPECIES
-    header += "--ctrl-match-opt %s\\\n" % CTRL_MATCH_OPT
-    header += "--weight-opt %s\\\n" % WEIGHT_OPT
-    header += "--adj-prop %s\\\n" % ADJ_PROP
-    header += "--flag-filter-data %s\\\n" % FLAG_FILTER_DATA
-    header += "--flag-raw-count %s\\\n" % FLAG_RAW_COUNT
-    header += "--n-ctrl %d\\\n" % N_CTRL
-    header += "--flag-return-ctrl-raw-score %s\\\n" % FLAG_RETURN_CTRL_RAW_SCORE
-    header += "--flag-return-ctrl-norm-score %s\\\n" % FLAG_RETURN_CTRL_NORM_SCORE
+    header += "--h5ad-file %s \\\n" % H5AD_FILE
+    header += "--h5ad-species %s \\\n" % H5AD_SPECIES
+    header += "--cov-file %s \\\n" % COV_FILE
+    header += "--gs-file %s \\\n" % GS_FILE
+    header += "--gs-species %s \\\n" % GS_SPECIES
+    header += "--ctrl-match-opt %s \\\n" % CTRL_MATCH_OPT
+    header += "--weight-opt %s \\\n" % WEIGHT_OPT
+    header += "--adj-prop %s \\\n" % ADJ_PROP
+    header += "--flag-filter-data %s \\\n" % FLAG_FILTER_DATA
+    header += "--flag-raw-count %s \\\n" % FLAG_RAW_COUNT
+    header += "--n-ctrl %d \\\n" % N_CTRL
+    header += "--flag-return-ctrl-raw-score %s \\\n" % FLAG_RETURN_CTRL_RAW_SCORE
+    header += "--flag-return-ctrl-norm-score %s \\\n" % FLAG_RETURN_CTRL_NORM_SCORE
     header += "--out-folder %s\n" % OUT_FOLDER
     print(header)
 
@@ -208,7 +208,9 @@ def compute_score(
 
     # Preprocess
     print("Preprocessing:")
-    scdrs.preprocess(adata, cov=df_cov, adj_prop=ADJ_PROP, n_mean_bin=20, n_var_bin=20, copy=False)
+    scdrs.preprocess(
+        adata, cov=df_cov, adj_prop=ADJ_PROP, n_mean_bin=20, n_var_bin=20, copy=False
+    )
     print("")
 
     # Compute score
@@ -346,27 +348,27 @@ def munge_gs(
         sum([(pval_file is not None), (zscore_file is not None)]) == 1
     ), "One of --pval-file and --zscore-file is expected."
     if pval_file is not None:
-        header += "--pval-file %s\\\n" % pval_file
+        header += "--pval-file %s \\\n" % pval_file
     if zscore_file is not None:
-        header += "--zscore-file %s\\\n" % zscore_file
+        header += "--zscore-file %s \\\n" % zscore_file
 
     assert weight in [
         "zscore",
         "uniform",
     ], "--weight needs to be one of 'zscore', 'uniform'"
-    header += "--weight %s\\\n" % weight
+    header += "--weight %s \\\n" % weight
 
     assert (fdr is None) or (
         fwer is None
     ), "At most one of --fdr and --fwer is allowed."
     if fdr is not None:
-        header += "--fdr %s\\\n" % fdr
+        header += "--fdr %s \\\n" % fdr
     if fwer is not None:
-        header += "--fwer %s\\\n" % fdr
+        header += "--fwer %s \\\n" % fdr
 
     n_min = min(n_min, n_max)
-    header += "--n-min %s\\\n" % n_min
-    header += "--n-max %s\\\n" % n_max
+    header += "--n-min %s \\\n" % n_min
+    header += "--n-max %s \\\n" % n_max
 
     assert out_file is not None, "--out-file is expected."
     header += "--out-file %s\n" % out_file
@@ -494,10 +496,10 @@ def perform_downstream(
     --corr-analysis
         For a given individual cell-level variable (e.g., T cell effectorness gradient), assess 
         association between disease and the individual cell-level variable (control-score-based 
-        MC tests using Pearson’s correlation).
+        MC tests using Pearson's correlation).
     
     --gene-analysis: 
-        Compute Pearson’s correlation between expression of each gene and the scDRS disease score.
+        Compute Pearson's correlation between expression of each gene and the scDRS disease score.
 
     Parameters
     ----------
@@ -535,13 +537,13 @@ def perform_downstream(
     Examples
     --------
     scdrs perform-downstream \
-        --h5ad-file <h5ad_file>\
-        --score-file <score_file>\
-        --out-folder <out_folder>\
+        --h5ad-file <h5ad_file> \
+        --score-file <full_score_file> \
+        --out-folder <out_folder> \
         --group-analysis cell_type \
-        --corr-analysis causal_variable,non_causal_variable,covariate\
-        --gene-analysis\
-        --flag-filter-data True\
+        --corr-analysis causal_variable,non_causal_variable,covariate \
+        --gene-analysis \
+        --flag-filter-data True \
         --flag-raw-count True
     """
 
@@ -554,13 +556,13 @@ def perform_downstream(
     header += "Call: scdrs perform-downstream \\\n"
 
     assert h5ad_file is not None, "--h5ad-file is expected."
-    header += "--h5ad-file %s\\\n" % h5ad_file
+    header += "--h5ad-file %s \\\n" % h5ad_file
 
     assert score_file is not None, "--score-file is expected."
-    header += "--score-file %s\\\n" % score_file
+    header += "--score-file %s \\\n" % score_file
 
     assert out_folder is not None, "--out-folder is expected."
-    header += "--out-folder %s\\\n" % out_folder
+    header += "--out-folder %s \\\n" % out_folder
 
     assert (
         sum(
@@ -593,14 +595,14 @@ def perform_downstream(
         else:
             raise ValueError("Expect --corr_analysis to be a comma-separated string.")
         # corr_analysis header
-        header += "--corr-analysis %s\\\n" % ",".join(corr_analysis)
+        header += "--corr-analysis %s \\\n" % ",".join(corr_analysis)
     if gene_analysis is not None:
-        header += "--gene-analysis %s\\\n" % gene_analysis
+        header += "--gene-analysis %s \\\n" % gene_analysis
 
-    header += "--flag-filter-data %s\\\n" % flag_filter_data
-    header += "--flag-raw-count %s\\\n" % flag_raw_count
-    header += "--knn-n-neighbors %s\\\n" % knn_n_neighbors
-    header += "--knn-n-pcs %s\\\n" % knn_n_pcs
+    header += "--flag-filter-data %s \\\n" % flag_filter_data
+    header += "--flag-raw-count %s \\\n" % flag_raw_count
+    header += "--knn-n-neighbors %s \\\n" % knn_n_neighbors
+    header += "--knn-n-pcs %s\n" % knn_n_pcs
     print(header)
 
     ###########################################################################################

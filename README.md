@@ -1,23 +1,24 @@
+[![DOI](https://zenodo.org/badge/278546123.svg)](https://zenodo.org/badge/latestdoi/278546123)
+
 <!--# scDRS <!-- omit in toc -->
 
 scDRS (single-cell disease-relevance score) is a method for associating individual cells in single-cell RNA-seq data with disease GWASs, built on top of [AnnData](https://anndata.readthedocs.io/en/latest/) and [Scanpy](https://scanpy.readthedocs.io/en/stable/). 
 
-Check out our manuscript [Zhang*, Hou*, et al. “Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](https://www.biorxiv.org/content/10.1101/2021.09.24.461597v2).
-
 Read the [documentation](https://martinjzhang.github.io/scDRS/): [installation](https://martinjzhang.github.io/scDRS/index.html#installation), [usage](https://martinjzhang.github.io/scDRS/index.html#usage), [command-line interface (CLI)](https://martinjzhang.github.io/scDRS/reference_cli.html#), [file formats](https://martinjzhang.github.io/scDRS/file_format.html), etc. 
 
+Check out [instructions](https://github.com/martinjzhang/scDRS/issues/2) for making customized gene sets using MAGMA. 
+
 ### Software version
-- v1.0.0: current version. 
-- [beta](https://github.com/martinjzhang/scDRS/tree/v0.1): version for the initial submission.
-
-
-### Code and data to reproduce results of the paper
-See [scDRS_paper](https://github.com/martinjzhang/scDRS_paper) for more details ([experiments](./experiments) folder is deprecated). Data are at [figshare](https://figshare.com/projects/Single-cell_Disease_Relevance_Score_scDRS_/118902). 
-- Download [GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_030122/19312583?file=34300898) (**.gs** files) for 74 diseases and complex traits.
-- Download [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_030122_score_file_tmsfacs/19312607) (**.score.gz** and **.full_score.gz** files) for TMS FACS + 74 diseases/trait.
-
-Older versions
-- Initial submission: [GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080?file=30853708) and [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_092121_score_file_tmsfacs/16664077).
+<!---
+- v1.0.1: current version. Currently identical to `v1.0.0` but may evolve when we incorporate more suggestions.
+--->
+- v1.0.1: current version, identical to `v1.0.0` except documentation, minted for publication.
+- [v1.0.0](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.0): stable version used in revision 1. Results are identical to `v0.1` for binary gene sets. Changes with respect to `v0.1`:
+    -  scDRS command-line interface (CLI) instead of `.py` scripts for calling scDRS in bash, including `scdrs munge-gs`, `scdrs compute-score`, and `scdrs perform-downstream`.
+    -  More efficient in memory use due to the use of sparse matrix throughout the computation.
+    -  Allow the use of quantitative weights.
+    -  New feature `--adj-prop` for adjusting for cell type-proportions.
+- [v0.1](https://github.com/martinjzhang/scDRS/tree/v0.1): stable version used in the initial submission.
 
 
 ### Explore scDRS results via [cellxgene](https://chanzuckerberg.github.io/cellxgene/)
@@ -30,69 +31,16 @@ Older versions
 |                   110,096 cells from 120 cell types in TMS FACS                    |                                  IBD-associated cells                                  |
 
 
-<!--# Table of contents <!-- omit in toc -->
-<!-- - [Installation](#installation)
-- [Within python scDRS demo](#within-python-scdrs-demo)
-- [Command line interface for scDRS score calculation](#command-line-interface-for-scdrs-score-calculation)
-- [Command line interface for scDRS downsteam applications](#command-line-interface-for-scdrs-downsteam-applications)
-- [File formats](#file-formats)
-  - [scDRS input files](#scdrs-input-files)
-  - [scDRS output files](#scdrs-output-files)
- -->
- 
-<!---
-# Installation
-Install from github:
-```sh
-git clone https://github.com/martinjzhang/scDRS.git
-cd scDRS; pip install -e .
-# Current version under development; switch to submission version
-# https://github.com/martinjzhang/scDRS/releases/tag/v0.1
-git checkout -b initial_submission v0.1 
-```
+## References
+[Zhang*, Hou*, et al. “Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](https://www.biorxiv.org/content/10.1101/2021.09.24.461597v2), accepted in principle at Nat Genet, 2022.
 
-Quick test:
-```sh
-python -m pytest tests/test_scdrs.py -p no:warnings
-```
+### Code and data to reproduce results of the paper
+See [scDRS_paper](https://github.com/martinjzhang/scDRS_paper) for more details ([experiments](./experiments) folder is deprecated). Data are at [figshare](https://figshare.com/projects/Single-cell_Disease_Relevance_Score_scDRS_/118902). 
+- Download [GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_030122/19312583?file=34300898) (**.gs** files) for 74 diseases and complex traits.
+- Download [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_030122_score_file_tmsfacs/19312607) (**.score.gz** and **.full_score.gz** files) for TMS FACS + 74 diseases/trait.
 
-Install from PyPI (coming soon)
--->
-
-
-<!---
-# Within python scDRS demo 
-
-We attach a toy example as follows, see [Documentation](https://martinjzhang.github.io/scDRS/reference.html) for detailed information.
-
-```python
-import os
-import pandas as pd
-from anndata import read_h5ad
-import scdrs
-
-# Load data
-DATA_PATH = scdrs.__path__[0]
-adata = read_h5ad(os.path.join(DATA_PATH, "data/toydata_mouse.h5ad"))
-df_gs = pd.read_csv(os.path.join(DATA_PATH, "data/toydata_mouse.gs"), sep="\t")
-
-# Compute scDRS gene-level and cell-level statistics
-scdrs.method.compute_stats(adata)
-
-# Compute scDRS results
-gene_list = df_gs["GENESET"].values[0].split(",")
-df_res = scdrs.method.score_cell(adata, gene_list)
-print(df_res.iloc[:4])
-```
-
-The expected output is (see below for format of **.score.gz** file):
-  |                 index                 | raw_score | norm_score | mc_pval  |   pval   | nlog10_pval |  zscore  |
-  | :-----------------------------------: | :-------: | :--------: | :------: | :------: | :---------: | :------: |
-  |      N1.MAA000586.3_8_M.1.1-1-1       | 5.495287  |  4.136498  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
-  |       F10.D041911.3_8_M.1.1-1-1       | 5.507245  |  4.878401  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
-  | A17_B002755_B007347_S17.mm10-plus-7-0 | 5.379276  |  3.338063  | 0.003992 | 0.000800 |  3.096939   | 3.155926 |
-  |    C22_B003856_S298_L004.mus-2-0-1    | 5.443514  |  4.537418  | 0.001996 | 0.000067 |  4.176120   | 3.820235 |
--->
+Older versions
+- Initial submission: [GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080?file=30853708) and [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_092121_score_file_tmsfacs/16664077).
 
 
 ## scDRS scripts (deprecated) 
