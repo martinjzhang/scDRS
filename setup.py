@@ -37,4 +37,5 @@ setuptools.setup(
     scripts=[
         "bin/scdrs",
     ],
+    package_data={'scdrs': ['data/*']},
 )
