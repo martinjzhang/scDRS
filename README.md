@@ -8,31 +8,17 @@ Read the [documentation](https://martinjzhang.github.io/scDRS/): [installation](
 
 Check out [instructions](https://github.com/martinjzhang/scDRS/issues/2) for making customized gene sets using MAGMA. 
 
-### Software version
-<!---
-- v1.0.1: current version. Currently identical to `v1.0.0` but may evolve when we incorporate more suggestions.
---->
-- v1.0.1: current version, identical to `v1.0.0` except documentation, minted for publication.
+### Reference
+[Zhang*, Hou*, et al. “Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](https://www.biorxiv.org/content/10.1101/2021.09.24.461597v2), accepted at Nature Genetics, 2022.
+
+### Versions
+- [v1.0.1](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.1): stable version used in publication. Identical to `v1.0.0` except documentation.
 - [v1.0.0](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.0): stable version used in revision 1. Results are identical to `v0.1` for binary gene sets. Changes with respect to `v0.1`:
     -  scDRS command-line interface (CLI) instead of `.py` scripts for calling scDRS in bash, including `scdrs munge-gs`, `scdrs compute-score`, and `scdrs perform-downstream`.
     -  More efficient in memory use due to the use of sparse matrix throughout the computation.
     -  Allow the use of quantitative weights.
     -  New feature `--adj-prop` for adjusting for cell type-proportions.
 - [v0.1](https://github.com/martinjzhang/scDRS/tree/v0.1): stable version used in the initial submission.
-
-
-### Explore scDRS results via [cellxgene](https://chanzuckerberg.github.io/cellxgene/)
-- Demo for [3 TMS FACS cell types and 3 diseases/traits](https://scdrs-demo.herokuapp.com/).
-- Results for [110,096 TMS FACS cells and 74 diseases/traits](https://scdrs-tms-facs.herokuapp.com/).
-- Download [h5ad files](https://figshare.com/articles/dataset/scdrs_cellxgene/15065061) for cellxgene.
-
-| <img src="./docs/images/cellxgene.tmsfacs.png" alt="cellxgene" style="width:100%"> | <img src="./docs/images/cellxgene.tmsfacs_ibd.png" alt="cellxgene" style="width:100%"> |
-| :--------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------: |
-|                   110,096 cells from 120 cell types in TMS FACS                    |                                  IBD-associated cells                                  |
-
-
-## References
-[Zhang*, Hou*, et al. “Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](https://www.biorxiv.org/content/10.1101/2021.09.24.461597v2), accepted in principle at Nat Genet, 2022.
 
 ### Code and data to reproduce results of the paper
 See [scDRS_paper](https://github.com/martinjzhang/scDRS_paper) for more details ([experiments](./experiments) folder is deprecated). Data are at [figshare](https://figshare.com/projects/Single-cell_Disease_Relevance_Score_scDRS_/118902). 
@@ -43,7 +29,18 @@ Older versions
 - Initial submission: [GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080?file=30853708) and [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_092121_score_file_tmsfacs/16664077).
 
 
-## scDRS scripts (deprecated) 
+# Explore scDRS results via [cellxgene](https://chanzuckerberg.github.io/cellxgene/)
+- Demo for [3 TMS FACS cell types and 3 diseases/traits](https://scdrs-demo.herokuapp.com/).
+- Results for [110,096 TMS FACS cells and 74 diseases/traits](https://scdrs-tms-facs.herokuapp.com/).
+- Download [h5ad files](https://figshare.com/articles/dataset/scdrs_cellxgene/15065061) for cellxgene.
+
+| <img src="./docs/images/cellxgene.tmsfacs.png" alt="cellxgene" style="width:100%"> | <img src="./docs/images/cellxgene.tmsfacs_ibd.png" alt="cellxgene" style="width:100%"> |
+| :--------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------: |
+|                   110,096 cells from 120 cell types in TMS FACS                    |                                  IBD-associated cells                                  |
+
+
+
+# scDRS scripts (deprecated) 
 ---
 **NOTE:** scDRS scripts are still maintained but deprecated. Consider using [scDRS command-line interface](https://martinjzhang.github.io/scDRS/reference_cli.html) instead.
 
