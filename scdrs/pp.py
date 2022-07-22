@@ -18,6 +18,8 @@ def category2dummy(
         Dataframe to convert
     cols : List[str], optional
         Columns to convert, by default None (columns are then selected automatically)
+    verbose : bool, optional
+        Print progress, by default False
 
     Returns
     -------
@@ -27,22 +29,32 @@ def category2dummy(
     df = df.copy()
 
     if cols is None:
+        # infer non-numerical columns
         cols = list(set(df.columns) - set(df._get_numeric_data().columns))
 
-    added_cols = []
+    assert set(cols).issubset(set(df.columns)), "'cols' must be a subset of df.columns"
+
+    cols_to_drop = []
+    cols_to_add = []
+    dummy_dfs = []
     for col in cols:
-        # create study dummies variables
-        dummies = pd.get_dummies(df[col], drop_first=True)
-        dummies.columns = [f"{col}_{s}" for s in dummies.columns]
-        dummies.loc[df[col].isnull(), dummies.columns] = np.nan
-        added_cols.extend(dummies.columns)
-        df = pd.concat([df, dummies], axis=1)
-        df = df.drop(columns=[col])
-    if (len(added_cols) > 0) and verbose:
+        # create df of dummy variables
+        dummy_df = pd.get_dummies(df[col], drop_first=True)
+        dummy_df.columns = [f"{col}_{s}" for s in dummy_df.columns]
+        dummy_df.loc[df[col].isnull(), dummy_df.columns] = np.nan
+        cols_to_drop.append(col)
+        cols_to_add.extend(dummy_df.columns)
+        dummy_dfs.append(dummy_df)
+
+    # all columns in dummy_dfs
+    df = pd.concat([df, *dummy_dfs], axis=1).drop(columns=cols_to_drop)
+
+    if (len(cols_to_add) > 0) and verbose:
         print(
-            "scdrs.pp.category2dummy: ",
-            f"Detected categorical columns: {','.join(cols)}, "
-            f"and added dummy columns:: {','.join(added_cols)}",
+            "scdrs.pp.category2dummy: "
+            f"Detected categorical columns: {','.join(cols)}. "
+            f"Added dummy columns: {','.join(cols_to_add)}. "
+            f"Dropped columns: {','.join(cols_to_drop)}."
         )
     return df
 
