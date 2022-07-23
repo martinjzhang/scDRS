@@ -3,6 +3,60 @@ import scipy as sp
 from scipy import sparse
 import pandas as pd
 from skmisc.loess import loess
+from typing import List
+
+
+def category2dummy(
+    df: pd.DataFrame, cols: List[str] = None, verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Convert categorical variables in a dataframe to binary dummy variables.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe to convert
+    cols : List[str], optional
+        Columns to convert, by default None (columns are then selected automatically)
+    verbose : bool, optional
+        Print progress, by default False
+
+    Returns
+    -------
+    pd.DataFrame
+        Converted dataframe
+    """
+    df = df.copy()
+
+    if cols is None:
+        # infer non-numerical columns
+        cols = list(set(df.columns) - set(df._get_numeric_data().columns))
+
+    assert set(cols).issubset(set(df.columns)), "'cols' must be a subset of df.columns"
+
+    cols_to_drop = []
+    cols_to_add = []
+    dummy_dfs = []
+    for col in cols:
+        # create df of dummy variables
+        dummy_df = pd.get_dummies(df[col], drop_first=True)
+        dummy_df.columns = [f"{col}_{s}" for s in dummy_df.columns]
+        dummy_df.loc[df[col].isnull(), dummy_df.columns] = np.nan
+        cols_to_drop.append(col)
+        cols_to_add.extend(dummy_df.columns)
+        dummy_dfs.append(dummy_df)
+
+    # all columns in dummy_dfs
+    df = pd.concat([df, *dummy_dfs], axis=1).drop(columns=cols_to_drop)
+
+    if (len(cols_to_add) > 0) and verbose:
+        print(
+            "scdrs.pp.category2dummy: "
+            f"Detected categorical columns: {','.join(cols)}. "
+            f"Added dummy columns: {','.join(cols_to_add)}. "
+            f"Dropped columns: {','.join(cols_to_drop)}."
+        )
+    return df
 
 
 def preprocess(
@@ -139,6 +193,7 @@ def preprocess(
 
         df_cov = pd.DataFrame(index=adata.obs_names)
         df_cov = df_cov.join(cov)
+        df_cov = category2dummy(df=df_cov, verbose=True)
         df_cov.fillna(df_cov.mean(), inplace=True)
 
         # Add const term if df_cov does not already have it (or a linear combination of it)
