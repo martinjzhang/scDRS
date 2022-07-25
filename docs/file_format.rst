@@ -1,6 +1,18 @@
 File formats
 ============
 
+.sumstats
+~~~~~~~~~
+GWAS summary statistics following the `LDSC format <https://github.com/bulik/ldsc/wiki/Summary-Statistics-File-Format>`_.
+    
+.. csv-table:: Example .sumstats file
+   :header: "GENE", "BMI", "HEIGHT"
+   :delim: space
+   
+   SNP A1 A2 N CHISQ Z
+   rs7899632 A G 59957 3.4299 -1.852
+   rs3750595 A C 59957 3.3124 1.82
+
 .h5ad
 ~~~~~
 

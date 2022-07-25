@@ -2,7 +2,7 @@ Versions
 ========
 
 v1.0.1: publication (072222)
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -33,8 +33,8 @@ Quick test:
 
    python -m pytest tests/test_CLI.py -p no:warnings
 
-v0.1: initial submission version
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+v0.1: initial submission (093022)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 

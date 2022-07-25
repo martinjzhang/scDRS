@@ -30,7 +30,7 @@ Install via `PyPI <https://pypi.org/project/scdrs/1.0.1/#description>`_
 
     pip install scdrs==1.0.1
     
-Quick test for PyPI installation: open Python (>=3.5) and run the code in the Usage section.
+Quick test for PyPI installation: open Python (>=3.5) and run the code in the Usage section below.
    
 `Install other versions <versions.html>`_
 
@@ -108,6 +108,7 @@ Examples
    reference_cli
    reference
    file_format
+   faq
    versions
    notebooks/quickstart.ipynb
    downloads
