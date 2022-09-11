@@ -66,6 +66,19 @@ def load_h5ad(
         Single-cell data.
     """
     adata = read_h5ad(h5ad_file)
+    # check inputs (1) no NaN in adata.X (2) all adata.X >= 0
+    if np.isnan(adata.X.sum()):
+        raise ValueError(
+            "h5ad expression matrix should not contain NaN. Please impute them beforehand."
+        )
+    if (adata.X < 0).sum() > 0:
+        raise ValueError(
+            "h5ad expression matrix should not contain negative values. "
+            "This is because in the preprocessing step, "
+            "scDRS models the gene-level log mean-variance relationship. "
+            "See scdrs.pp.compute_stats for details."
+        )
+
     if flag_filter_data:
         sc.pp.filter_cells(adata, min_genes=250)
         sc.pp.filter_genes(adata, min_cells=50)
