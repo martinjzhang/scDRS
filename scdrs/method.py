@@ -32,8 +32,8 @@ def score_cell(
 
     It operates in implicit-covariate-correction mode if both `FLAG_SPARSE`
     and `FLAG_COV` are `True`, where computations are based on the implicit
-    covariate-corrected data 
-    
+    covariate-corrected data
+
         `CORRECTED_X = data.X + COV_MAT * COV_BETA + COV_GENE_MEAN`.
 
     It operates in normal mode otherwise, where computations are based on `data.X`,
@@ -59,12 +59,12 @@ def score_cell(
         `data.uns["SCDRS_PARAM"]["GENE_STATS"][ctrl_match_key]` is a continuous variable.
     weight_opt : str, default="vs"
         Option for computing the raw score
-        
+
         - 'uniform': average over the genes in the gene_list.
         - 'vs': weighted average with weights equal to 1/sqrt(technical_variance_of_logct).
         - 'inv_std': weighted average with weights equal to 1/std.
         - 'od': overdispersion score.
-        
+
     copy : bool, default=False
         If to make copy of the AnnData object to avoid writing on the orignal data.
     return_raw_ctrl_score : bool, default=False
@@ -79,10 +79,10 @@ def score_cell(
         File path prefix for saving intermediate results.
 
     Returns
-    -------    
+    -------
     df_res : pandas.DataFrame (dtype=np.float32)
         scDRS results of shape (n_cell, n_key) with columns
-        
+
         - raw_score: raw disease scores.
         - norm_score: normalized disease scores.
         - mc_pval: Monte Carlo p-values based on the normalized control scores of the same cell.
@@ -712,7 +712,7 @@ def downstream_group_analysis(
     scDRS group-level analysis.
 
     For each annotation in `group_cols` and each group of cells in the annotation, compute:
-    
+
     1. Proportion of FDR < 0.1 cells.
     2. Group-level trait association.
     3. Group-level heterogeneity.
@@ -731,7 +731,7 @@ def downstream_group_analysis(
         List of column names in adata.obs used to define cell groups.
 
     Returns
-    -------    
+    -------
     dict_df_res : Dict[str, pd.DataFrame]
         Group-level statistics (n_group, n_stats) keyed by the group names.
     """
@@ -835,7 +835,7 @@ def downstream_corr_analysis(
         List of column names in `adata.obs` for continous cell-level variables.
 
     Returns
-    -------    
+    -------
     df_res : pd.DataFrame
         Correlation results (n_var, n_stats).
     """
@@ -882,7 +882,7 @@ def downstream_gene_analysis(
         scDRS `.full_score` file for a given trait.
 
     Returns
-    -------    
+    -------
     df_res : pd.DataFrame
         Correlation results (n_gene, n_stats).
     """
@@ -930,10 +930,10 @@ def test_gearysc(
                 the distribution of the scores of the disease scores.
 
     Returns
-    -------    
+    -------
     df_rls : DataFrame
         DataFrame with the results of the test with `n_group` rows and 4 columns:
-        
+
         - `pval`: significance level of Geary's C
         - `trait`: Geary's C test statistic of the trait scores
         - `ctrl_mean`: mean of the control scores
@@ -1031,9 +1031,9 @@ def test_gearysc(
 def gearys_c(adata, vals):
     """
     Compute Geary's C statistics for an AnnData.
-    
+
     Adopted from https://github.com/ivirshup/scanpy/blob/metrics/scanpy/metrics/_gearys_c.py
-        
+
     :math:`C=\\frac{(N - 1)\\sum_{i,j} w_{i,j} (x_i - x_j)^2}{2W \\sum_i (x_i - \\bar{x})^2}`
 
     Parameters
@@ -1046,7 +1046,7 @@ def gearys_c(adata, vals):
         shape (n_obs,).
 
     Returns
-    -------    
+    -------
     C : float
         Geary's C statistics.
     """
@@ -1089,7 +1089,7 @@ def _pearson_corr(mat_X, mat_Y):
         Second matrix of shape (N,M2).
 
     Returns
-    -------    
+    -------
     mat_corr : np.ndarray
         Correlation matrix of shape (M1,M2).
     """
@@ -1125,7 +1125,7 @@ def _pearson_corr_sparse(mat_X, mat_Y):
         Second matrix of shape (N,M2).
 
     Returns
-    -------    
+    -------
     mat_corr : np.ndarray
         Correlation matrix of shape (M1,M2).
     """
@@ -1299,82 +1299,3 @@ def _get_rank(mat_X, axis=0):
             mat_rank[i_row, mat_X[i_row, :]] = temp_v
 
     return mat_rank
-
-
-# @Kangcheng: this is the archived section.
-# Remove it if you want but it can stay here for a while.
-def group_stats(
-    df_drs: pd.DataFrame,
-    adata: anndata.AnnData,
-    group_col: str,
-    stats=["assoc", "hetero"],
-) -> pd.DataFrame:
-    """compute group-level statistics for scDRS results
-
-    Parameters
-    ----------
-    df_drs : pd.DataFrame
-        scDRS results dataframe
-    adata : anndata.AnnData
-        AnnData object
-    group_col : str
-        Column name of group column in adata.obs
-    stats : list, optional
-        statistics to compute, by default ["assoc", "hetero"]
-
-    Returns
-    -------
-    pd.DataFrame
-        Group-level statistics (n_group x n_stats)
-    """
-
-    assert group_col in adata.obs.columns, "group_col not in adata.obs"
-    # stats must be contained in ["fdr_prop", "assoc", "hetero"]
-    assert set(stats).issubset(
-        set(["assoc", "hetero"])
-    ), "stats must be contained in ['assoc', 'hetero']"
-    group_list = np.unique(adata.obs[group_col])
-    col_list = ["n_cell", "n_ctrl", "fdr_prop"]
-
-    df = adata.obs[[group_col]].join(df_drs)
-    for stat in stats:
-        col_list.extend([stat + "_pval", stat + "_zsc"])
-    df_stats = pd.DataFrame(index=group_list, columns=col_list, dtype=float)
-
-    norm_score = df["norm_score"].values
-    ctrl_norm_score = df[
-        [col for col in df.columns if col.startswith(f"ctrl_norm_score_")]
-    ].values
-    n_ctrl = ctrl_norm_score.shape[1]
-
-    v_fdr = multipletests(df["pval"].values, method="fdr_bh")[1]
-
-    for group in group_list:
-        # Basic info
-        group_index = df[group_col].values == group
-        df_stats.loc[group, "n_cell"] = sum(group_index)
-        df_stats.loc[group, "n_ctrl"] = n_ctrl
-
-        # FDR proportion
-        df_stats.loc[group, "fdr_prop"] = (v_fdr[group_index] < 0.1).mean()
-
-        # association
-        if "assoc" in stats:
-            score_q95 = np.quantile(norm_score[group_index], 0.95)
-            v_ctrl_score_q95 = np.quantile(
-                ctrl_norm_score[group_index, :], 0.95, axis=0
-            )
-            mc_p = ((v_ctrl_score_q95 >= score_q95).sum() + 1) / (
-                v_ctrl_score_q95.shape[0] + 1
-            )
-            mc_z = (score_q95 - v_ctrl_score_q95.mean()) / v_ctrl_score_q95.std()
-            df_stats.loc[group, ["assoc_pval", "assoc_zsc"]] = [mc_p, mc_z]
-
-    # Heterogeneity
-    if "hetero" in stats:
-        df_rls = test_gearysc(adata, df, groupby=group_col)
-        for group in group_list:
-            mc_p, mc_z = df_rls.loc[group, ["pval", "zsc"]]
-            df_stats.loc[group, ["hetero_pval", "hetero_zsc"]] = [mc_p, mc_z]
-
-    return df_stats

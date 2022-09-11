@@ -458,8 +458,12 @@ def plot_group_stats(
 
     Parameters
     ----------
-    dict_df_stats: dict trait -> pd.DataFrame
-        group-level statistics from `group_stats` function for each trait
+    dict_df_stats: Dict
+        dictionary from trait -> pd.DataFrame
+        group-level statistics from `scdrs perform-downstream: group-analysis`
+        see https://martinjzhang.github.io/scDRS/notebooks/quickstart.html for an
+        example. Alternatively, df_fdr_prop, df_assoc_fdr, df_hetero_fdr can be
+        separately provided.
     df_fdr_prop : pd.DataFrame
         dataframe of proportion of cells with FDR < 0.1
     df_assoc : pd.DataFrame
@@ -500,6 +504,12 @@ def plot_group_stats(
         df_fdr_prop.index = trait_list
         df_assoc_fdr.index = trait_list
         df_hetero_fdr.index = trait_list
+    else:
+        assert (
+            (df_fdr_prop is not None)
+            and (df_assoc_fdr is not None)
+            and (df_hetero_fdr is not None)
+        )
 
     df_hetero_fdr = df_hetero_fdr.applymap(lambda x: "×" if x < 0.05 else "")
     df_hetero_fdr[df_assoc_fdr > 0.05] = ""
