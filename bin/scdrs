@@ -387,6 +387,13 @@ def munge_gs(
         print("%-20s" % "Traits", str(list(df_pval.columns[:3])))
         for gene in df_pval.index[:10]:
             print("%-20s" % gene, str(list(df_pval.loc[gene, df_pval.columns[:3]])))
+        # Check index is unique
+        if not df_pval.index.is_unique:
+            raise ValueError(
+                "Gene names in the provided p-value files are not unique: ",
+                ",".join(df_pval.index[df_pval.index.duplicated()]),
+                ". Please make sure the gene names are unique beforehand.",
+            )
 
         # Check range
         max_ = df_pval.max(skipna=True).max()
@@ -407,6 +414,14 @@ def munge_gs(
         print("%-20s" % "Traits", str(list(df_zscore.columns[:3])))
         for gene in df_zscore.index[:10]:
             print("%-20s" % gene, str(list(df_zscore.loc[gene, df_zscore.columns[:3]])))
+
+        # Check index is unique
+        if not df_zscore.index.is_unique:
+            raise ValueError(
+                "Gene names in the provided z-score files are not unique: ",
+                ",".join(df_zscore.index[df_zscore.index.duplicated()]),
+                ". Please make sure the gene names are unique beforehand.",
+            )
 
         # Check range
         max_ = df_zscore.max(skipna=True).max()
