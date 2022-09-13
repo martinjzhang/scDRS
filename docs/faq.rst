@@ -63,7 +63,7 @@ scDRS scales linearly with the number of cells and number of control gene sets f
 scDRS detected few significant cells (FDR<0.2)?
 ==================================================
 
-scDRS may be underpowered for certain GWAS/scRNA-seq data sets. In these cases, the ensuing scDRS group analyses may still have sufficient power, because scDRS group analyses aggregate results of individual cells and hence have higher power than the scDRS individual cell-level analyses. To assess if scDRS has sufficient power, we suggest performing the scDRS group analyses [`scdrs perform-downstream --group-analysis`](https://martinjzhang.github.io/scDRS/reference_cli.html#perform-downstream) to assess significance at an aggregated level. In addition, it is helpful to visually inspect the scDRS normalized disease score on the UMAP plot. Localized enrichments of high scDRS disease scores on the UMAP usually indicate that scDRS have detected interesting biological signals.
+scDRS may be underpowered for certain GWAS/scRNA-seq data sets. In these cases, the ensuing scDRS group analyses may still have sufficient power, because scDRS group analyses aggregate results of individual cells and hence have higher power than the scDRS individual cell-level analyses. To assess if scDRS has sufficient power, we suggest performing the `scDRS group analyses <https://martinjzhang.github.io/scDRS/reference_cli.html#perform-downstream>`_ to assess significance at an aggregated level. In addition, it is helpful to visually inspect the scDRS normalized disease score on the UMAP plot. Localized enrichments of high scDRS disease scores on the UMAP usually indicate that scDRS have detected interesting biological signals.
 
 
 Use scDRS for other types of single-cell data?
