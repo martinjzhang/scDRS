@@ -522,7 +522,7 @@ def plot_group_stats(
             (df_fdr_prop is not None)
             and (df_assoc_fdr is not None)
             and (df_hetero_fdr is not None)
-        )
+        ), "If dict_df_stats is not provided, df_fdr_prop, df_assoc_fdr, df_hetero_fdr must be all provided."
 
     df_hetero_fdr = df_hetero_fdr.applymap(lambda x: "×" if x < 0.05 else "")
     df_hetero_fdr[df_assoc_fdr > 0.05] = ""
