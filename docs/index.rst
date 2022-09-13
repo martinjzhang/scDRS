@@ -24,7 +24,7 @@ Quick test:
 
    python -m pytest tests/test_CLI.py -p no:warnings
    
-Install via `PyPI <https://pypi.org/project/scdrs/1.0.1/#description>`_
+Install via `PyPI <https://pypi.org/project/scdrs/>`_
 
 .. code-block:: bash
 
