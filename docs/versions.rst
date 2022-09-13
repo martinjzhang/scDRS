@@ -1,6 +1,22 @@
 Versions
 ========
 
+v1.0.2: publication (091222)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   git clone https://github.com/martinjzhang/scDRS.git
+   cd scDRS 
+   git checkout -b v102 v1.0.2
+   pip install -e .
+   
+Quick test:
+
+.. code-block:: bash
+
+   python -m pytest tests/test_CLI.py -p no:warnings
+
 v1.0.1: publication (072222)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

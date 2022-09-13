@@ -3,7 +3,7 @@ scDRS
 
 scDRS (single-cell disease-relevance score) is a method for associating individual cells in scRNA-seq data with disease GWASs, built on top of `AnnData <https://anndata.readthedocs.io/en/latest/>`_ and `Scanpy <https://scanpy.readthedocs.io/en/stable/>`_.
 
-Check out our manuscript `Zhang*, Hou*, et al. "Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data <https://www.biorxiv.org/content/10.1101/2021.09.24.461597v2>`_.
+Check out our manuscript `Zhang*, Hou*, et al. "Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data <https://www.nature.com/articles/s41588-022-01167-z>`_.
 
 Explore results for 74 diseases/traits and the TMS FACS data on `cellxgene <https://scdrs-tms-facs.herokuapp.com/>`_.
 
@@ -15,7 +15,7 @@ Installation
 
    git clone https://github.com/martinjzhang/scDRS.git
    cd scDRS
-   git checkout -b pub v1.0.1
+   git checkout -b v102 v1.0.2
    pip install -e .
    
 Quick test:
@@ -28,7 +28,7 @@ Install via `PyPI <https://pypi.org/project/scdrs/1.0.1/#description>`_
 
 .. code-block:: bash
 
-    pip install scdrs==1.0.1
+    pip install scdrs==1.0.2
     
 Quick test for PyPI installation: open Python (>=3.5) and run the code in the Usage section below.
    
