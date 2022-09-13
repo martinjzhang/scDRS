@@ -18,7 +18,9 @@ copyright = "2021, Martin Jinye Zhang, Kangcheng Hou"
 author = "Martin Jinye Zhang, Kangcheng Hou"
 
 # The full version, including alpha/beta/rc tags
-release = "1.0.1"
+# release = "1.0.1"
+exec(open('../scdrs/version.py').read())
+release = __version__
 
 
 # -- General configuration ---------------------------------------------------

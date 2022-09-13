@@ -28,6 +28,12 @@ Typical scDRS workflow
         iii. MC-pvalue = :code:`(# of control statistics exceeding disease statistic) / (n_ctrl+1)`
     b. Input: scDRS full score file (:code:`<trait>.full_score.gz`), cell annotations stored in :code:`adata.obs` of scRNA-seq :code:`.h5ad` file.
     c. Output: test statistics/p-values based on the scDRS MC tests.
+    
+    
+Which GWAS and scRNA-seq data to use?
+======================================================
+
+To ensure a reasonable number of scDRS discoveries, we recommend using GWAS data with a heritability z-score greater than 5 or a sample size greater than 100K. We also recommend using scRNA-seq data with a diverse set of cells potentially relevant to disease, although a smaller number of cells should not affect the scDRS power.
 
 
 How to create MAGMA gene sets?
@@ -54,18 +60,10 @@ Computational complexity?
 scDRS scales linearly with the number of cells and number of control gene sets for both computation and memory use. It takes around 3 hours and 60GB for a single-cell data set with a million cells). Please see details in Methods in Zhang & Hou et al. Nat Genet 2022. 
 
 
-Which GWAS and scRNA-seq data should I use?
-======================================================
+scDRS detected few significant cells (FDR<0.2)?
+==================================================
 
-To ensure a reasonable number of scDRS discoveries, we recommend using GWAS data with a heritability z-score greater than 5 or a sample size greater than 100K. We also recommend using scRNA-seq data with a diverse set of cells potentially relevant to disease, although a smaller number of cells should not affect the scDRS power.
-
-
-scDRS detected very few significant cells (FDR<0.2)?
-======================================================
-
-scDRS may be underpowered for certain GWAS/scRNA-seq data sets. In these cases, the ensuing scDRS group analyses may still have sufficient power, because scDRS group analyses aggregate results of individual cells and hence usually have higher power than the scDRS individual cell-level analyses. To assess if scDRS has sufficient power, we suggest visually inspecting the scDRS normalized disease score on the UMAP plot. If some parts of the UMAP plot are enriched with clearly higher scDRS disease scores, then scDRS should have detected interesting biological signals in your data. 
-
-scDRS may be underpowered for certain GWAS/scRNA-seq data sets. In these cases, the ensuing scDRS group analyses may still have sufficient power, because scDRS group analyses aggregate results of individual cells and hence usually have higher power than the scDRS individual cell-level analyses. To assess if scDRS has sufficient power, we suggest performing [`scdrs perform-downstream --group-analysis`](https://martinjzhang.github.io/scDRS/reference_cli.html#perform-downstream) to assess significance at an aggregated level. In addition, it is helpful to visually inspect the scDRS normalized disease score on the UMAP plot. If some parts of the UMAP plot are enriched with clearly higher scDRS disease scores, then scDRS should have detected interesting biological signals in your data.
+scDRS may be underpowered for certain GWAS/scRNA-seq data sets. In these cases, the ensuing scDRS group analyses may still have sufficient power, because scDRS group analyses aggregate results of individual cells and hence have higher power than the scDRS individual cell-level analyses. To assess if scDRS has sufficient power, we suggest performing the scDRS group analyses [`scdrs perform-downstream --group-analysis`](https://martinjzhang.github.io/scDRS/reference_cli.html#perform-downstream) to assess significance at an aggregated level. In addition, it is helpful to visually inspect the scDRS normalized disease score on the UMAP plot. Localized enrichments of high scDRS disease scores on the UMAP usually indicate that scDRS have detected interesting biological signals.
 
 
 Use scDRS for other types of single-cell data?
