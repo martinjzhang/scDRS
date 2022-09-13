@@ -9,9 +9,10 @@ Read the [documentation](https://martinjzhang.github.io/scDRS/): [installation](
 Check out [instructions](https://github.com/martinjzhang/scDRS/issues/2) for making customized gene sets using MAGMA. 
 
 ### Reference
-[Zhang*, Hou*, et al. “Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](https://www.biorxiv.org/content/10.1101/2021.09.24.461597v2), accepted at Nature Genetics, 2022.
+[Zhang*, Hou*, et al. "Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](https://www.nature.com/articles/s41588-022-01167-z), Nature Genetics, 2022.
 
 ### Versions
+- [v1.0.2](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.2): bug fixes on `scdrs.util.plot_group_stats`; input checks in `scdrs munge-gs` and `scdrs.util.load_h5ad`.
 - [v1.0.1](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.1): stable version used in publication. Identical to `v1.0.0` except documentation.
 - [v1.0.0](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.0): stable version used in revision 1. Results are identical to `v0.1` for binary gene sets. Changes with respect to `v0.1`:
     -  scDRS command-line interface (CLI) instead of `.py` scripts for calling scDRS in bash, including `scdrs munge-gs`, `scdrs compute-score`, and `scdrs perform-downstream`.
