@@ -4,6 +4,7 @@ from scipy import sparse
 import pandas as pd
 from skmisc.loess import loess
 from typing import List
+import warnings
 
 
 def category2dummy(
@@ -373,6 +374,10 @@ def compute_stats(
 
     # Borrowed from scanpy _highly_variable_genes_seurat_v3
     not_const = df_gene["ct_var"].values > 0
+    if (df_gene["ct_mean"].values <= 0).sum() > 0:
+        # Exclude genes with negative values (usually small)
+        warnings.warn("%d genes with ct_mean<0" % (df_gene["ct_mean"].values < 0).sum())
+        not_const = not_const & (df_gene["ct_mean"].values > 0)
     estimat_var = np.zeros(adata.shape[1], dtype=np.float64)
     y = np.log10(df_gene["ct_var"].values[not_const])
     x = np.log10(df_gene["ct_mean"].values[not_const])
