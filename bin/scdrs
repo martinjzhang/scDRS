@@ -167,6 +167,21 @@ def compute_score(
     )
     print("First 3 cells: %s" % (str(list(adata.obs_names[:3]))))
     print("First 5 genes: %s" % (str(list(adata.var_names[:5]))))
+    if ADJ_PROP is not None:
+        err_msg = "'adj_prop'=%s not in 'adata.obs.columns'" % ADJ_PROP
+        assert ADJ_PROP in adata.obs, err_msg
+        temp_df = adata.obs[[ADJ_PROP]].groupby(ADJ_PROP).agg({ADJ_PROP: len})
+        temp_df.columns = ["n"]
+        temp_df.sort_values(by="n", ascending=False, inplace=True)
+        print("--adj-prop: %d categories" % temp_df.shape[0])
+        msg = ", ".join(
+            ["%s (%d)" % (x, temp_df.loc[x, "n"]) for x in temp_df.index[:3]]
+        )
+        print("Top 3: %s" % msg)
+        msg = ", ".join(
+            ["%s (%d)" % (x, temp_df.loc[x, "n"]) for x in temp_df.index[-3:]]
+        )
+        print("Bottom 3: %s" % msg)
 
     # Load .cov file
     if COV_FILE is not None:
