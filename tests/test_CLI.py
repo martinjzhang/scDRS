@@ -71,12 +71,12 @@ def test_munge_gs_cli():
     # pval_file and zscore_file
     temp_df = pd.DataFrame(
         data={
+            "GENE": ["OR4F5", "DAZ1", "BPY2B"],
             "HEIGHT": [0.02, np.nan, 0.4],
             "BMI": [0.8, 0.02, np.nan],
         }
     )
-    temp_df.index = ["OR4F5", "DAZ1", "BPY2B"]
-    temp_df.to_csv(os.path.join(tmp_dir_path, "pval_file.tsv"), sep="\t", index=True)
+    temp_df.to_csv(os.path.join(tmp_dir_path, "pval_file.tsv"), sep="\t", index=False)
     temp_df = pd.DataFrame(
         data={
             "GENE": ["OR4F5", "DAZ1", "BPY2B"],
@@ -111,7 +111,7 @@ def test_munge_gs_cli():
             )
 
             # Check results
-            print('Generated .gs file:')
+            print("Generated .gs file:")
             print(temp_df)
             err_msg = "input_file=%s, %s" % (input_file, selection)
             assert list(temp_df.index) == ["BMI", "HEIGHT"], err_msg
@@ -167,9 +167,10 @@ def test_downstream_cli():
             df_res = pd.read_csv(res_path, sep="\t", index_col=0)
             df_ref_res = pd.read_csv(ref_res_path, sep="\t", index_col=0)
             print(df_res)
-            assert np.allclose(
-                df_res.values, df_ref_res.values
-            ), '%s, %s'%(prefix, suffix)
+            assert np.allclose(df_res.values, df_ref_res.values), "%s, %s" % (
+                prefix,
+                suffix,
+            )
 
     tmp_dir.cleanup()
     return
