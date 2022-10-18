@@ -394,6 +394,14 @@ def munge_gs(
     ###########################################################################################
     if pval_file is not None:
         df_pval = pd.read_csv(pval_file, sep="\t", index_col=0)
+        assert (
+            df_pval.index.name == "GENE"
+        ), "Header of the first column should be `GENE`."
+        for col in df_pval.columns:
+            if not (df_pval[col].dtype == float):
+                raise ValueError(
+                    "Column {col} contains non-float entries. Please check the input file."
+                )
         print(
             "--pval-file loaded: n_gene=%d, n_trait=%d (sys_time=%0.1fs)"
             % (df_pval.shape[0], df_pval.shape[1], time.time() - sys_start_time)
@@ -402,6 +410,13 @@ def munge_gs(
         print("%-20s" % "Traits", str(list(df_pval.columns[:3])))
         for gene in df_pval.index[:10]:
             print("%-20s" % gene, str(list(df_pval.loc[gene, df_pval.columns[:3]])))
+
+        # Check if index contains NaN
+        if df_pval.index.isnull().any():
+            null_rows = df_pval.index.isnull()
+            print(f"Removing {sum(null_rows)} rows with GENE=NaN")
+            df_pval = df_pval.loc[~null_rows, :]
+
         # Check index is unique
         if not df_pval.index.is_unique:
             raise ValueError(
@@ -421,6 +436,14 @@ def munge_gs(
 
     if zscore_file is not None:
         df_zscore = pd.read_csv(zscore_file, sep="\t", index_col=0)
+        assert (
+            df_zscore.index.name == "GENE"
+        ), "Header of the first column should be `GENE`."
+        for col in df_zscore.columns:
+            if not (df_zscore[col].dtype == float):
+                raise ValueError(
+                    f"Column {col} contains non-float entries. Please check the input file."
+                )
         print(
             "--zscore-file loaded: n_gene=%d, n_trait=%d (sys_time=%0.1fs)"
             % (df_zscore.shape[0], df_zscore.shape[1], time.time() - sys_start_time)
@@ -429,6 +452,13 @@ def munge_gs(
         print("%-20s" % "Traits", str(list(df_zscore.columns[:3])))
         for gene in df_zscore.index[:10]:
             print("%-20s" % gene, str(list(df_zscore.loc[gene, df_zscore.columns[:3]])))
+
+        # Check if index contains NaN
+        if df_zscore.index.isnull().any():
+            null_rows = df_zscore.index.isnull()
+            print(f"Removing {sum(null_rows)} rows with GENE=NaN")
+            df_zscore = df_zscore.loc[~null_rows, :]
+            print(df_zscore)
 
         # Check index is unique
         if not df_zscore.index.is_unique:
