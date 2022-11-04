@@ -462,10 +462,11 @@ def small_squares(ax, pos, size=1, linewidth=0.8):
 
 
 def plot_group_stats(
-    dict_df_stats=None,
-    df_fdr_prop=None,
-    df_assoc_fdr=None,
-    df_hetero_fdr=None,
+    dict_df_stats: Dict = None,
+    df_fdr_prop: pd.DataFrame = None,
+    df_assoc_fdr: pd.DataFrame = None,
+    df_hetero_fdr: pd.DataFrame = None,
+    plot_kws: Dict = None,
 ):
     """plot group-level statistics for scDRS results
 
@@ -483,7 +484,39 @@ def plot_group_stats(
         dataframe of group-level association statistics
     df_hetero : pd.DataFrame
         dataframe of group-level heterogeneity statistics
+    plot_kws : Dict
+        dictionary of plotting parameters (you can adjust them by scaling them with a factor to the default value), containing
+        - cb_location: location of colorbar, default="top"
+        - cb_fraction: fraction of colorbar, default=0.1
+        - cb_pad: padding of colorbar, default=0.05
+        - cb_vmin: minimum value of colorbar, default=0
+        - cb_vmax: maximum value of colorbar, default=0.2
+        - cb_n_bin: number of bins of colorbar, default=5
+        - square_size: size of each heatmap grid, default=30
+        - hetero_size: size of each cross denoting heterogeneity, default=8
+        - signif_size: size of each small square denoting significant cell type, default=0.6
+        - signif_width: width of each small square denoting significant cell type, default=0.5
     """
+    DEFAULT_PLOT_KWS = {
+        "cb_location": "top",
+        "cb_fraction": 0.1,
+        "cb_pad": 0.05,
+        "cb_vmin": 0,
+        "cb_vmax": 0.2,
+        "cb_n_bin": 5,
+        "square_size": 30,
+        "hetero_size": 8,
+        "signif_size": 0.6,
+        "signif_width": 0.5,
+    }
+    if plot_kws is None:
+        plot_kws = DEFAULT_PLOT_KWS
+    else:
+        # add default values
+        for k, v in DEFAULT_PLOT_KWS.items():
+            if k not in plot_kws:
+                plot_kws[k] = v
+
     if dict_df_stats is not None:
         trait_list = list(dict_df_stats.keys())
         # compile df_fdr_prop, df_assoc_fdr, df_hetero_fdr from dict_df_stats
@@ -529,22 +562,27 @@ def plot_group_stats(
 
     fig, ax = plot_heatmap(
         df_fdr_prop,
-        squaresize=30,
+        squaresize=plot_kws["square_size"],
         heatmap_annot=df_hetero_fdr,
-        heatmap_annot_kws={"color": "black", "size": 8},
+        heatmap_annot_kws={"color": "black", "size": plot_kws["hetero_size"]},
         heatmap_cbar_kws=dict(
-            use_gridspec=False, location="top", fraction=0.1, pad=0.05, drawedges=True
+            use_gridspec=False,
+            location=plot_kws["cb_location"],
+            fraction=plot_kws["cb_fraction"],
+            pad=plot_kws["cb_pad"],
+            drawedges=True,
         ),
-        heatmap_vmin=0,
-        heatmap_vmax=0.2,
-        colormap_n_bin=5,
+        heatmap_vmin=plot_kws["cb_vmin"],
+        heatmap_vmax=plot_kws["cb_vmax"],
+        colormap_n_bin=plot_kws["cb_n_bin"],
     )
+    ax.set_xlabel(None)
 
     small_squares(
         ax,
         pos=[(y, x) for x, y in zip(*np.where(df_assoc_fdr < 0.05))],
-        size=0.6,
-        linewidth=0.5,
+        size=plot_kws["signif_size"],
+        linewidth=plot_kws["signif_width"],
     )
 
     cb = ax.collections[0].colorbar
@@ -553,8 +591,7 @@ def plot_group_stats(
     cb.ax.set_title("Prop. of sig. cells (FDR < 0.1)", fontsize=8)
     cb.outline.set_edgecolor("black")
     cb.outline.set_linewidth(1)
-
-    plt.tight_layout()
+    return fig, ax
 
 
 def discrete_cmap(N, base_cmap=None, start_white=True):
