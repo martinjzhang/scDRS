@@ -32,12 +32,13 @@ Older versions
 - Initial submission: [GWAS gene sets](https://figshare.com/articles/dataset/scDRS_data_release_092121/16664080?file=30853708) and [scDRS results](https://figshare.com/articles/dataset/scDRS_data_release_092121_score_file_tmsfacs/16664077).
 
 
-# Explore scDRS results via [cellxgene](https://chanzuckerberg.github.io/cellxgene/)
+# Explore scDRS results via [CELLxGENE](https://cellxgene.cziscience.com/docs/01__CellxGene)
 <!--- 
 - Demo for [3 TMS FACS cell types and 3 diseases/traits](https://scdrs-demo.herokuapp.com/).
 - Results for [110,096 TMS FACS cells and 74 diseases/traits](https://scdrs-tms-facs.herokuapp.com/).
 -->
-- Download [h5ad files](https://figshare.com/articles/dataset/scdrs_cellxgene/15065061) for cellxgene.
+- [h5ad files](https://figshare.com/articles/dataset/scdrs_cellxgene/15065061) compatible with CELLxGENE
+- [Instructions](https://cellxgene.cziscience.com/docs/01__CellxGene) on running CELLxGENE
 
 | <img src="./docs/images/cellxgene.tmsfacs.png" alt="cellxgene" style="width:100%"> | <img src="./docs/images/cellxgene.tmsfacs_ibd.png" alt="cellxgene" style="width:100%"> |
 | :--------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------: |
