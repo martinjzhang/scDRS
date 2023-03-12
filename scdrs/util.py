@@ -130,6 +130,7 @@ def load_scdrs_score(
         temp_df = pd.read_csv(
             score_dir + os.path.sep + score_file, sep="\t", index_col=0
         )
+        temp_df.index = [str(x) for x in temp_df.index]
         if obs_names is not None:
             # Check overlap of cells between score_file and obs_names
             n_cell_overlap = len(set(obs_names) & set(temp_df.index))
