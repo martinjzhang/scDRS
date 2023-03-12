@@ -109,6 +109,10 @@ out_folder : str
     :code:`<trait>` is from :code:`gs_file` file.
 cov_file : str, optional
     scDRS covariate :code:`.cov` file. Default is :code:`None`.
+weight_opt : str, optional
+    Option for single-cell data-based weights (separate from the MAGMA z-score weights in the :code:`gs_file`).
+    One of :code:`vs` (variance-stablization weights) and :code:`uniform` (uniform weights).
+    Default is :code:`vs`.
 adj_prop : str, optional
     Cell group annotation (e.g., cell type) in :code:`adata.obs.columns` used for adjusting 
     for cell group proportions. Cells are inversely weighted by the corresponding 
@@ -119,6 +123,12 @@ flag_raw_count : bool, optional
     If to apply size-factor normalization and log1p-transformation to :code:`h5ad_file`. Default is :code:`True`.
 n_ctrl : int, optional
     Number of control gene sets. Default is :code:`1000`.
+min_genes : int, optional
+    Minimum number of genes expressed required for a cell to pass filtering. 
+    Used in :code:`scanpy.pp.filter_cells`. Default is :code:`250`.
+min_cells : int, optional
+    Minimum number of cells expressed required for a gene to pass filtering. 
+    Used in :code:`scanpy.pp.filter_genes`. Default is :code:`50`.
 flag_return_ctrl_raw_score : bool, optional
     If to return raw control scores. Default is :code:`False`.
 flag_return_ctrl_norm_score : bool, optional
@@ -176,6 +186,12 @@ flag_filter_data : bool, optional
 flag_raw_count : bool, optional
     If to apply size-factor normalization and log1p-transformation to :code:`h5ad_file`. 
     Default is :code:`True`.
+min_genes : int, optional
+    Minimum number of genes expressed required for a cell to pass filtering. 
+    Used in :code:`scanpy.pp.filter_cells`. Default is :code:`250`.
+min_cells : int, optional
+    Minimum number of cells expressed required for a gene to pass filtering. 
+    Used in :code:`scanpy.pp.filter_genes`. Default is :code:`50`.
 knn_n_neighbors : int, optional
     :code:`n_neighbors` parameter for computing KNN graph using :code:`sc.pp.neighbors`.
     Default is :code:`15` (consistent with the TMS pipeline).
