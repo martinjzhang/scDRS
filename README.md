@@ -12,7 +12,7 @@ Check out [instructions](https://github.com/martinjzhang/scDRS/issues/2) for mak
 [Zhang*, Hou*, et al. "Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data"](https://www.nature.com/articles/s41588-022-01167-z), Nature Genetics, 2022.
 
 ### Versions
-- [v1.0.3](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.3): development version. Fixing a bug of negative values of `ct_mean` when `--adj-prop` and `--cov` are on and there are genes extremely low expression; print `--adj-prop` info in `scdrs compute-score`; check p-value and z-score files that the gene column should have header `GENE`.
+- [v1.0.3](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.3): development version. Fixing a bug of negative values of `ct_mean` when `--adj-prop` and `--cov` are on and there are genes extremely low expression; print `--adj-prop` info in `scdrs compute-score`; check p-value and z-score files that the gene column should have header `GENE`; force index in df_cov and df_score to be str; add --min-genes and --min-cells in CLI for customized filtering.
 - [v1.0.2](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.2): latest stable version. Bug fixes on `scdrs.util.plot_group_stats`; input checks in `scdrs munge-gs` and `scdrs.util.load_h5ad`.
 #### Older versions
 - [v1.0.1](https://github.com/martinjzhang/scDRS/releases/tag/v1.0.1): stable version used in publication. Identical to `v1.0.0` except documentation.
