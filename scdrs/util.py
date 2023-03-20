@@ -44,7 +44,11 @@ def str_or_list_like(x):
 
 
 def load_h5ad(
-    h5ad_file: str, flag_filter_data: bool = False, flag_raw_count: bool = True
+    h5ad_file: str,
+    flag_filter_data: bool = False,
+    flag_raw_count: bool = True,
+    min_genes: int = 250,
+    min_cells: int = 50,
 ) -> anndata.AnnData:
     """Load h5ad file and optionally filter out cells and perform normalization.
 
@@ -80,8 +84,8 @@ def load_h5ad(
         )
 
     if flag_filter_data:
-        sc.pp.filter_cells(adata, min_genes=250)
-        sc.pp.filter_genes(adata, min_cells=50)
+        sc.pp.filter_cells(adata, min_genes=min_genes)
+        sc.pp.filter_genes(adata, min_cells=min_cells)
     if flag_raw_count:
         sc.pp.normalize_per_cell(adata, counts_per_cell_after=1e4)
         sc.pp.log1p(adata)
@@ -130,6 +134,7 @@ def load_scdrs_score(
         temp_df = pd.read_csv(
             score_dir + os.path.sep + score_file, sep="\t", index_col=0
         )
+        temp_df.index = [str(x) for x in temp_df.index]
         if obs_names is not None:
             # Check overlap of cells between score_file and obs_names
             n_cell_overlap = len(set(obs_names) & set(temp_df.index))

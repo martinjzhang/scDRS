@@ -35,6 +35,8 @@ def compute_score(
     flag_filter_data: bool = True,
     flag_raw_count: bool = True,
     n_ctrl: int = 1000,
+    min_genes: int = 250,
+    min_cells: int = 50,
     flag_return_ctrl_raw_score: bool = False,
     flag_return_ctrl_norm_score: bool = True,
 ):
@@ -72,6 +74,12 @@ def compute_score(
         Default is True.
     n_ctrl : int, optional
         Number of control gene sets. Default is 1000.
+    min_genes : int, optional
+        Minimum number of genes expressed required for a cell to pass filtering. 
+        Used in scanpy.pp.filter_cells. Default is 250.
+    min_cells : int, optional
+        Minimum number of cells expressed required for a gene to pass filtering.
+        Used in scanpy.pp.filter_genes. Default is 50.
     flag_return_ctrl_raw_score : bool, optional
         If to return raw control scores. Default is False.
     flag_return_ctrl_norm_score : bool, optional
@@ -109,6 +117,8 @@ def compute_score(
     FLAG_FILTER_DATA = flag_filter_data
     FLAG_RAW_COUNT = flag_raw_count
     N_CTRL = n_ctrl
+    MIN_GENES = min_genes
+    MIN_CELLS = min_cells
     FLAG_RETURN_CTRL_RAW_SCORE = flag_return_ctrl_raw_score
     FLAG_RETURN_CTRL_NORM_SCORE = flag_return_ctrl_norm_score
     OUT_FOLDER = out_folder
@@ -130,6 +140,8 @@ def compute_score(
     header += "--flag-filter-data %s \\\n" % FLAG_FILTER_DATA
     header += "--flag-raw-count %s \\\n" % FLAG_RAW_COUNT
     header += "--n-ctrl %d \\\n" % N_CTRL
+    header += "--min-genes %d \\\n" % MIN_GENES
+    header += "--min-cells %d \\\n" % MIN_CELLS
     header += "--flag-return-ctrl-raw-score %s \\\n" % FLAG_RETURN_CTRL_RAW_SCORE
     header += "--flag-return-ctrl-norm-score %s \\\n" % FLAG_RETURN_CTRL_NORM_SCORE
     header += "--out-folder %s\n" % OUT_FOLDER
@@ -159,7 +171,11 @@ def compute_score(
 
     # Load .h5ad file
     adata = scdrs.util.load_h5ad(
-        H5AD_FILE, flag_filter_data=FLAG_FILTER_DATA, flag_raw_count=FLAG_RAW_COUNT
+        H5AD_FILE,
+        flag_filter_data=FLAG_FILTER_DATA,
+        flag_raw_count=FLAG_RAW_COUNT,
+        min_genes=MIN_GENES,
+        min_cells=MIN_CELLS,
     )
     print(
         "--h5ad-file loaded: n_cell=%d, n_gene=%d (sys_time=%0.1fs)"
@@ -186,10 +202,16 @@ def compute_score(
     # Load .cov file
     if COV_FILE is not None:
         df_cov = pd.read_csv(COV_FILE, sep="\t", index_col=0)
+        df_cov.index = [str(x) for x in df_cov.index]
         print(
             "--cov-file loaded: covariates=%s (sys_time=%0.1fs)"
             % (str(list(df_cov.columns)), time.time() - sys_start_time)
         )
+        print(
+            "n_cell=%d (%d in .h5ad)"
+            % (df_cov.shape[0], len(set(df_cov.index) & set(adata.obs_names)))
+        )
+        print("First 3 cells: %s" % (str(list(df_cov.index[:3]))))
         for col in df_cov.columns:
             print(
                 "First 5 values for '%s': %s" % (col, str(list(df_cov[col].values[:5])))
@@ -542,6 +564,8 @@ def perform_downstream(
     gene_analysis: str = None,
     flag_filter_data: bool = True,
     flag_raw_count: bool = True,
+    min_genes: int = 250,
+    min_cells: int = 50,
     knn_n_neighbors: int = 15,
     knn_n_pcs: int = 20,
 ):
@@ -587,6 +611,12 @@ def perform_downstream(
     flag_raw_count : bool, optional
         If to apply size-factor normalization and log1p-transformation to h5ad_file.
         Default is True.
+    min_genes : int, optional
+        Minimum number of genes expressed required for a cell to pass filtering. 
+        Used in scanpy.pp.filter_cells. Default is 250.
+    min_cells : int, optional
+        Minimum number of cells expressed required for a gene to pass filtering.
+        Used in scanpy.pp.filter_genes. Default is 50.
     knn_n_neighbors : int, optional
         `n_neighbors` for computing KNN graph using `sc.pp.neighbors`.
         Default is 15 (consistent with the TMS pipeline).
@@ -661,6 +691,8 @@ def perform_downstream(
 
     header += "--flag-filter-data %s \\\n" % flag_filter_data
     header += "--flag-raw-count %s \\\n" % flag_raw_count
+    header += "--min-genes %d \\\n" % min_genes
+    header += "--min-cells %d \\\n" % min_cells
     header += "--knn-n-neighbors %s \\\n" % knn_n_neighbors
     header += "--knn-n-pcs %s\n" % knn_n_pcs
     print(header)
@@ -672,6 +704,8 @@ def perform_downstream(
         h5ad_file=h5ad_file,
         flag_filter_data=flag_filter_data,
         flag_raw_count=flag_raw_count,
+        min_genes=min_genes,
+        min_cells=min_cells,
     )
     print(
         "--h5ad-file loaded: n_cell=%d, n_gene=%d (sys_time=%0.1fs)"
