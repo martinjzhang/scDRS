@@ -37,3 +37,5 @@ ${magma_dir}/magma \
     --gene-annot out/step1.genes.annot \
     --out out/step2/${trait}
 ```
+
+We can then map IDs in `out/step2/${trait}.gene.out` to gene symbols using the map from `<MAGMA_DIR>/NCBI37.3.gene.loc` 
