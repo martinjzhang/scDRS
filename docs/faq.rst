@@ -66,6 +66,12 @@ scDRS detected few significant cells (FDR<0.2)?
 scDRS may be underpowered for certain GWAS/scRNA-seq data sets. In these cases, the ensuing scDRS group analyses may still have sufficient power, because scDRS group analyses aggregate results of individual cells and hence have higher power than the scDRS individual cell-level analyses. To assess if scDRS has sufficient power, we suggest performing the `scDRS group analyses <https://martinjzhang.github.io/scDRS/reference_cli.html#perform-downstream>`_ to assess significance at an aggregated level. In addition, it is helpful to visually inspect the scDRS normalized disease score on the UMAP plot. Localized enrichments of high scDRS disease scores on the UMAP usually indicate that scDRS have detected interesting biological signals.
 
 
+MC z-scores much more significant than MC p-values in group analysis due to the MC limit? 
+===========================================================================================
+
+Increasing :code:`--n-ctrl` in `compute-score` will produce more control scores, which will be later used in the group analysis to increase the number of MC samples for MC tests. Alternatively, you can compute a p-value from assoc_mcz when assoc_mcp is reasonably small. As mentioned in the Methods section: "We recommend using MC P values to determine statistical significance and using MC z-scores to further prioritize associations whose MC P values have reached the MC limit. "
+
+
 Use scDRS for other types of single-cell data?
 ====================================================
 
