@@ -138,7 +138,7 @@ flag_return_ctrl_norm_score : bool, optional
 perform-downstream
 ~~~~~~~~~~~~~~~~~~
 
-Perform scDRS downstream analyses based on precomputed scDRS :code:`.full_score.gz` files.
+Perform scDRS downstream analyses based on precomputed scDRS :code:`.full_score.gz` files. The number of MC samples in MC tests depends on the number of control scores in the :code:`.full_score.gz` file; to increase this number, specify a larger :code:`--n_ctrl` when calling :code:`scdrs compute-score` in the previous step. 
         
 --group-analysis  For a given cell group-level annotation (e.g., tissue or cell type), assess cell 
     group-disease association (control-score-based MC tests using 5% quantile) and within-cell

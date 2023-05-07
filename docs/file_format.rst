@@ -86,8 +86,8 @@ scDRS score file for a give trait. :code:`.tsv.gz` file.
 - First column: cell names, should be the same as :code:`adata.obs_names`.
 - raw_score: raw disease score.
 - norm_score: normalized disease score.
-- mc_pval: cell-level MC p-value.
-- pval: cell-level scDRS p-value.
+- mc_pval: cell-level MC p-value. Raw p-value without multiple testing adjustment.
+- pval: cell-level scDRS p-value. Raw p-value without multiple testing adjustment.
 - nlog10_pval: -log10(pval).
 - zscore: z-score converted from pval.
 
@@ -118,9 +118,9 @@ Results for scDRS group-level analysis for a give trait and a given cell-group a
 - First column: different cell groups in :code:`adata.obs[<annot>]`.
 - n_cell: number of cells from the cell group.
 - n_ctrl: number of control gene sets.
-- assoc_mcp: MC p-value for cell group-disease association.
+- assoc_mcp: MC p-value for cell group-disease association. Raw p-value without multiple testing adjustment.
 - assoc_mcz: MC z-score for cell group-disease association.
-- hetero_mcp:  MC p-value for within-cell group heterogeneity in association with disease.
+- hetero_mcp:  MC p-value for within-cell group heterogeneity in association with disease. Raw p-value without multiple testing adjustment.
 - hetero_mcz:  MC z-score for within-cell group heterogeneity in association with disease.
 
 .. csv-table:: Example <trait>.scdrs_group.<annot> file
@@ -138,7 +138,7 @@ Results for scDRS cell-level correlation analysis for a given trait. :code:`.tsv
 - <trait> : trait name consistent with :code:`<trait>.full_score.gz` file.
 - First column: all cell-level variables, specified by specified by :code:`corr_analysis` in CLI.
 - n_ctrl: number of control gene sets.
-- corr_mcp: MC p-value for cell-level variable association with disease.
+- corr_mcp: MC p-value for cell-level variable association with disease. Raw p-value without multiple testing adjustment.
 - corr_mcz: MC z-score for cell-level variable association with disease.
 
 .. csv-table:: Example <trait>.scdrs_cell_corr file
