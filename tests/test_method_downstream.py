@@ -33,7 +33,7 @@ def test_downstream_group_analysis():
 
     adata, df_cov, df_gs, dic_res_ref = load_toy_data()
     df_full_score = dic_res_ref["REF_COV_FULL"]
-    sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
+    sc.pp.neighbors(adata, n_neighbors=10, n_pcs=min(40, adata.n_obs - 1))
 
     dic_res = scdrs.method.downstream_group_analysis(
         adata, df_full_score, ["cell_type"]
@@ -118,7 +118,7 @@ def test_gearys_c():
     """
 
     adata, df_cov, df_gs, dic_res_ref = load_toy_data()
-    sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
+    sc.pp.neighbors(adata, n_neighbors=10, n_pcs=min(40, adata.n_obs - 1))
 
     v_x = np.arange(adata.shape[0])
     gc = scdrs.method.gearys_c(adata, v_x)

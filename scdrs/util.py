@@ -349,7 +349,7 @@ def meta_analysis(effects, se, method="random", weights=None):
 
     assert method in ["fixed", "random"]
     d = effects
-    variances = se ** 2
+    variances = se**2
 
     # compute random-effects variance tau2
     vwts = 1.0 / variances
@@ -471,6 +471,8 @@ def plot_group_stats(
     df_fdr_prop: pd.DataFrame = None,
     df_assoc_fdr: pd.DataFrame = None,
     df_hetero_fdr: pd.DataFrame = None,
+    assoc_fdr_threshold: float = 0.05,
+    hetero_fdr_threshold: float = 0.05,
     plot_kws: Dict = None,
 ):
     """plot group-level statistics for scDRS results
@@ -489,6 +491,10 @@ def plot_group_stats(
         dataframe of group-level association statistics
     df_hetero : pd.DataFrame
         dataframe of group-level heterogeneity statistics
+    assoc_fdr_threshold : float
+        threshold for FDR correction of cell type-level mean association statistics, default = 0.05
+    hetero_fdr_threshold : float
+        threshold for FDR correction of heterogeneity statistics, default = 0.05
     plot_kws : Dict
         dictionary of plotting parameters (you can adjust them by scaling them with a factor to the default value), containing
         - cb_location: location of colorbar, default="top"
@@ -562,8 +568,10 @@ def plot_group_stats(
             and (df_hetero_fdr is not None)
         ), "If dict_df_stats is not provided, df_fdr_prop, df_assoc_fdr, df_hetero_fdr must be all provided."
 
-    df_hetero_fdr = df_hetero_fdr.applymap(lambda x: "×" if x < 0.05 else "")
-    df_hetero_fdr[df_assoc_fdr > 0.05] = ""
+    df_hetero_fdr = df_hetero_fdr.applymap(
+        lambda x: "×" if x < hetero_fdr_threshold else ""
+    )
+    df_hetero_fdr[df_assoc_fdr > assoc_fdr_threshold] = ""
 
     fig, ax = plot_heatmap(
         df_fdr_prop,
@@ -585,7 +593,7 @@ def plot_group_stats(
 
     small_squares(
         ax,
-        pos=[(y, x) for x, y in zip(*np.where(df_assoc_fdr < 0.05))],
+        pos=[(y, x) for x, y in zip(*np.where(df_assoc_fdr < assoc_fdr_threshold))],
         size=plot_kws["signif_size"],
         linewidth=plot_kws["signif_width"],
     )
@@ -749,7 +757,6 @@ def plot_qq(pval_dict, num_cols=6):
 
     plt.figure(figsize=[20, 2 + 3 * len(plot_trait_list) / num_cols])
     for trait_i, trait in enumerate(plot_trait_list):
-
         trait_logpval = -np.log10(pval_dict[trait])
         plt.subplot(
             int(np.ceil(len(plot_trait_list) / num_cols)), num_cols, trait_i + 1
