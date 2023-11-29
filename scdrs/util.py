@@ -542,7 +542,7 @@ def plot_group_stats(
             [dict_df_stats[trait]["assoc_mcp"] for trait in trait_list], axis=1
         ).T
         df_assoc_fdr = pd.DataFrame(
-            multipletests(df_assoc_fdr.values.flatten(), method="fdr_bh")[1].reshape(
+            multipletests(df_assoc_fdr.values.flatten(), method="fdr_bh", alpha=assoc_fdr_threshold)[0].reshape(
                 df_assoc_fdr.shape
             ),
             index=df_assoc_fdr.index,
@@ -552,7 +552,7 @@ def plot_group_stats(
             [dict_df_stats[trait]["hetero_mcp"] for trait in trait_list], axis=1
         ).T
         df_hetero_fdr = pd.DataFrame(
-            multipletests(df_hetero_fdr.values.flatten(), method="fdr_bh")[1].reshape(
+            multipletests(df_hetero_fdr.values.flatten(), method="fdr_bh", alpha=hetero_fdr_threshold)[0].reshape(
                 df_hetero_fdr.shape
             ),
             index=df_hetero_fdr.index,
@@ -568,10 +568,10 @@ def plot_group_stats(
             and (df_hetero_fdr is not None)
         ), "If dict_df_stats is not provided, df_fdr_prop, df_assoc_fdr, df_hetero_fdr must be all provided."
 
+    df_hetero_fdr = df_hetero_fdr * df_assoc_fdr
     df_hetero_fdr = df_hetero_fdr.applymap(
-        lambda x: "×" if x < hetero_fdr_threshold else ""
+        lambda x: "×" if x else ""
     )
-    df_hetero_fdr[df_assoc_fdr > assoc_fdr_threshold] = ""
 
     fig, ax = plot_heatmap(
         df_fdr_prop,
@@ -593,7 +593,7 @@ def plot_group_stats(
 
     small_squares(
         ax,
-        pos=[(y, x) for x, y in zip(*np.where(df_assoc_fdr < assoc_fdr_threshold))],
+        pos=[(y, x) for x, y in zip(*np.where(df_assoc_fdr))],
         size=plot_kws["signif_size"],
         linewidth=plot_kws["signif_width"],
     )
