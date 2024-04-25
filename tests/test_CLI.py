@@ -55,7 +55,18 @@ def test_score_cell_cli():
         ROOT_DIR, "data/toydata_gs_mouse.ref_Ctrl20_CovConstCovariate.score.gz"
     )
     df_ref_res = pd.read_csv(REF_COV_FILE, sep="\t", index_col=0)
-    compare_score_file(df_res, df_ref_res)
+    # Skip testing results that are different due to different pandas versions.
+    # Spcifically, different pandas versions may give slightly different mean_var bins,
+    # which will in turn give different `norm_score`, `mc_pval`, `pval`.
+    # `norm_score`, `mc_pval`, `pval` are covered in test_method_score_cell_main.py
+    # for first 5 (causal) cells, only norm_score is different
+    compare_score_file(
+        df_res.iloc[:5], df_ref_res.iloc[:5], skip_col_list=["norm_score"]
+    )
+    # for other (non-causal) cells, `norm_score`, `mc_pval`, `pval` are different
+    compare_score_file(
+        df_res, df_ref_res, skip_col_list=["norm_score", "mc_pval", "pval"]
+    )
     tmp_dir.cleanup()
     return
 
