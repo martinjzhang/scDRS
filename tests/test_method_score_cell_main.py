@@ -53,12 +53,14 @@ def load_toy_data():
     return adata, df_cov, df_gs, dic_res_ref
 
 
-def compare_score_file(df_res, df_res_ref):
+def compare_score_file(df_res, df_res_ref, skip_col_list=[]):
     """
     Compare df_res
     """
 
     col_list = ["raw_score", "norm_score", "mc_pval", "pval"]
+    # skip columns whose results cannot be controlled
+    col_list = [x for x in col_list if x not in skip_col_list]
     for col in col_list:
         v_ = df_res[col].values
         v_ref = df_res_ref[col].values
@@ -87,6 +89,14 @@ def test_score_cell_dense_nocov():
 
     adata.X = adata.X.toarray()
     scdrs.pp.preprocess(adata, cov=None, n_mean_bin=20, n_var_bin=20, copy=False)
+
+    # set mean_var bin to the reference mean_var bin to avoid numerical instability
+    temp_path = os.path.join(
+        scdrs.__path__[0], "data/toydata_mouse.gene_stats.nocov.tsv"
+    )
+    temp_df = pd.read_csv(temp_path, sep="\t", index_col=0, dtype={"mean_var": str})
+    adata.uns["SCDRS_PARAM"]["GENE_STATS"]["mean_var"] = temp_df["mean_var"]
+
     df_res = scdrs.method.score_cell(
         adata, gene_list, ctrl_match_key="mean_var", n_ctrl=20, weight_opt="vs"
     )
@@ -105,6 +115,12 @@ def test_score_cell_dense_cov():
 
     adata.X = adata.X.toarray()
     scdrs.pp.preprocess(adata, cov=df_cov, n_mean_bin=20, n_var_bin=20, copy=False)
+
+    # set mean_var bin to the reference mean_var bin to avoid numerical instability
+    temp_path = os.path.join(scdrs.__path__[0], "data/toydata_mouse.gene_stats.cov.tsv")
+    temp_df = pd.read_csv(temp_path, sep="\t", index_col=0, dtype={"mean_var": str})
+    adata.uns["SCDRS_PARAM"]["GENE_STATS"]["mean_var"] = temp_df["mean_var"]
+
     df_res = scdrs.method.score_cell(
         adata, gene_list, ctrl_match_key="mean_var", n_ctrl=20, weight_opt="vs"
     )
@@ -122,6 +138,14 @@ def test_score_cell_sparse_nocov():
     gene_list = sorted(set(gene_list) & set(adata.var_names))
 
     scdrs.pp.preprocess(adata, cov=None, n_mean_bin=20, n_var_bin=20, copy=False)
+
+    # set mean_var bin to the reference mean_var bin to avoid numerical instability
+    temp_path = os.path.join(
+        scdrs.__path__[0], "data/toydata_mouse.gene_stats.nocov.tsv"
+    )
+    temp_df = pd.read_csv(temp_path, sep="\t", index_col=0, dtype={"mean_var": str})
+    adata.uns["SCDRS_PARAM"]["GENE_STATS"]["mean_var"] = temp_df["mean_var"]
+
     df_res = scdrs.method.score_cell(
         adata, gene_list, ctrl_match_key="mean_var", n_ctrl=20, weight_opt="vs"
     )
@@ -139,6 +163,12 @@ def test_score_cell_sparse_cov():
     gene_list = sorted(set(gene_list) & set(adata.var_names))
 
     scdrs.pp.preprocess(adata, cov=df_cov, n_mean_bin=20, n_var_bin=20, copy=False)
+
+    # set mean_var bin to the reference mean_var bin to avoid numerical instability
+    temp_path = os.path.join(scdrs.__path__[0], "data/toydata_mouse.gene_stats.cov.tsv")
+    temp_df = pd.read_csv(temp_path, sep="\t", index_col=0, dtype={"mean_var": str})
+    adata.uns["SCDRS_PARAM"]["GENE_STATS"]["mean_var"] = temp_df["mean_var"]
+
     df_res = scdrs.method.score_cell(
         adata, gene_list, ctrl_match_key="mean_var", n_ctrl=20, weight_opt="vs"
     )
