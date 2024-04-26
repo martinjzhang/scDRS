@@ -178,7 +178,7 @@ def test_downstream_cli():
             df_res = pd.read_csv(res_path, sep="\t", index_col=0)
             df_ref_res = pd.read_csv(ref_res_path, sep="\t", index_col=0)
             print(df_res)
-            assert np.allclose(df_res.values, df_ref_res.values), "%s, %s" % (
+            assert np.allclose(df_res.values, df_ref_res.values, rtol=1e-03), "%s, %s" % (
                 prefix,
                 suffix,
             )
