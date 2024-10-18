@@ -1052,14 +1052,14 @@ def gearys_c(adata, vals):
     """
     graph = adata.obsp["connectivities"]
     assert graph.shape[0] == graph.shape[1]
-    graph_data = graph.data.astype(np.float_, copy=False)
+    graph_data = graph.data.astype(np.float64, copy=False)
     assert graph.shape[0] == vals.shape[0]
     assert np.ndim(vals) == 1
 
     W = graph_data.sum()
     N = len(graph.indptr) - 1
     vals_bar = vals.mean()
-    vals = vals.astype(np.float_)
+    vals = vals.astype(np.float64)
 
     # numerators
     total = 0.0
