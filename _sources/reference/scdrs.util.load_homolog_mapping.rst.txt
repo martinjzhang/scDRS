@@ -1,0 +1,6 @@
+﻿scdrs.util.load\_homolog\_mapping
+=================================
+
+.. currentmodule:: scdrs.util
+
+.. autofunction:: load_homolog_mapping

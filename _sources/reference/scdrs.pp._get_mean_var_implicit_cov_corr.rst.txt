@@ -1,0 +1,6 @@
+﻿scdrs.pp.\_get\_mean\_var\_implicit\_cov\_corr
+==============================================
+
+.. currentmodule:: scdrs.pp
+
+.. autofunction:: _get_mean_var_implicit_cov_corr

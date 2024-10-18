@@ -1,0 +1,6 @@
+﻿scdrs.pp.reg\_out
+=================
+
+.. currentmodule:: scdrs.pp
+
+.. autofunction:: reg_out
