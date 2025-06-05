@@ -7,7 +7,7 @@ import anndata
 from typing import List, Dict, Tuple
 from statsmodels.stats.multitest import multipletests
 import scdrs
-
+from scipy.sparse import csc_matrix
 
 def score_cell(
     data,
@@ -166,17 +166,17 @@ def score_cell(
     dic_ctrl_list, dic_ctrl_weight = _select_ctrl_geneset(
         df_gene, gene_list, gene_weight, ctrl_match_key, n_ctrl, n_genebin, random_seed
     )
-
+    csc_mat = csc_matrix(adata.X)
     # Compute raw scores
     v_raw_score, v_score_weight = _compute_raw_score(
-        adata, gene_list, gene_weight, weight_opt
+        adata, gene_list, gene_weight, weight_opt,csc_mat
     )
 
     mat_ctrl_raw_score = np.zeros([n_cell, n_ctrl])
     mat_ctrl_weight = np.zeros([len(gene_list), n_ctrl])
     for i_ctrl in tqdm(range(n_ctrl), desc="Computing control scores"):
         v_ctrl_raw_score, v_ctrl_weight = _compute_raw_score(
-            adata, dic_ctrl_list[i_ctrl], dic_ctrl_weight[i_ctrl], weight_opt
+            adata, dic_ctrl_list[i_ctrl], dic_ctrl_weight[i_ctrl], weight_opt,csc_mat
         )
         mat_ctrl_raw_score[:, i_ctrl] = v_ctrl_raw_score
         mat_ctrl_weight[:, i_ctrl] = v_ctrl_weight
@@ -308,7 +308,7 @@ def _select_ctrl_geneset(
     return dic_ctrl_list, dic_ctrl_weight
 
 
-def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
+def _compute_raw_score(adata, gene_list, gene_weight, weight_opt,csc_mat):
     """Compute raw score
         v_score_weight = gene_weight * {uniform/vs/inv_std}
         `SCDRS_PARAM` is assumed to have been computed using `sparse_reg_out`
@@ -392,7 +392,9 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
         ).flatten()
     else:
         # Normal mode
-        v_raw_score = adata[:, gene_list].X.dot(v_score_weight).reshape([-1])
+        gene_idx = adata.var_names.get_indexer(gene_list)
+        gene_idx = gene_idx[gene_idx >= 0]
+        v_raw_score = csc_mat[:,gene_idx].dot(v_score_weight).reshape([-1])
 
     return v_raw_score, v_score_weight
 
