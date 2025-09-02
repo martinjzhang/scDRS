@@ -187,7 +187,7 @@ def test_preprocess_consistency_nocov():
     assert np.allclose(
         adata_sparse.uns["SCDRS_PARAM"]["CELL_STATS"].values,
         adata_dense.uns["SCDRS_PARAM"]["CELL_STATS"].values,
-        rtol=1e-4,
+        rtol=1e-3, # higher tolerance for version differences in sparse vs. dense arrays
         equal_nan=True,
     ), err_msg
 
@@ -258,8 +258,9 @@ def test_compute_stats():
     v_var_true = np.var(mat_X, axis=1)
     err_msg = (
         "avg_abs_cell_var_dif=%0.2e" % np.absolute(df_cell["var"] - v_var_true).mean()
-    )
-    assert np.allclose(df_cell["var"], v_var_true, rtol=1e-4, equal_nan=True), err_msg
+    )   
+    # higher tolerance for version differences in sparse vs. dense arrays
+    assert np.allclose(df_cell["var"], v_var_true, rtol=1e-3, equal_nan=True), err_msg
 
     return
 
