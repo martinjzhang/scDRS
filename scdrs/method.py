@@ -7,7 +7,7 @@ import anndata
 from typing import List, Dict, Tuple
 from statsmodels.stats.multitest import multipletests
 import scdrs
-
+from scipy.sparse import csc_matrix
 
 def score_cell(
     data,
@@ -95,6 +95,8 @@ def score_cell(
 
     np.random.seed(random_seed)
     adata = data.copy() if copy else data
+    if sp.sparse.issparse(adata.X) and not isinstance(adata.X, sp.sparse.csc_matrix):
+        adata.X = sp.sparse.csc_matrix(adata.X)
     n_cell, n_gene = adata.shape
 
     # Check preprocessing information
@@ -166,7 +168,6 @@ def score_cell(
     dic_ctrl_list, dic_ctrl_weight = _select_ctrl_geneset(
         df_gene, gene_list, gene_weight, ctrl_match_key, n_ctrl, n_genebin, random_seed
     )
-
     # Compute raw scores
     v_raw_score, v_score_weight = _compute_raw_score(
         adata, gene_list, gene_weight, weight_opt
@@ -385,14 +386,18 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
 
         # Compute v_raw_score = transformed_X @ v_score_weight
         # where transformed_X = adata.X + cov_mat @ cov_beta + gene_mean
+        gene_idx = adata.var_names.get_indexer(gene_list)
+        gene_idx = gene_idx[gene_idx >= 0]
         v_raw_score = (
-            adata[:, gene_list].X.dot(v_score_weight)
+            adata.X[:,gene_idx].dot(v_score_weight)
             + cov_mat @ (cov_beta @ v_score_weight)
             + gene_mean @ v_score_weight
         ).flatten()
     else:
         # Normal mode
-        v_raw_score = adata[:, gene_list].X.dot(v_score_weight).reshape([-1])
+        gene_idx = adata.var_names.get_indexer(gene_list)
+        gene_idx = gene_idx[gene_idx >= 0]
+        v_raw_score = adata.X[:,gene_idx].dot(v_score_weight).reshape([-1])
 
     return v_raw_score, v_score_weight
 
@@ -434,11 +439,13 @@ def _compute_overdispersion_score(adata, gene_list, gene_weight):
     # Mode check
     flag_sparse = adata.uns["SCDRS_PARAM"]["FLAG_SPARSE"]
     flag_cov = adata.uns["SCDRS_PARAM"]["FLAG_COV"]
+    gene_idx = adata.var_names.get_indexer(gene_list)
+    gene_idx = gene_idx[gene_idx >= 0]
     if flag_sparse and flag_cov:
         cell_list = list(adata.obs_names)
         cov_list = list(adata.uns["SCDRS_PARAM"]["COV_MAT"])
         mat_X = (
-            adata[:, gene_list].X.toarray()
+            adata.X[:,gene_idx].toarray()
             + adata.uns["SCDRS_PARAM"]["COV_MAT"]
             .loc[cell_list, cov_list]
             .values.dot(
@@ -447,7 +454,7 @@ def _compute_overdispersion_score(adata, gene_list, gene_weight):
             + adata.uns["SCDRS_PARAM"]["COV_GENE_MEAN"].loc[gene_list].values
         )
     else:
-        mat_X = adata[:, gene_list].X
+        mat_X = adata.X[:,gene_idx]
 
     v_mean = adata.uns["SCDRS_PARAM"]["GENE_STATS"].loc[gene_list, "mean"].values
     v_var_tech = (
