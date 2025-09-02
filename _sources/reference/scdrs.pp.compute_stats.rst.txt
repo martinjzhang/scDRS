@@ -1,0 +1,6 @@
+﻿scdrs.pp.compute\_stats
+=======================
+
+.. currentmodule:: scdrs.pp
+
+.. autofunction:: compute_stats

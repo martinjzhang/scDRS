@@ -1,0 +1,737 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>CLI &#8212; scDRS 1.0.4 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=535dfbd7"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference_cli';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Documentation" href="reference.html" />
+    <link rel="prev" title="scDRS" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">scDRS 1.0.4 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="#">
+                        CLI
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="reference.html">
+                        Documentation
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="file_format.html">
+                        File formats
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="faq.html">
+                        FAQ
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="versions.html">
+                        Versions
+                      </a>
+                    </li>
+                
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="notebooks/quickstart.html">
+                        Quick start
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="downloads.html">
+                        Downloads
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link dropdown-item nav-external" href="https://github.com/martinjzhang/scDRS">
+                    Github
+                  </a>
+                </li>
+                
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="#">
+                        CLI
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="reference.html">
+                        Documentation
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="file_format.html">
+                        File formats
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="faq.html">
+                        FAQ
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="versions.html">
+                        Versions
+                      </a>
+                    </li>
+                
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links-2">
+                    More
+                </button>
+                <ul id="pst-nav-more-links-2" class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="notebooks/quickstart.html">
+                        Quick start
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="downloads.html">
+                        Downloads
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link dropdown-item nav-external" href="https://github.com/martinjzhang/scDRS">
+                    Github
+                  </a>
+                </li>
+                
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">CLI</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="cli">
+<h1>CLI<a class="headerlink" href="#cli" title="Permalink to this heading">#</a></h1>
+<p>scDRS CLI supports 3 main functions:</p>
+<ol class="arabic simple">
+<li><p>Munge gene sets <code class="code docutils literal notranslate"><span class="pre">scdrs</span> <span class="pre">munge-gs</span></code>, producing <code class="code docutils literal notranslate"><span class="pre">.gs</span></code> file.</p></li>
+<li><p>Compute scores <code class="code docutils literal notranslate"><span class="pre">scdrs</span> <span class="pre">compute-score</span></code>, producing <code class="code docutils literal notranslate"><span class="pre">&lt;trait&gt;.score.gz</span></code> and <code class="code docutils literal notranslate"><span class="pre">&lt;trait&gt;.full_score.gz</span></code> files.</p></li>
+<li><p>Perform downstream analyses <code class="code docutils literal notranslate"><span class="pre">scdrs</span> <span class="pre">perform-downstream</span></code>, producing <code class="code docutils literal notranslate"><span class="pre">&lt;trait&gt;.scdrs_group.&lt;annot&gt;</span></code>, <code class="code docutils literal notranslate"><span class="pre">&lt;trait&gt;.scdrs_cell_corr</span></code>, and <code class="code docutils literal notranslate"><span class="pre">&lt;trait&gt;.scdrs_gene</span></code> files.</p></li>
+</ol>
+<p>See <a class="reference external" href="file_format.html">scDRS file formats</a>. Use <code class="code docutils literal notranslate"><span class="pre">--help</span></code> to check out more CLI details, e.g., <code class="code docutils literal notranslate"><span class="pre">scdrs</span> <span class="pre">compute-score</span> <span class="pre">--help</span></code>.</p>
+<p>scDRS CLI does not distinguish between dash “-” and underscore “_”. E.g., followings are equivalent:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># All dashes</span>
+scdrs<span class="w"> </span>compute-score<span class="w"> </span>--h5ad-file<span class="w"> </span>&lt;h5ad_file&gt;<span class="w"> </span>--out-folder<span class="w"> </span>&lt;out_folder&gt;<span class="w"> </span>...
+<span class="c1"># All underscores</span>
+scdrs<span class="w"> </span>compute_score<span class="w"> </span>--h5ad_file<span class="w"> </span>&lt;h5ad_file&gt;<span class="w"> </span>--out_folder<span class="w"> </span>&lt;out_folder&gt;<span class="w"> </span>...
+<span class="c1"># Mixed</span>
+scdrs<span class="w"> </span>compute_score<span class="w"> </span>--h5ad-file<span class="w"> </span>&lt;h5ad_file&gt;<span class="w"> </span>--out_folder<span class="w"> </span>&lt;out_folder&gt;<span class="w"> </span>...
+</pre></div>
+</div>
+<section id="munge-gs">
+<h2>munge-gs<a class="headerlink" href="#munge-gs" title="Permalink to this heading">#</a></h2>
+<p>Convert a <code class="code docutils literal notranslate"><span class="pre">.tsv</span></code> GWAS gene statistics file to an scDRS <code class="code docutils literal notranslate"><span class="pre">.gs</span></code> file.</p>
+<ol class="arabic simple">
+<li><p>Read result from a <code class="code docutils literal notranslate"><span class="pre">.tsv</span></code> p-value or z-score file.</p></li>
+<li><p>Select a subset of genes for each trait:</p>
+<ul class="simple">
+<li><p>If both <code class="code docutils literal notranslate"><span class="pre">fdr</span></code> and <code class="code docutils literal notranslate"><span class="pre">fwer</span></code> are <code class="code docutils literal notranslate"><span class="pre">None</span></code>, select the top <code class="code docutils literal notranslate"><span class="pre">n_max</span></code> genes.</p></li>
+<li><p>If <code class="code docutils literal notranslate"><span class="pre">fdr</span></code> is not <code class="code docutils literal notranslate"><span class="pre">None</span></code>, select genes for based on FDR (across all genes of a given trait)
+and cap between <code class="code docutils literal notranslate"><span class="pre">n_min</span></code> and <code class="code docutils literal notranslate"><span class="pre">n_max</span></code>.</p></li>
+<li><p>If <code class="code docutils literal notranslate"><span class="pre">fwer</span></code> is not <code class="code docutils literal notranslate"><span class="pre">None</span></code>, select genes based on FWER (across all genes of a given trait) and
+cap between <code class="code docutils literal notranslate"><span class="pre">n_min</span></code> and <code class="code docutils literal notranslate"><span class="pre">n_max</span></code>.</p></li>
+</ul>
+</li>
+<li><p>Assign gene weights based on <code class="code docutils literal notranslate"><span class="pre">weight</span></code>.</p></li>
+<li><p>Write the <code class="code docutils literal notranslate"><span class="pre">.gs</span></code> file to <code class="code docutils literal notranslate"><span class="pre">out_file</span></code>.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Select top 1,000 genes and use z-score weights</span>
+scdrs<span class="w"> </span>munge-gs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--out-file<span class="w"> </span>&lt;out_file&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--zscore-file<span class="w"> </span>&lt;zscore_file&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--weight<span class="w"> </span>zscore<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--n-max<span class="w"> </span><span class="m">1000</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>out_file<span class="classifier">str</span></dt><dd><p>Output scDRS <code class="code docutils literal notranslate"><span class="pre">.gs</span></code> file.</p>
+</dd>
+<dt>pval_file<span class="classifier">str, optional</span></dt><dd><p>P-value file. A .tsv file with first column corresponding to genes and other
+columns corresponding to p-values of traits (one trait per column).
+One of <code class="code docutils literal notranslate"><span class="pre">pval-file</span></code> and <code class="code docutils literal notranslate"><span class="pre">zscore-file</span></code> is expected. Default is <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt>zscore_file<span class="classifier">str, optional</span></dt><dd><p>Z-score file. A .tsv file with first column corresponding to genes and other
+columns corresponding to z-scores of traits (one trait per column).
+One of <code class="code docutils literal notranslate"><span class="pre">pval-file</span></code> and <code class="code docutils literal notranslate"><span class="pre">zscore-file</span></code> is expected. Default is <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt>weight<span class="classifier">str, optional</span></dt><dd><p>Gene weight options. One of <code class="code docutils literal notranslate"><span class="pre">zscore</span></code> or <code class="code docutils literal notranslate"><span class="pre">uniform</span></code>. Default is <code class="code docutils literal notranslate"><span class="pre">zscore</span></code>.</p>
+</dd>
+<dt>fdr<span class="classifier">float, optional</span></dt><dd><p>FDR threshold. Default is <code class="code docutils literal notranslate"><span class="pre">None</span></code>. E.g., <code class="code docutils literal notranslate"><span class="pre">--fdr</span> <span class="pre">0.05</span></code></p>
+</dd>
+<dt>fwer<span class="classifier">float, optional</span></dt><dd><p>FWER threshold. Default is <code class="code docutils literal notranslate"><span class="pre">None</span></code>. E.g., <code class="code docutils literal notranslate"><span class="pre">--fwer</span> <span class="pre">0.05</span></code></p>
+</dd>
+<dt>n_min<span class="classifier">int, optional</span></dt><dd><p>Minimum number of genes for each gene set. Default is <code class="code docutils literal notranslate"><span class="pre">100</span></code>. E.g., <code class="code docutils literal notranslate"><span class="pre">--n-min</span> <span class="pre">100</span></code></p>
+</dd>
+<dt>n_max<span class="classifier">int, optional</span></dt><dd><p>Maximum number of genes for each gene set. Default is <code class="code docutils literal notranslate"><span class="pre">1000</span></code>. E.g., <code class="code docutils literal notranslate"><span class="pre">--n-min</span> <span class="pre">1000</span></code></p>
+</dd>
+</dl>
+<p>Example p-value file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GENE</span>    <span class="n">BMI</span>    <span class="n">HEIGHT</span>
+<span class="n">OR4F5</span>   <span class="mf">0.001</span>  <span class="mf">0.01</span>
+<span class="n">DAZ3</span>    <span class="mf">0.01</span>   <span class="mf">0.001</span>
+</pre></div>
+</div>
+</section>
+<section id="compute-score">
+<h2>compute-score<a class="headerlink" href="#compute-score" title="Permalink to this heading">#</a></h2>
+<p>Compute scDRS scores. Generate <code class="code docutils literal notranslate"><span class="pre">.score.gz</span></code> and <code class="code docutils literal notranslate"><span class="pre">.full_score.gz</span></code> files for each trait.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>scdrs<span class="w"> </span>compute-score<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--h5ad-file<span class="w"> </span>&lt;h5ad_file&gt;<span class="se">\</span>
+<span class="w">    </span>--h5ad-species<span class="w"> </span>mouse<span class="se">\</span>
+<span class="w">    </span>--gs-file<span class="w"> </span>&lt;gs_file&gt;<span class="se">\</span>
+<span class="w">    </span>--gs-species<span class="w"> </span>human<span class="se">\</span>
+<span class="w">    </span>--out-folder<span class="w"> </span>&lt;out_folder&gt;<span class="se">\</span>
+<span class="w">    </span>--cov-file<span class="w"> </span>&lt;cov_file&gt;<span class="se">\</span>
+<span class="w">    </span>--flag-filter-data<span class="w"> </span>True<span class="se">\</span>
+<span class="w">    </span>--flag-raw-count<span class="w"> </span>True<span class="se">\</span>
+<span class="w">    </span>--n-ctrl<span class="w"> </span><span class="m">1000</span><span class="se">\</span>
+<span class="w">    </span>--flag-return-ctrl-raw-score<span class="w"> </span>False<span class="se">\</span>
+<span class="w">    </span>--flag-return-ctrl-norm-score<span class="w"> </span>True
+</pre></div>
+</div>
+<dl class="simple">
+<dt>h5ad_file<span class="classifier">str</span></dt><dd><p>Single-cell <code class="code docutils literal notranslate"><span class="pre">.h5ad</span></code> file.</p>
+</dd>
+<dt>h5ad_species<span class="classifier">str</span></dt><dd><p>Species of <code class="code docutils literal notranslate"><span class="pre">h5ad_file</span></code>. One of <code class="code docutils literal notranslate"><span class="pre">hsapiens</span></code>, <code class="code docutils literal notranslate"><span class="pre">human</span></code>, <code class="code docutils literal notranslate"><span class="pre">mmusculus</span></code>, or <code class="code docutils literal notranslate"><span class="pre">mouse</span></code>.</p>
+</dd>
+<dt>gs_file<span class="classifier">str</span></dt><dd><p>scDRS gene set <code class="code docutils literal notranslate"><span class="pre">.gs</span></code> file.</p>
+</dd>
+<dt>gs_species<span class="classifier">str</span></dt><dd><p>Species of <code class="code docutils literal notranslate"><span class="pre">gs_file</span></code>. One of <code class="code docutils literal notranslate"><span class="pre">hsapiens</span></code>, <code class="code docutils literal notranslate"><span class="pre">human</span></code>, <code class="code docutils literal notranslate"><span class="pre">mmusculus</span></code>, or <code class="code docutils literal notranslate"><span class="pre">mouse</span></code>.</p>
+</dd>
+<dt>out_folder<span class="classifier">str</span></dt><dd><p>Output folder. Save scDRS score files as <code class="code docutils literal notranslate"><span class="pre">&lt;out_folder&gt;/&lt;trait&gt;.score.gz</span></code> and
+scDRS full score files as <code class="code docutils literal notranslate"><span class="pre">&lt;out_folder&gt;/&lt;trait&gt;.full_score.gz</span></code>, where trait identifier
+<code class="code docutils literal notranslate"><span class="pre">&lt;trait&gt;</span></code> is from <code class="code docutils literal notranslate"><span class="pre">gs_file</span></code> file.</p>
+</dd>
+<dt>cov_file<span class="classifier">str, optional</span></dt><dd><p>scDRS covariate <code class="code docutils literal notranslate"><span class="pre">.cov</span></code> file. Default is <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt>weight_opt<span class="classifier">str, optional</span></dt><dd><p>Option for single-cell data-based weights (separate from the MAGMA z-score weights in the <code class="code docutils literal notranslate"><span class="pre">gs_file</span></code>).
+One of <code class="code docutils literal notranslate"><span class="pre">vs</span></code> (variance-stablization weights) and <code class="code docutils literal notranslate"><span class="pre">uniform</span></code> (uniform weights).
+Default is <code class="code docutils literal notranslate"><span class="pre">vs</span></code>.</p>
+</dd>
+<dt>adj_prop<span class="classifier">str, optional</span></dt><dd><p>Cell group annotation (e.g., cell type) in <code class="code docutils literal notranslate"><span class="pre">adata.obs.columns</span></code> used for adjusting
+for cell group proportions. Cells are inversely weighted by the corresponding
+group size. Default is <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt>flag_filter_data<span class="classifier">bool, optional</span></dt><dd><p>If to apply minimal cell and gene filtering to <code class="code docutils literal notranslate"><span class="pre">h5ad_file</span></code>. Default is <code class="code docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</dd>
+<dt>flag_raw_count<span class="classifier">bool, optional</span></dt><dd><p>If to apply size-factor normalization and log1p-transformation to <code class="code docutils literal notranslate"><span class="pre">h5ad_file</span></code>. Default is <code class="code docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</dd>
+<dt>n_ctrl<span class="classifier">int, optional</span></dt><dd><p>Number of control gene sets. Default is <code class="code docutils literal notranslate"><span class="pre">1000</span></code>.</p>
+</dd>
+<dt>min_genes<span class="classifier">int, optional</span></dt><dd><p>Minimum number of genes expressed required for a cell to pass filtering.
+Used in <code class="code docutils literal notranslate"><span class="pre">scanpy.pp.filter_cells</span></code>. Default is <code class="code docutils literal notranslate"><span class="pre">250</span></code>.</p>
+</dd>
+<dt>min_cells<span class="classifier">int, optional</span></dt><dd><p>Minimum number of cells expressed required for a gene to pass filtering.
+Used in <code class="code docutils literal notranslate"><span class="pre">scanpy.pp.filter_genes</span></code>. Default is <code class="code docutils literal notranslate"><span class="pre">50</span></code>.</p>
+</dd>
+<dt>flag_return_ctrl_raw_score<span class="classifier">bool, optional</span></dt><dd><p>If to return raw control scores. Default is <code class="code docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+<dt>flag_return_ctrl_norm_score<span class="classifier">bool, optional</span></dt><dd><p>If to return normalized control scores. Default is <code class="code docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</dd>
+</dl>
+</section>
+<section id="perform-downstream">
+<h2>perform-downstream<a class="headerlink" href="#perform-downstream" title="Permalink to this heading">#</a></h2>
+<p>Perform scDRS downstream analyses based on precomputed scDRS <code class="code docutils literal notranslate"><span class="pre">.full_score.gz</span></code> files. The number of MC samples in MC tests depends on the number of control scores in the <code class="code docutils literal notranslate"><span class="pre">.full_score.gz</span></code> file; to increase this number, specify a larger <code class="code docutils literal notranslate"><span class="pre">--n_ctrl</span></code> when calling <code class="code docutils literal notranslate"><span class="pre">scdrs</span> <span class="pre">compute-score</span></code> in the previous step.</p>
+<dl class="option-list">
+<dt><kbd><span class="option">--group-analysis</span></kbd></dt>
+<dd><p>For a given cell group-level annotation (e.g., tissue or cell type), assess cell
+group-disease association (control-score-based MC tests using 5% quantile) and within-cell
+group disease-association heterogeneity (control-score-based MC tests using Geary’s C).</p>
+</dd>
+<dt><kbd><span class="option">--corr-analysis</span></kbd></dt>
+<dd><p>For a given individual cell-level variable (e.g., T cell effectorness gradient),
+assess association between disease and the individual cell-level variable (control-score-based
+MC tests using Pearson’s correlation).</p>
+</dd>
+<dt><kbd><span class="option">--gene-analysis</span></kbd></dt>
+<dd><p>Compute Pearson’s correlation between expression of each gene and the scDRS disease score.</p>
+</dd>
+</dl>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>scdrs<span class="w"> </span>perform-downstream<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--h5ad-file<span class="w"> </span>&lt;h5ad_file&gt;<span class="se">\</span>
+<span class="w">    </span>--score-file<span class="w"> </span>&lt;score_file&gt;<span class="se">\</span>
+<span class="w">    </span>--out-folder<span class="w"> </span>&lt;out_folder&gt;<span class="se">\</span>
+<span class="w">    </span>--group-analysis<span class="w"> </span>cell_type<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--corr-analysis<span class="w"> </span>causal_variable,non_causal_variable,covariate<span class="se">\</span>
+<span class="w">    </span>--gene-analysis<span class="se">\</span>
+<span class="w">    </span>--flag-filter-data<span class="w"> </span>True<span class="se">\</span>
+<span class="w">    </span>--flag-raw-count<span class="w"> </span>True
+</pre></div>
+</div>
+<dl class="simple">
+<dt>h5ad_file<span class="classifier">str</span></dt><dd><p>Single-cell <code class="code docutils literal notranslate"><span class="pre">.h5ad</span></code> file.</p>
+</dd>
+<dt>score_file<span class="classifier">str</span></dt><dd><p>scDRS <code class="code docutils literal notranslate"><span class="pre">.full_score.gz</span></code> file. Use “&#64;” to specify multiple file names,
+e.g., <code class="code docutils literal notranslate"><span class="pre">&lt;score_folder&gt;/&#64;.full_score.gz</span></code>. However, <code class="code docutils literal notranslate"><span class="pre">&lt;score_folder&gt;</span></code>
+should not contain “&#64;”.</p>
+</dd>
+<dt>out_folder<span class="classifier">str</span></dt><dd><p>Output folder.</p>
+</dd>
+<dt>group_analysis<span class="classifier">str, optional</span></dt><dd><p>Comma-seperated column names for cell group annotations in <code class="code docutils literal notranslate"><span class="pre">adata.obs.columns</span></code>, e.g.,
+cell types or tissues. Results are saved as <code class="code docutils literal notranslate"><span class="pre">&lt;out_folder&gt;/&lt;trait&gt;.scdrs_group.&lt;annot&gt;</span></code>,
+one file per annotation. Default is <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt>corr_analysis<span class="classifier">str, optional</span></dt><dd><p>Comma-seperated column names for continuous annotations in <code class="code docutils literal notranslate"><span class="pre">adata.obs.columns</span></code>,
+e.g., T cell effectorness gradient. Results are saved as
+<code class="code docutils literal notranslate"><span class="pre">&lt;out_folder&gt;/&lt;trait&gt;.scdrs_cell_corr</span></code> for all variables.
+Default is <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt>gene_analysis<span class="classifier">str, optional</span></dt><dd><p>Flag to perform the gene prioritization by correlating gene expression with scDRS
+scores. Specifying <code class="code docutils literal notranslate"><span class="pre">--gene-analysis</span></code> without any arguments. Results are saved as
+<code class="code docutils literal notranslate"><span class="pre">&lt;out_folder&gt;/&lt;trait&gt;.scdrs_gene</span></code> for all genes.  Default is <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt>flag_filter_data<span class="classifier">bool, optional</span></dt><dd><p>If to apply minimal cell and gene filtering to <code class="code docutils literal notranslate"><span class="pre">h5ad_file</span></code>. Default is <code class="code docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</dd>
+<dt>flag_raw_count<span class="classifier">bool, optional</span></dt><dd><p>If to apply size-factor normalization and log1p-transformation to <code class="code docutils literal notranslate"><span class="pre">h5ad_file</span></code>.
+Default is <code class="code docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</dd>
+<dt>min_genes<span class="classifier">int, optional</span></dt><dd><p>Minimum number of genes expressed required for a cell to pass filtering.
+Used in <code class="code docutils literal notranslate"><span class="pre">scanpy.pp.filter_cells</span></code>. Default is <code class="code docutils literal notranslate"><span class="pre">250</span></code>.</p>
+</dd>
+<dt>min_cells<span class="classifier">int, optional</span></dt><dd><p>Minimum number of cells expressed required for a gene to pass filtering.
+Used in <code class="code docutils literal notranslate"><span class="pre">scanpy.pp.filter_genes</span></code>. Default is <code class="code docutils literal notranslate"><span class="pre">50</span></code>.</p>
+</dd>
+<dt>knn_n_neighbors<span class="classifier">int, optional</span></dt><dd><p><code class="code docutils literal notranslate"><span class="pre">n_neighbors</span></code> parameter for computing KNN graph using <code class="code docutils literal notranslate"><span class="pre">sc.pp.neighbors</span></code>.
+Default is <code class="code docutils literal notranslate"><span class="pre">15</span></code> (consistent with the TMS pipeline).</p>
+</dd>
+<dt>knn_n_pcs<span class="classifier">int, optional</span></dt><dd><p><code class="code docutils literal notranslate"><span class="pre">n_pcs</span></code> parameter for computing KNN graph using <code class="code docutils literal notranslate"><span class="pre">sc.pp.neighbors</span></code>.
+Default is <code class="code docutils literal notranslate"><span class="pre">20</span></code> (consistent with the TMS pipeline).</p>
+</dd>
+</dl>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">scDRS</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="reference.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Documentation</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#munge-gs">munge-gs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-score">compute-score</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#perform-downstream">perform-downstream</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/reference_cli.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021, Martin Jinye Zhang, Kangcheng Hou.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

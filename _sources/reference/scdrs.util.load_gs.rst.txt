@@ -1,0 +1,6 @@
+﻿scdrs.util.load\_gs
+===================
+
+.. currentmodule:: scdrs.util
+
+.. autofunction:: load_gs

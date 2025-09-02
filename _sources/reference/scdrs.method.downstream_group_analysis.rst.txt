@@ -1,0 +1,6 @@
+﻿scdrs.method.downstream\_group\_analysis
+========================================
+
+.. currentmodule:: scdrs.method
+
+.. autofunction:: downstream_group_analysis

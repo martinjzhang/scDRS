@@ -1,0 +1,854 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>File formats &#8212; scDRS 1.0.4 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=535dfbd7"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'file_format';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="FAQ" href="faq.html" />
+    <link rel="prev" title="scdrs.pp._get_mean_var_implicit_cov_corr" href="reference/scdrs.pp._get_mean_var_implicit_cov_corr.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">scDRS 1.0.4 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="reference_cli.html">
+                        CLI
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="reference.html">
+                        Documentation
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="#">
+                        File formats
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="faq.html">
+                        FAQ
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="versions.html">
+                        Versions
+                      </a>
+                    </li>
+                
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="notebooks/quickstart.html">
+                        Quick start
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="downloads.html">
+                        Downloads
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link dropdown-item nav-external" href="https://github.com/martinjzhang/scDRS">
+                    Github
+                  </a>
+                </li>
+                
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="reference_cli.html">
+                        CLI
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="reference.html">
+                        Documentation
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="#">
+                        File formats
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="faq.html">
+                        FAQ
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="versions.html">
+                        Versions
+                      </a>
+                    </li>
+                
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links-2">
+                    More
+                </button>
+                <ul id="pst-nav-more-links-2" class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="notebooks/quickstart.html">
+                        Quick start
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="downloads.html">
+                        Downloads
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link dropdown-item nav-external" href="https://github.com/martinjzhang/scDRS">
+                    Github
+                  </a>
+                </li>
+                
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">File formats</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="file-formats">
+<h1>File formats<a class="headerlink" href="#file-formats" title="Permalink to this heading">#</a></h1>
+<section id="sumstats">
+<h2>.sumstats<a class="headerlink" href="#sumstats" title="Permalink to this heading">#</a></h2>
+<p>GWAS summary statistics following the <a class="reference external" href="https://github.com/bulik/ldsc/wiki/Summary-Statistics-File-Format">LDSC format</a>.</p>
+<table class="table" id="id1">
+<caption><span class="caption-text">Example .sumstats file</span><a class="headerlink" href="#id1" title="Permalink to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>GENE</p></th>
+<th class="head"><p>BMI</p></th>
+<th class="head"><p>HEIGHT</p></th>
+<th class="head"></th>
+<th class="head"></th>
+<th class="head"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SNP</p></td>
+<td><p>A1</p></td>
+<td><p>A2</p></td>
+<td><p>N</p></td>
+<td><p>CHISQ</p></td>
+<td><p>Z</p></td>
+</tr>
+<tr class="row-odd"><td><p>rs7899632</p></td>
+<td><p>A</p></td>
+<td><p>G</p></td>
+<td><p>59957</p></td>
+<td><p>3.4299</p></td>
+<td><p>-1.852</p></td>
+</tr>
+<tr class="row-even"><td><p>rs3750595</p></td>
+<td><p>A</p></td>
+<td><p>C</p></td>
+<td><p>59957</p></td>
+<td><p>3.3124</p></td>
+<td><p>1.82</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="h5ad">
+<h2>.h5ad<a class="headerlink" href="#h5ad" title="Permalink to this heading">#</a></h2>
+<p>Single-cell data <code class="code docutils literal notranslate"><span class="pre">.h5ad</span></code> file as defined in <a class="reference external" href="https://anndata.readthedocs.io/en/latest/">AnnData</a> and <a class="reference external" href="https://scanpy.readthedocs.io/en/stable/">Scanpy</a>.</p>
+</section>
+<section id="pval-file-zscore-file">
+<h2>pval_file,zscore_file<a class="headerlink" href="#pval-file-zscore-file" title="Permalink to this heading">#</a></h2>
+<p>GWAS gene-level p-values / z-scores for different traits. A <code class="code docutils literal notranslate"><span class="pre">.tsv</span></code> file with first column corresponding to genes and other columns corresponding to p-values / z-scores of traits (one trait per column).</p>
+<table class="table" id="id2">
+<caption><span class="caption-text">Example pval_file</span><a class="headerlink" href="#id2" title="Permalink to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>GENE</p></th>
+<th class="head"><p>BMI</p></th>
+<th class="head"><p>HEIGHT</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>OR4F5</p></td>
+<td><p>0.001</p></td>
+<td><p>0.01</p></td>
+</tr>
+<tr class="row-odd"><td><p>DAZ3</p></td>
+<td><p>0.01</p></td>
+<td><p>0.001</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="gs">
+<h2>.gs<a class="headerlink" href="#gs" title="Permalink to this heading">#</a></h2>
+<p>scDRS gene set file. A <code class="code docutils literal notranslate"><span class="pre">.tsv</span></code> file with two columns <code class="code docutils literal notranslate"><span class="pre">[&quot;TRAIT&quot;,</span> <span class="pre">&quot;GENESET&quot;]</span></code> and one line per trait. Can be generated using customized code or from p-value or z-score files using scDRS CLI <code class="code docutils literal notranslate"><span class="pre">scdrs</span> <span class="pre">munge-gs</span></code>.</p>
+<dl class="simple">
+<dt>TRAIT</dt><dd><p>Trait (gene set) identifier.</p>
+</dd>
+<dt>GENESET</dt><dd><p>Comma-separated list of gene-weight pairs with the form “gene1:weight1,gene2:weight2,…”
+or “gene1,gene2,…” (meaning weights are 1).</p>
+</dd>
+</dl>
+<table class="table table-center" id="id3" style="width: 50%">
+<caption><span class="caption-text">Example weighted .gs file</span><a class="headerlink" href="#id3" title="Permalink to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>TRAIT</p></th>
+<th class="head"><p>GENESET</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PASS_HbA1C</p></td>
+<td><p>FN3KRP:1.2,FN3K:2.3,HK1:4.7,GCK:5.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>PASS_MedicationUse_Wu2019</p></td>
+<td><p>FTO:3,SEC16B:0.6,ADCY3:1.5,DNAJC27:1.3</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table table-center" id="id4" style="width: 50%">
+<caption><span class="caption-text">Example unweighted .gs file</span><a class="headerlink" href="#id4" title="Permalink to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>TRAIT</p></th>
+<th class="head"><p>GENESET</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PASS_HbA1C</p></td>
+<td><p>FN3KRP,FN3K,HK1,GCK</p></td>
+</tr>
+<tr class="row-odd"><td><p>PASS_MedicationUse_Wu2019</p></td>
+<td><p>FTO,SEC16B,ADCY3,DNAJC27</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="cov">
+<h2>.cov<a class="headerlink" href="#cov" title="Permalink to this heading">#</a></h2>
+<p>scDRS covariate file for the <code class="code docutils literal notranslate"><span class="pre">.h5ad</span></code> single-cell data. <code class="code docutils literal notranslate"><span class="pre">.tsv</span></code> file.</p>
+<ul class="simple">
+<li><p>First column: cell names, consistent with <code class="code docutils literal notranslate"><span class="pre">adata.obs_names</span></code>.</p></li>
+<li><p>Other comlumns: covariates with numerical values.</p></li>
+</ul>
+<table class="table table-center" id="id5" style="width: 50%">
+<caption><span class="caption-text">Example .cov file</span><a class="headerlink" href="#id5" title="Permalink to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>index</p></th>
+<th class="head"><p>const</p></th>
+<th class="head"><p>n_genes</p></th>
+<th class="head"><p>sex_male</p></th>
+<th class="head"><p>age</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>A10_B000497_B009023_S10</p></td>
+<td><p>1</p></td>
+<td><p>2706</p></td>
+<td><p>1</p></td>
+<td><p>18</p></td>
+</tr>
+<tr class="row-odd"><td><p>A10_B000497_B009023_S10</p></td>
+<td><p>1</p></td>
+<td><p>2501</p></td>
+<td><p>0</p></td>
+<td><p>24</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="trait-score-gz">
+<h2>&lt;trait&gt;.score.gz<a class="headerlink" href="#trait-score-gz" title="Permalink to this heading">#</a></h2>
+<p>scDRS score file for a give trait. <code class="code docutils literal notranslate"><span class="pre">.tsv.gz</span></code> file.</p>
+<ul class="simple">
+<li><p>First column: cell names, should be the same as <code class="code docutils literal notranslate"><span class="pre">adata.obs_names</span></code>.</p></li>
+<li><p>raw_score: raw disease score.</p></li>
+<li><p>norm_score: normalized disease score.</p></li>
+<li><p>mc_pval: cell-level MC p-value. Raw p-value without multiple testing adjustment.</p></li>
+<li><p>pval: cell-level scDRS p-value. Raw p-value without multiple testing adjustment.</p></li>
+<li><p>nlog10_pval: -log10(pval).</p></li>
+<li><p>zscore: z-score converted from pval.</p></li>
+</ul>
+<table class="table" id="id6">
+<caption><span class="caption-text">Example &lt;trait&gt;.score.gz file</span><a class="headerlink" href="#id6" title="Permalink to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>index</p></th>
+<th class="head"><p>raw_score</p></th>
+<th class="head"><p>norm_score</p></th>
+<th class="head"><p>mc_pval</p></th>
+<th class="head"><p>pval</p></th>
+<th class="head"><p>nlog10_pval</p></th>
+<th class="head"><p>zscore</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>A10_B000497_B009023_S10</p></td>
+<td><p>0.730</p></td>
+<td><p>7.04</p></td>
+<td><p>0.0476</p></td>
+<td><p>0.00166</p></td>
+<td><p>2.78</p></td>
+<td><p>2.94</p></td>
+</tr>
+<tr class="row-odd"><td><p>A10_B000756_B007446_S10</p></td>
+<td><p>0.725</p></td>
+<td><p>7.30</p></td>
+<td><p>0.0476</p></td>
+<td><p>0.00166</p></td>
+<td><p>2.78</p></td>
+<td><p>2.94</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="trait-full-score-gz">
+<h2>&lt;trait&gt;.full_score.gz<a class="headerlink" href="#trait-full-score-gz" title="Permalink to this heading">#</a></h2>
+<p>scDRS full score file for a give trait. <code class="code docutils literal notranslate"><span class="pre">.tsv.gz</span></code> file.</p>
+<ul class="simple">
+<li><p>All columns of <code class="code docutils literal notranslate"><span class="pre">{trait}.score.gz</span></code> file.</p></li>
+<li><p>ctrl_raw_score_&lt;i_ctrl&gt; : raw control scores, specified by <code class="code docutils literal notranslate"><span class="pre">--flag_return_ctrl_raw_score</span> <span class="pre">True</span></code>.</p></li>
+<li><p>ctrl_norm_score_&lt;i_ctrl&gt; : normalized control scores, specified by <code class="code docutils literal notranslate"><span class="pre">--flag_return_ctrl_norm_score</span> <span class="pre">True</span></code>.</p></li>
+</ul>
+</section>
+<section id="trait-scdrs-group-annot">
+<h2>&lt;trait&gt;.scdrs_group.&lt;annot&gt;<a class="headerlink" href="#trait-scdrs-group-annot" title="Permalink to this heading">#</a></h2>
+<p>Results for scDRS group-level analysis for a give trait and a given cell-group annotation (e.g., cell type). <code class="code docutils literal notranslate"><span class="pre">.tsv</span></code> file.</p>
+<ul class="simple">
+<li><p>&lt;trait&gt; : trait name consistent with <code class="code docutils literal notranslate"><span class="pre">&lt;trait&gt;.full_score.gz</span></code> file.</p></li>
+<li><p>&lt;annot&gt; : cell-annotation in <code class="code docutils literal notranslate"><span class="pre">adata.obs.columns</span></code>, specified by <code class="code docutils literal notranslate"><span class="pre">group_analysis</span></code> in CLI.</p></li>
+<li><p>First column: different cell groups in <code class="code docutils literal notranslate"><span class="pre">adata.obs[&lt;annot&gt;]</span></code>.</p></li>
+<li><p>n_cell: number of cells from the cell group.</p></li>
+<li><p>n_ctrl: number of control gene sets.</p></li>
+<li><p>assoc_mcp: MC p-value for cell group-disease association. Raw p-value without multiple testing adjustment.</p></li>
+<li><p>assoc_mcz: MC z-score for cell group-disease association.</p></li>
+<li><p>hetero_mcp:  MC p-value for within-cell group heterogeneity in association with disease. Raw p-value without multiple testing adjustment.</p></li>
+<li><p>hetero_mcz:  MC z-score for within-cell group heterogeneity in association with disease.</p></li>
+</ul>
+<table class="table" id="id7">
+<caption><span class="caption-text">Example &lt;trait&gt;.scdrs_group.&lt;annot&gt; file</span><a class="headerlink" href="#id7" title="Permalink to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>n_cell</p></th>
+<th class="head"><p>n_ctrl</p></th>
+<th class="head"><p>assoc_mcp</p></th>
+<th class="head"><p>assoc_mcz</p></th>
+<th class="head"><p>hetero_mcp</p></th>
+<th class="head"><p>hetero_mcz</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>causal_cell</p></td>
+<td><p>10.0</p></td>
+<td><p>20.0</p></td>
+<td><p>0.04761905</p></td>
+<td><p>12.297529</p></td>
+<td><p>1.0</p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>non_causal_cell</p></td>
+<td><p>20.0</p></td>
+<td><p>20.0</p></td>
+<td><p>0.9047619</p></td>
+<td><p>-1.1364214</p></td>
+<td><p>1.0</p></td>
+<td><p>1.0</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="trait-scdrs-cell-corr">
+<h2>&lt;trait&gt;.scdrs_cell_corr<a class="headerlink" href="#trait-scdrs-cell-corr" title="Permalink to this heading">#</a></h2>
+<p>Results for scDRS cell-level correlation analysis for a given trait. <code class="code docutils literal notranslate"><span class="pre">.tsv</span></code> file.</p>
+<ul class="simple">
+<li><p>&lt;trait&gt; : trait name consistent with <code class="code docutils literal notranslate"><span class="pre">&lt;trait&gt;.full_score.gz</span></code> file.</p></li>
+<li><p>First column: all cell-level variables, specified by specified by <code class="code docutils literal notranslate"><span class="pre">corr_analysis</span></code> in CLI.</p></li>
+<li><p>n_ctrl: number of control gene sets.</p></li>
+<li><p>corr_mcp: MC p-value for cell-level variable association with disease. Raw p-value without multiple testing adjustment.</p></li>
+<li><p>corr_mcz: MC z-score for cell-level variable association with disease.</p></li>
+</ul>
+<table class="table" id="id8">
+<caption><span class="caption-text">Example &lt;trait&gt;.scdrs_cell_corr file</span><a class="headerlink" href="#id8" title="Permalink to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>n_cell</p></th>
+<th class="head"><p>corr_mcp</p></th>
+<th class="head"><p>corr_mcz</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>causal_variable</p></td>
+<td><p>20.0</p></td>
+<td><p>0.04761905</p></td>
+<td><p>3.4574268</p></td>
+</tr>
+<tr class="row-odd"><td><p>non_causal_variable</p></td>
+<td><p>20.0</p></td>
+<td><p>0.23809524</p></td>
+<td><p>0.8974108</p></td>
+</tr>
+<tr class="row-even"><td><p>covariate</p></td>
+<td><p>20.0</p></td>
+<td><p>0.1904762</p></td>
+<td><p>1.1220891</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="trait-scdrs-gene">
+<h2>&lt;trait&gt;.scdrs_gene<a class="headerlink" href="#trait-scdrs-gene" title="Permalink to this heading">#</a></h2>
+<p>Results for scDRS gene-level correlation analysis for a given trait. <code class="code docutils literal notranslate"><span class="pre">.tsv</span></code> file.</p>
+<ul class="simple">
+<li><p>&lt;trait&gt; : trait name consistent with <code class="code docutils literal notranslate"><span class="pre">&lt;trait&gt;.full_score.gz</span></code> file.</p></li>
+<li><p>First column: genes in <code class="code docutils literal notranslate"><span class="pre">adata.var_names</span></code>.</p></li>
+<li><p>CORR: correlation with scDRS disease score across all cells in <code class="code docutils literal notranslate"><span class="pre">adata</span></code>.</p></li>
+<li><p>RANK: rank of correlation across genes (starting from 0).</p></li>
+</ul>
+<table class="table" id="id9">
+<caption><span class="caption-text">Example &lt;trait&gt;.scdrs_gene file</span><a class="headerlink" href="#id9" title="Permalink to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>index</p></th>
+<th class="head"><p>CORR</p></th>
+<th class="head"><p>RANK</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Serping1</p></td>
+<td><p>0.314</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Lmna</p></td>
+<td><p>0.278</p></td>
+<td><p>1</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="reference/scdrs.pp._get_mean_var_implicit_cov_corr.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">scdrs.pp._get_mean_var_implicit_cov_corr</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="faq.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">FAQ</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sumstats">.sumstats</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#h5ad">.h5ad</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pval-file-zscore-file">pval_file,zscore_file</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gs">.gs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cov">.cov</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trait-score-gz">&lt;trait&gt;.score.gz</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trait-full-score-gz">&lt;trait&gt;.full_score.gz</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trait-scdrs-group-annot">&lt;trait&gt;.scdrs_group.&lt;annot&gt;</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trait-scdrs-cell-corr">&lt;trait&gt;.scdrs_cell_corr</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trait-scdrs-gene">&lt;trait&gt;.scdrs_gene</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/file_format.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021, Martin Jinye Zhang, Kangcheng Hou.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

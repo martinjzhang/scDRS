@@ -1,0 +1,6 @@
+﻿scdrs.method.test\_gearysc
+==========================
+
+.. currentmodule:: scdrs.method
+
+.. autofunction:: test_gearysc

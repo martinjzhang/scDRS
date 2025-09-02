@@ -1,0 +1,6 @@
+﻿scdrs.method.\_pearson\_corr\_sparse
+====================================
+
+.. currentmodule:: scdrs.method
+
+.. autofunction:: _pearson_corr_sparse

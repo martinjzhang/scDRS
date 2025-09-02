@@ -1,0 +1,6 @@
+﻿scdrs.method.gearys\_c
+======================
+
+.. currentmodule:: scdrs.method
+
+.. autofunction:: gearys_c
