@@ -4,10 +4,10 @@ import scipy as sp
 import pandas as pd
 from tqdm import tqdm
 import anndata
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from statsmodels.stats.multitest import multipletests
 import scdrs
-from scipy.sparse import csc_matrix
+
 
 def score_cell(
     data,
@@ -95,8 +95,17 @@ def score_cell(
 
     np.random.seed(random_seed)
     adata = data.copy() if copy else data
+
+    # Load backed AnnData (or a view of one) into memory as the control loop slices columns ~n_ctrl times, which is slow on a backed matrix.
+    if adata.isbacked:
+        if verbose:
+            print("# scdrs.method.score_cell: loading backed AnnData into memory")
+        adata = adata.to_memory()
+
+    # CSC needed enables for fast column slicing in `_compute_raw_score`
     if sp.sparse.issparse(adata.X) and not isinstance(adata.X, sp.sparse.csc_matrix):
         adata.X = sp.sparse.csc_matrix(adata.X)
+
     n_cell, n_gene = adata.shape
 
     # Check preprocessing information
@@ -389,7 +398,7 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
         gene_idx = adata.var_names.get_indexer(gene_list)
         gene_idx = gene_idx[gene_idx >= 0]
         v_raw_score = (
-            adata.X[:,gene_idx].dot(v_score_weight)
+            adata.X[:, gene_idx].dot(v_score_weight)
             + cov_mat @ (cov_beta @ v_score_weight)
             + gene_mean @ v_score_weight
         ).flatten()
@@ -397,7 +406,7 @@ def _compute_raw_score(adata, gene_list, gene_weight, weight_opt):
         # Normal mode
         gene_idx = adata.var_names.get_indexer(gene_list)
         gene_idx = gene_idx[gene_idx >= 0]
-        v_raw_score = adata.X[:,gene_idx].dot(v_score_weight).reshape([-1])
+        v_raw_score = adata.X[:, gene_idx].dot(v_score_weight).reshape([-1])
 
     return v_raw_score, v_score_weight
 
@@ -445,7 +454,7 @@ def _compute_overdispersion_score(adata, gene_list, gene_weight):
         cell_list = list(adata.obs_names)
         cov_list = list(adata.uns["SCDRS_PARAM"]["COV_MAT"])
         mat_X = (
-            adata.X[:,gene_idx].toarray()
+            adata.X[:, gene_idx].toarray()
             + adata.uns["SCDRS_PARAM"]["COV_MAT"]
             .loc[cell_list, cov_list]
             .values.dot(
@@ -454,7 +463,7 @@ def _compute_overdispersion_score(adata, gene_list, gene_weight):
             + adata.uns["SCDRS_PARAM"]["COV_GENE_MEAN"].loc[gene_list].values
         )
     else:
-        mat_X = adata.X[:,gene_idx]
+        mat_X = adata.X[:, gene_idx]
 
     v_mean = adata.uns["SCDRS_PARAM"]["GENE_STATS"].loc[gene_list, "mean"].values
     v_var_tech = (
@@ -809,7 +818,7 @@ def downstream_group_analysis(
 
         # Heterogeneity
         df_rls = test_gearysc(
-            adata[cell_list], df_reg.loc[cell_list, :], groupby=group_col
+            adata, df_reg.loc[cell_list, :], groupby=group_col, subset=cell_list
         )
         for ct in group_list:
             mc_p, mc_z = df_rls.loc[ct, ["pval", "zsc"]]
@@ -916,6 +925,7 @@ def test_gearysc(
     adata: anndata.AnnData,
     df_full_score: pd.DataFrame,
     groupby: str,
+    subset: Optional[List] = None,
     opt="control_distribution_match",
 ) -> pd.DataFrame:
     """
@@ -935,6 +945,8 @@ def test_gearysc(
             - "control_distribution_match":
                 The distribution of the scores of the control scores is similar to
                 the distribution of the scores of the disease scores.
+    subset : list, optional
+        Subset of cells (obs_names) of `adata` to include. Defaults to all cells.
 
     Returns
     -------
@@ -946,22 +958,24 @@ def test_gearysc(
         - `ctrl_mean`: mean of the control scores
         - `ctrl_sd`: standard deviation of the control scores
     """
+    if subset is None:
+        subset = adata.obs_names.tolist()
     assert np.all(
-        df_full_score.index == adata.obs_names
+        df_full_score.index == adata[subset,:].obs_names
     ), "adata.obs_names must match df_full_score.index"
     norm_score = df_full_score["norm_score"]
     ctrl_norm_score = df_full_score[
         [col for col in df_full_score.columns if col.startswith(f"ctrl_norm_score_")]
     ]
     n_null = ctrl_norm_score.shape[1]
-    df_meta = adata.obs.copy()
+    df_meta = adata[subset,:].obs.copy()
     df_stats = pd.DataFrame(
         index=df_meta[groupby].unique(),
         columns=["trait"] + [f"null_{i_null}" for i_null in range(n_null)],
         data=np.nan,
     )
 
-    for group, df_group in df_meta.groupby(groupby):
+    for group, df_group in tqdm(df_meta.groupby(groupby)):
         group_index = df_group.index
         group_adata = adata[group_index]
         group_norm_score = norm_score[group_index]
@@ -977,18 +991,19 @@ def test_gearysc(
                 """
                 return np.sort(ref)[rankdata(v, method="ordinal") - 1]
 
-            df_stats.loc[group, "trait"] = gearys_c(
-                group_adata, group_norm_score.values
+            df_stats.loc[group, ["trait"] + [f"null_{i_null}" for i_null in range(n_null)]] = gearys_c(
+                group_adata,
+                pd.DataFrame(
+                    {"trait": group_norm_score.values}
+                    | {
+                        f"null_{i_null}": distribution_match(
+                            group_ctrl_norm_score.iloc[:, i_null].values,
+                            ref=group_norm_score,
+                        )
+                        for i_null in range(n_null)
+                    }
+                ).values,
             )
-
-            for i_null in range(n_null):
-                df_stats.loc[group, f"null_{i_null}"] = gearys_c(
-                    group_adata,
-                    distribution_match(
-                        group_ctrl_norm_score.iloc[:, i_null].values,
-                        ref=group_norm_score,
-                    ),
-                )
 
         elif opt == "permutation":
             # permutation
@@ -1054,18 +1069,23 @@ def gearys_c(adata, vals):
 
     Returns
     -------
-    C : float
-        Geary's C statistics.
+    C : float or np.ndarray
+        Geary's C statistic. A float for 1D `vals`; a 1D array (one value per
+        column) for 2D `vals`.
     """
     graph = adata.obsp["connectivities"]
     assert graph.shape[0] == graph.shape[1]
     graph_data = graph.data.astype(np.float64, copy=False)
+    vals = np.asarray(vals)
+    assert vals.ndim in [1, 2]
+    flag_1d = vals.ndim == 1
+    if flag_1d:
+        vals = vals.reshape([-1, 1])
     assert graph.shape[0] == vals.shape[0]
-    assert np.ndim(vals) == 1
 
     W = graph_data.sum()
     N = len(graph.indptr) - 1
-    vals_bar = vals.mean()
+    vals_bar = vals.mean(axis = 0)
     vals = vals.astype(np.float64)
 
     # numerators
@@ -1075,14 +1095,14 @@ def gearys_c(adata, vals):
         # indices of corresponding neighbors
         i_indices = graph.indices[s]
         # corresponding connecting weights
-        i_data = graph_data[s]
-        total += np.sum(i_data * ((vals[i] - vals[i_indices]) ** 2))
+        i_data = graph_data[s].reshape([-1,1])
+        total += np.sum(i_data * ((vals[i,:] - vals[i_indices,:]) ** 2), axis = 0)
 
     numer = (N - 1) * total
-    denom = 2 * W * ((vals - vals_bar) ** 2).sum()
+    denom = 2 * W * ((vals - vals_bar) ** 2).sum(axis = 0)
     C = numer / denom
 
-    return C
+    return C[0] if flag_1d else C
 
 
 def _pearson_corr(mat_X, mat_Y):
