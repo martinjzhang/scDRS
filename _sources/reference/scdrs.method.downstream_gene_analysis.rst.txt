@@ -1,0 +1,6 @@
+﻿scdrs.method.downstream\_gene\_analysis
+=======================================
+
+.. currentmodule:: scdrs.method
+
+.. autofunction:: downstream_gene_analysis

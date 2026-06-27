@@ -1,0 +1,6 @@
+﻿scdrs.util.load\_scdrs\_score
+=============================
+
+.. currentmodule:: scdrs.util
+
+.. autofunction:: load_scdrs_score

@@ -1,0 +1,6 @@
+﻿scdrs.pp.\_get\_mean\_var
+=========================
+
+.. currentmodule:: scdrs.pp
+
+.. autofunction:: _get_mean_var

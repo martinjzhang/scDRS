@@ -1,0 +1,6 @@
+﻿scdrs.method.downstream\_corr\_analysis
+=======================================
+
+.. currentmodule:: scdrs.method
+
+.. autofunction:: downstream_corr_analysis

@@ -1,0 +1,6 @@
+﻿scdrs.util.load\_h5ad
+=====================
+
+.. currentmodule:: scdrs.util
+
+.. autofunction:: load_h5ad

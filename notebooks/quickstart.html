@@ -1,0 +1,1183 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Quick start &#8212; scDRS 1.0.4 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
+  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=535dfbd7"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/quickstart';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Downloads" href="../downloads.html" />
+    <link rel="prev" title="Versions" href="../versions.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">scDRS 1.0.4 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../reference_cli.html">
+                        CLI
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../reference.html">
+                        Documentation
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../file_format.html">
+                        File formats
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../faq.html">
+                        FAQ
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../versions.html">
+                        Versions
+                      </a>
+                    </li>
+                
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+                    <li class="nav-item current active">
+                      <a class="nav-link dropdown-item nav-internal" href="#">
+                        Quick start
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="../downloads.html">
+                        Downloads
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link dropdown-item nav-external" href="https://github.com/martinjzhang/scDRS">
+                    Github
+                  </a>
+                </li>
+                
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../reference_cli.html">
+                        CLI
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../reference.html">
+                        Documentation
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../file_format.html">
+                        File formats
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../faq.html">
+                        FAQ
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../versions.html">
+                        Versions
+                      </a>
+                    </li>
+                
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links-2">
+                    More
+                </button>
+                <ul id="pst-nav-more-links-2" class="dropdown-menu">
+                    
+                    <li class="nav-item current active">
+                      <a class="nav-link dropdown-item nav-internal" href="#">
+                        Quick start
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="../downloads.html">
+                        Downloads
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link dropdown-item nav-external" href="https://github.com/martinjzhang/scDRS">
+                    Github
+                  </a>
+                </li>
+                
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Quick start</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="Quick-start">
+<h1>Quick start<a class="headerlink" href="#Quick-start" title="Permalink to this heading">#</a></h1>
+<p>In this tutorial, we will show case main features of scDRS using the <a class="reference external" href="http://linnarssonlab.org/cortex/">Zeisel &amp; Muñoz-Manchado et al. 2015</a> cortex data set.</p>
+<p>We have preprocessed the scRNA-seq data set and disease gene sets (which are used in our manuscript). Alternatively you can use the <a class="reference external" href="process_zeisel2015.py">processing script</a> to obtain the scRNA-seq data sets from scratch.</p>
+<p>Going through this notebook will take ~10 minutes. We suggest user to copy and run this notebook locally to get familar with scDRS analysis and use this as a template for their own analysis.</p>
+</section>
+<section id="Preparing-data-sets">
+<h1>Preparing data sets<a class="headerlink" href="#Preparing-data-sets" title="Permalink to this heading">#</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>%%capture
+
+# download precomputed data
+# see above for processing code
+!wget https://figshare.com/ndownloader/files/34300925 -O data.zip
+!unzip data.zip &amp;&amp; \
+ mkdir -p data/ &amp;&amp; \
+ mv single_cell_data/zeisel_2015/* data/ &amp;&amp; \
+ rm data.zip &amp;&amp; rm -r single_cell_data
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scdrs</span>
+<span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">125</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">anndata</span> <span class="kn">import</span> <span class="n">AnnData</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>For demonstration purpose, we use the following 3 gene sets:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SCZ</span></code>: Schizophrenia (SCZ) gene sets obtained from GWAS summary statistics, which is the disease of interest in this demo.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Dorsal</span></code>: Differentially expressed genes in dorsal CA1 pyramidal obtained from <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0896627315010867">Cembrowski et al. 2016</a>, which we will used to construct dorsal score indicating the proximity to the dorsal CA1, which we find useful to understand the spatial distribution of SCZ disease enrichment.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Height</span></code>: Height gene sets obtained from GWAS summary statistics, which we use as a negative control trait.</p></li>
+</ol>
+<p>We load these data in the following block:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># load adata</span>
+<span class="n">adata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="s2">&quot;data/expr.h5ad&quot;</span><span class="p">)</span>
+
+<span class="c1"># subset gene sets</span>
+<span class="n">df_gs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;data/geneset.gs&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">df_gs</span> <span class="o">=</span> <span class="n">df_gs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;PASS_Schizophrenia_Pardinas2018&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;spatial_dorsal&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;UKB_460K.body_HEIGHTz&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="p">:,</span>
+<span class="p">]</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;PASS_Schizophrenia_Pardinas2018&quot;</span><span class="p">:</span> <span class="s2">&quot;SCZ&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;spatial_dorsal&quot;</span><span class="p">:</span> <span class="s2">&quot;Dorsal&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;UKB_460K.body_HEIGHTz&quot;</span><span class="p">:</span> <span class="s2">&quot;Height&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">df_gs</span><span class="p">)</span>
+
+<span class="n">df_gs</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;data/processed_geneset.gs&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>GENESET</th>
+    </tr>
+    <tr>
+      <th>TRAIT</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>SCZ</th>
+      <td>Dpyd:7.6519,Cacna1i:7.4766,Rbfox1:7.3247,Ppp1r...</td>
+    </tr>
+    <tr>
+      <th>Dorsal</th>
+      <td>Ckb,Fndc5,Lin7b,Gstm7,Tle1,Cabp7,Etv5,Actn1,Sa...</td>
+    </tr>
+    <tr>
+      <th>Height</th>
+      <td>Wwox:10,Bnc2:10,Gmds:10,Lpp:9.9916,Prkg1:9.836...</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+</section>
+<section id="scDRS-analysis-of-disease-enrichment-for-individual-cells">
+<h1><code class="docutils literal notranslate"><span class="pre">scDRS</span></code> analysis of disease enrichment for individual cells<a class="headerlink" href="#scDRS-analysis-of-disease-enrichment-for-individual-cells" title="Permalink to this heading">#</a></h1>
+<p>We use <code class="docutils literal notranslate"><span class="pre">scdrs</span> <span class="pre">compute-score</span></code> cli to evaluate disease enrichment to individual cells.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>%%capture
+
+!scdrs compute-score \
+    --h5ad-file data/expr.h5ad \
+    --h5ad-species mouse \
+    --gs-file data/processed_geneset.gs \
+    --gs-species mouse \
+    --cov-file data/cov.tsv \
+    --flag-filter-data True \
+    --flag-raw-count True \
+    --flag-return-ctrl-raw-score False \
+    --flag-return-ctrl-norm-score True \
+    --out-folder data/
+</pre></div>
+</div>
+</div>
+<p>For an overview of <code class="docutils literal notranslate"><span class="pre">scDRS</span></code> results, we overlay the computed <code class="docutils literal notranslate"><span class="pre">scDRS</span></code> disease scores on the UMAP.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dict_score</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">trait</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;data/</span><span class="si">{</span><span class="n">trait</span><span class="si">}</span><span class="s2">.full_score.gz&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">trait</span> <span class="ow">in</span> <span class="n">df_gs</span><span class="o">.</span><span class="n">index</span>
+<span class="p">}</span>
+
+<span class="k">for</span> <span class="n">trait</span> <span class="ow">in</span> <span class="n">dict_score</span><span class="p">:</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">trait</span><span class="p">]</span> <span class="o">=</span> <span class="n">dict_score</span><span class="p">[</span><span class="n">trait</span><span class="p">][</span><span class="s2">&quot;norm_score&quot;</span><span class="p">]</span>
+
+<span class="n">sc</span><span class="o">.</span><span class="n">set_figure_params</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">],</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;level1class&quot;</span><span class="p">,</span>
+    <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">color_map</span><span class="o">=</span><span class="s2">&quot;RdBu_r&quot;</span><span class="p">,</span>
+    <span class="n">vmin</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">vmax</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="n">dict_score</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+    <span class="n">color_map</span><span class="o">=</span><span class="s2">&quot;RdBu_r&quot;</span><span class="p">,</span>
+    <span class="n">vmin</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">vmax</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_quickstart_9_0.png" src="../_images/notebooks_quickstart_9_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_quickstart_9_1.png" src="../_images/notebooks_quickstart_9_1.png" />
+</div>
+</div>
+<p>We highlight several visual observations:</p>
+<ol class="arabic simple">
+<li><p>In the SCZ panel, CA1 pyramidal neurons shows some disease enrichments.</p></li>
+<li><p>In the Dorsal panel, within the CA pyramidal neurons, we observe left-to-right gradient of Dorsal score, which indicates that cells on the right of the UMAP are enriched in dorsal area of CA1.</p></li>
+<li><p>Combining SCZ and Dorsal panels, we may hypothesize that SCZ is enriched in dorsal part of CA1.</p></li>
+<li><p>Height, as a negative control, shows little signal.</p></li>
+</ol>
+<p>Before we dive into detailed analyses, it is helpful to first leverage existing annotations in the data set to understand the data.</p>
+<p>We use the <code class="docutils literal notranslate"><span class="pre">level1class</span></code> annotation provided in Zeisel &amp; Muñoz-Manchado et al. 2015 to first perform a cell type level analyses.</p>
+</section>
+<section id="scDRS-test-of-group-level-statistics">
+<h1><code class="docutils literal notranslate"><span class="pre">scDRS</span></code> test of group level statistics<a class="headerlink" href="#scDRS-test-of-group-level-statistics" title="Permalink to this heading">#</a></h1>
+<p>We use <code class="docutils literal notranslate"><span class="pre">scdrs</span> <span class="pre">perform-downstream</span></code> to obtain the group-level statistics. The function will return the following statistics for each cell type:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">assoc_mcp</span></code>: significance of cell type-disease association</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hetero_mcp</span></code>: significance heterogeneity in association with disease across individual cells within a given cell type</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_fdr_0.1</span></code>: number of significantly associated cells (with FDR$&lt;$0.1 across all cells for a given disease)</p></li>
+</ol>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>%%capture
+
+for trait in [&quot;SCZ&quot;, &quot;Height&quot;]:
+    !scdrs perform-downstream \
+        --h5ad-file data/expr.h5ad \
+        --score-file data/{trait}.full_score.gz \
+        --out-folder data/ \
+        --group-analysis level1class \
+        --flag-filter-data True \
+        --flag-raw-count True
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># scDRS group-level statistics for SCZ</span>
+<span class="o">!</span>cat<span class="w"> </span>data/SCZ.scdrs_group.level1class<span class="w"> </span><span class="p">|</span><span class="w"> </span>column<span class="w"> </span>-t<span class="w"> </span>-s<span class="w"> </span><span class="s1">$&#39;\t&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+group                 n_cell  n_ctrl  assoc_mcp    assoc_mcz    hetero_mcp   hetero_mcz  n_fdr_0.05  n_fdr_0.1  n_fdr_0.2
+astrocytes_ependymal  224.0   1000.0  0.007992008  2.755896     0.002997003  3.0352552   6.0         12.0       23.0
+endothelial-mural     235.0   1000.0  0.14085914   1.0441228    0.051948052  1.8254294   6.0         9.0        11.0
+interneurons          290.0   1000.0  0.17982018   0.85168266   0.005994006  3.0294392   0.0         3.0        13.0
+microglia             98.0    1000.0  0.43956044   0.09781444   0.17782217   0.9301765   0.0         2.0        3.0
+oligodendrocytes      820.0   1000.0  0.7672328    -0.73165476  0.000999001  5.0373654   1.0         4.0        11.0
+pyramidal CA1         939.0   1000.0  0.000999001  7.7077475    0.000999001  9.697396    50.0        105.0      189.0
+pyramidal SS          399.0   1000.0  0.000999001  5.78891      0.000999001  6.059032    26.0        43.0       70.0
+</pre></div></div>
+</div>
+<p>We can also visualize the three statistics simulateously using the built-in <code class="docutils literal notranslate"><span class="pre">scdrs.util.plot_group_stats</span></code>:</p>
+<ol class="arabic simple">
+<li><p>Heatmap colors for each cell type-disease pair denote the proportion of significantly associated cells.</p></li>
+<li><p>Squares denote significant cell type-disease associations (FDR$&lt;$0.05 across all pairs of cell types and diseases/traits.</p></li>
+<li><p>Cross symbols denote significant heterogeneity in association with disease across individual cells within a given cell type.</p></li>
+</ol>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dict_df_stats</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">trait</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;data/</span><span class="si">{</span><span class="n">trait</span><span class="si">}</span><span class="s2">.scdrs_group.level1class&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">trait</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;SCZ&quot;</span><span class="p">,</span> <span class="s2">&quot;Height&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+<span class="n">dict_celltype_display_name</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;pyramidal_CA1&quot;</span><span class="p">:</span> <span class="s2">&quot;Pyramidal CA1&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;oligodendrocytes&quot;</span><span class="p">:</span> <span class="s2">&quot;Oligodendrocyte&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pyramidal_SS&quot;</span><span class="p">:</span> <span class="s2">&quot;Pyramidal SS&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;interneurons&quot;</span><span class="p">:</span> <span class="s2">&quot;Interneuron&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;endothelial-mural&quot;</span><span class="p">:</span> <span class="s2">&quot;Endothelial&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;astrocytes_ependymal&quot;</span><span class="p">:</span> <span class="s2">&quot;Astrocyte&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;microglia&quot;</span><span class="p">:</span> <span class="s2">&quot;Microglia&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">scdrs</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">plot_group_stats</span><span class="p">(</span>
+    <span class="n">dict_df_stats</span><span class="o">=</span><span class="p">{</span>
+        <span class="n">trait</span><span class="p">:</span> <span class="n">df_stats</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">dict_celltype_display_name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">trait</span><span class="p">,</span> <span class="n">df_stats</span> <span class="ow">in</span> <span class="n">dict_df_stats</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">},</span>
+    <span class="n">plot_kws</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;vmax&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+        <span class="s2">&quot;cb_fraction&quot;</span><span class="p">:</span><span class="mf">0.12</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_quickstart_15_0.png" src="../_images/notebooks_quickstart_15_0.png" />
+</div>
+</div>
+<p>We observed that CA1 pyramidal neurons show the strongest cell type association as well as significant heterogeneity.</p>
+<p>Now we focus on this subset of cells and further understand sources of heterogeneity.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># extract CA1 pyramidal neurons and perform a re-clustering</span>
+<span class="n">adata_ca1</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;level2class&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s2">&quot;CA1Pyr1&quot;</span><span class="p">,</span> <span class="s2">&quot;CA1Pyr2&quot;</span><span class="p">])]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">filter_cells</span><span class="p">(</span><span class="n">adata_ca1</span><span class="p">,</span> <span class="n">min_genes</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">filter_genes</span><span class="p">(</span><span class="n">adata_ca1</span><span class="p">,</span> <span class="n">min_cells</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">normalize_total</span><span class="p">(</span><span class="n">adata_ca1</span><span class="p">,</span> <span class="n">target_sum</span><span class="o">=</span><span class="mf">1e4</span><span class="p">)</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">adata_ca1</span><span class="p">)</span>
+
+<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">highly_variable_genes</span><span class="p">(</span><span class="n">adata_ca1</span><span class="p">,</span> <span class="n">min_mean</span><span class="o">=</span><span class="mf">0.0125</span><span class="p">,</span> <span class="n">max_mean</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">min_disp</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">adata_ca1</span> <span class="o">=</span> <span class="n">adata_ca1</span><span class="p">[:,</span> <span class="n">adata_ca1</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">highly_variable</span><span class="p">]</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">adata_ca1</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">adata_ca1</span><span class="p">,</span> <span class="n">svd_solver</span><span class="o">=</span><span class="s2">&quot;arpack&quot;</span><span class="p">)</span>
+
+<span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">adata_ca1</span><span class="p">,</span> <span class="n">n_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">n_pcs</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">adata_ca1</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># assign scDRS score</span>
+<span class="k">for</span> <span class="n">trait</span> <span class="ow">in</span> <span class="n">dict_score</span><span class="p">:</span>
+    <span class="n">adata_ca1</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">trait</span><span class="p">]</span> <span class="o">=</span> <span class="n">dict_score</span><span class="p">[</span><span class="n">trait</span><span class="p">][</span><span class="s2">&quot;norm_score&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span>
+    <span class="n">adata_ca1</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="n">dict_score</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+    <span class="n">color_map</span><span class="o">=</span><span class="s2">&quot;RdBu_r&quot;</span><span class="p">,</span>
+    <span class="n">vmin</span><span class="o">=-</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">vmax</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_quickstart_18_0.png" src="../_images/notebooks_quickstart_18_0.png" />
+</div>
+</div>
+</section>
+<section id="scDRS-test-between-disease-score-and-cell-level-variable">
+<h1><code class="docutils literal notranslate"><span class="pre">scDRS</span></code> test between disease score and cell-level variable<a class="headerlink" href="#scDRS-test-between-disease-score-and-cell-level-variable" title="Permalink to this heading">#</a></h1>
+<p>Consistent with the previous observations, SCZ seems to be enriched in dorsal part of CA1.</p>
+<p>This is more obvious when we plot the plot average SCZ disease score against dorsal quintile.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df_plot</span> <span class="o">=</span> <span class="n">adata_ca1</span><span class="o">.</span><span class="n">obs</span><span class="p">[[</span><span class="s2">&quot;Dorsal&quot;</span><span class="p">,</span> <span class="s2">&quot;SCZ&quot;</span><span class="p">,</span> <span class="s2">&quot;Height&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">df_plot</span><span class="p">[</span><span class="s2">&quot;Dorsal quintile&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">qcut</span><span class="p">(</span><span class="n">df_plot</span><span class="p">[</span><span class="s2">&quot;Dorsal&quot;</span><span class="p">],</span> <span class="mi">5</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">trait</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;SCZ&quot;</span><span class="p">,</span> <span class="s2">&quot;Height&quot;</span><span class="p">]:</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">df_plot</span><span class="p">,</span>
+        <span class="n">x</span><span class="o">=</span><span class="s2">&quot;Dorsal quintile&quot;</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">trait</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">trait</span><span class="p">,</span>
+        <span class="n">err_style</span><span class="o">=</span><span class="s2">&quot;bars&quot;</span><span class="p">,</span>
+        <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Dorsal quintile&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Mean scDRS disease score&quot;</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_quickstart_20_0.png" src="../_images/notebooks_quickstart_20_0.png" />
+</div>
+</div>
+<p>To perform rigorous statistical test which quantify the p-value of the trend (probability that this happens by chance).</p>
+<p>We can compare Pearson’s correlation of disease score and dorsal score against Pearson’s correlation of control scores and dorsal score and derive a p-value.</p>
+<p>Indeed, the association between SCZ v.s. Dorsal is highly significant. Apart from assessing the significance of correlation, the control scores can help assess the significance of essentially any statistics. See our paper for more details.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">spatial_col</span> <span class="o">=</span> <span class="s2">&quot;Dorsal&quot;</span>
+<span class="k">for</span> <span class="n">trait</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;SCZ&quot;</span><span class="p">,</span> <span class="s2">&quot;Height&quot;</span><span class="p">]:</span>
+    <span class="n">df_score</span> <span class="o">=</span> <span class="n">dict_score</span><span class="p">[</span><span class="n">trait</span><span class="p">]</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">adata_ca1</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">ctrl_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df_score</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;ctrl_norm_score&quot;</span><span class="p">)]</span>
+    <span class="n">n_ctrl</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ctrl_cols</span><span class="p">)</span>
+
+    <span class="c1"># Pearson&#39;s r between trait score and spatial score</span>
+    <span class="n">data_r</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">df_score</span><span class="p">[</span><span class="s2">&quot;norm_score&quot;</span><span class="p">],</span> <span class="n">adata_ca1</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">spatial_col</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Regression: control score ~ spatial score</span>
+    <span class="n">ctrl_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ctrl_cols</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">ctrl_i</span><span class="p">,</span> <span class="n">ctrl_col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ctrl_cols</span><span class="p">):</span>
+        <span class="n">ctrl_r</span><span class="p">[</span><span class="n">ctrl_i</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">df_score</span><span class="p">[</span><span class="n">ctrl_col</span><span class="p">],</span> <span class="n">adata_ca1</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">spatial_col</span><span class="p">])[</span>
+            <span class="mi">0</span>
+        <span class="p">]</span>
+    <span class="n">pval</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data_r</span> <span class="o">&lt;=</span> <span class="n">ctrl_r</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_ctrl</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trait</span><span class="si">}</span><span class="s2"> v.s. </span><span class="si">{</span><span class="n">spatial_col</span><span class="si">}</span><span class="s2">, Pearson&#39;s r=</span><span class="si">{</span><span class="n">data_r</span><span class="si">:</span><span class="s2">.2g</span><span class="si">}</span><span class="s2"> (p=</span><span class="si">{</span><span class="n">pval</span><span class="si">:</span><span class="s2">.2g</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+SCZ v.s. Dorsal, Pearson&#39;s r=0.43 (p=0.001)
+Height v.s. Dorsal, Pearson&#39;s r=0.04 (p=0.37)
+</pre></div></div>
+</div>
+</section>
+<section id="Using-scDRS-within-python">
+<h1>Using <code class="docutils literal notranslate"><span class="pre">scDRS</span></code> within python<a class="headerlink" href="#Using-scDRS-within-python" title="Permalink to this heading">#</a></h1>
+<p>If you prefer to use scDRS within python or would like to know about the details, here we provide python codes to (1) calculate scDRS scores (2) perform group-level analyses achieving the same functionality as above via cli.</p>
+<section id="Preparing-data">
+<h2>Preparing data<a class="headerlink" href="#Preparing-data" title="Permalink to this heading">#</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># scdrs.util.load_h5ad is a simple wrapper to read h5ad files</span>
+<span class="c1"># with basic data filtering</span>
+<span class="n">adata</span> <span class="o">=</span> <span class="n">scdrs</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">load_h5ad</span><span class="p">(</span>
+    <span class="n">h5ad_file</span><span class="o">=</span><span class="s2">&quot;data/expr.h5ad&quot;</span><span class="p">,</span> <span class="n">flag_filter_data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">flag_raw_count</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># load geneset, convert homologs and overlap gene names to adata.var_names</span>
+<span class="n">dict_gs</span> <span class="o">=</span> <span class="n">scdrs</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">load_gs</span><span class="p">(</span>
+    <span class="s2">&quot;data/processed_geneset.gs&quot;</span><span class="p">,</span>
+    <span class="n">src_species</span><span class="o">=</span><span class="s2">&quot;mouse&quot;</span><span class="p">,</span>
+    <span class="n">dst_species</span><span class="o">=</span><span class="s2">&quot;mouse&quot;</span><span class="p">,</span>
+    <span class="n">to_intersect</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">var_names</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># load covariates</span>
+<span class="n">df_cov</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;data/cov.tsv&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># preprocess data to</span>
+<span class="c1"># (1) regress out from covariates</span>
+<span class="c1"># (2) group genes into bins by mean and variance</span>
+<span class="n">scdrs</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">df_cov</span><span class="p">,</span> <span class="n">n_mean_bin</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">n_var_bin</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Computing-scDRS-scores">
+<h2>Computing scDRS scores<a class="headerlink" href="#Computing-scDRS-scores" title="Permalink to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dict_df_score</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">trait</span> <span class="ow">in</span> <span class="n">dict_gs</span><span class="p">:</span>
+    <span class="n">gene_list</span><span class="p">,</span> <span class="n">gene_weights</span> <span class="o">=</span> <span class="n">dict_gs</span><span class="p">[</span><span class="n">trait</span><span class="p">]</span>
+    <span class="n">dict_df_score</span><span class="p">[</span><span class="n">trait</span><span class="p">]</span> <span class="o">=</span> <span class="n">scdrs</span><span class="o">.</span><span class="n">score_cell</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">adata</span><span class="p">,</span>
+        <span class="n">gene_list</span><span class="o">=</span><span class="n">gene_list</span><span class="p">,</span>
+        <span class="n">gene_weight</span><span class="o">=</span><span class="n">gene_weights</span><span class="p">,</span>
+        <span class="n">ctrl_match_key</span><span class="o">=</span><span class="s2">&quot;mean_var&quot;</span><span class="p">,</span>
+        <span class="n">n_ctrl</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">weight_opt</span><span class="o">=</span><span class="s2">&quot;vs&quot;</span><span class="p">,</span>
+        <span class="n">return_ctrl_raw_score</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_ctrl_norm_score</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Computing control scores: 100%|██████████| 1000/1000 [00:38&lt;00:00, 25.70it/s]
+Computing control scores: 100%|██████████| 1000/1000 [00:12&lt;00:00, 77.20it/s]
+Computing control scores: 100%|██████████| 1000/1000 [00:32&lt;00:00, 30.69it/s]
+</pre></div></div>
+</div>
+</section>
+<section id="Downstream-analyses-for-SCZ">
+<h2>Downstream analyses for SCZ<a class="headerlink" href="#Downstream-analyses-for-SCZ" title="Permalink to this heading">#</a></h2>
+<p>We can validate that these statistics are identical as calculated via cli.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df_stats</span> <span class="o">=</span> <span class="n">scdrs</span><span class="o">.</span><span class="n">method</span><span class="o">.</span><span class="n">downstream_group_analysis</span><span class="p">(</span>
+    <span class="n">adata</span><span class="o">=</span><span class="n">adata</span><span class="p">,</span>
+    <span class="n">df_full_score</span><span class="o">=</span><span class="n">dict_df_score</span><span class="p">[</span><span class="s2">&quot;SCZ&quot;</span><span class="p">],</span>
+    <span class="n">group_cols</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;level1class&quot;</span><span class="p">],</span>
+<span class="p">)[</span><span class="s2">&quot;level1class&quot;</span><span class="p">]</span>
+
+<span class="n">display</span><span class="p">(</span><span class="n">df_stats</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">set_caption</span><span class="p">(</span><span class="s2">&quot;Group-level statistics for SCZ&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style type="text/css">
+</style>
+<table id="T_341ea_">
+  <caption>Group-level statistics for SCZ</caption>
+  <thead>
+    <tr>
+      <th class="blank level0" >&nbsp;</th>
+      <th class="col_heading level0 col0" >n_cell</th>
+      <th class="col_heading level0 col1" >n_ctrl</th>
+      <th class="col_heading level0 col2" >assoc_mcp</th>
+      <th class="col_heading level0 col3" >assoc_mcz</th>
+      <th class="col_heading level0 col4" >hetero_mcp</th>
+      <th class="col_heading level0 col5" >hetero_mcz</th>
+      <th class="col_heading level0 col6" >n_fdr_0.05</th>
+      <th class="col_heading level0 col7" >n_fdr_0.1</th>
+      <th class="col_heading level0 col8" >n_fdr_0.2</th>
+    </tr>
+    <tr>
+      <th class="index_name level0" >group</th>
+      <th class="blank col0" >&nbsp;</th>
+      <th class="blank col1" >&nbsp;</th>
+      <th class="blank col2" >&nbsp;</th>
+      <th class="blank col3" >&nbsp;</th>
+      <th class="blank col4" >&nbsp;</th>
+      <th class="blank col5" >&nbsp;</th>
+      <th class="blank col6" >&nbsp;</th>
+      <th class="blank col7" >&nbsp;</th>
+      <th class="blank col8" >&nbsp;</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th id="T_341ea_level0_row0" class="row_heading level0 row0" >astrocytes_ependymal</th>
+      <td id="T_341ea_row0_col0" class="data row0 col0" >224.000000</td>
+      <td id="T_341ea_row0_col1" class="data row0 col1" >1000.000000</td>
+      <td id="T_341ea_row0_col2" class="data row0 col2" >0.007992</td>
+      <td id="T_341ea_row0_col3" class="data row0 col3" >2.755896</td>
+      <td id="T_341ea_row0_col4" class="data row0 col4" >0.002997</td>
+      <td id="T_341ea_row0_col5" class="data row0 col5" >3.035255</td>
+      <td id="T_341ea_row0_col6" class="data row0 col6" >6.000000</td>
+      <td id="T_341ea_row0_col7" class="data row0 col7" >12.000000</td>
+      <td id="T_341ea_row0_col8" class="data row0 col8" >23.000000</td>
+    </tr>
+    <tr>
+      <th id="T_341ea_level0_row1" class="row_heading level0 row1" >endothelial-mural</th>
+      <td id="T_341ea_row1_col0" class="data row1 col0" >235.000000</td>
+      <td id="T_341ea_row1_col1" class="data row1 col1" >1000.000000</td>
+      <td id="T_341ea_row1_col2" class="data row1 col2" >0.140859</td>
+      <td id="T_341ea_row1_col3" class="data row1 col3" >1.044123</td>
+      <td id="T_341ea_row1_col4" class="data row1 col4" >0.051948</td>
+      <td id="T_341ea_row1_col5" class="data row1 col5" >1.825429</td>
+      <td id="T_341ea_row1_col6" class="data row1 col6" >6.000000</td>
+      <td id="T_341ea_row1_col7" class="data row1 col7" >9.000000</td>
+      <td id="T_341ea_row1_col8" class="data row1 col8" >11.000000</td>
+    </tr>
+    <tr>
+      <th id="T_341ea_level0_row2" class="row_heading level0 row2" >interneurons</th>
+      <td id="T_341ea_row2_col0" class="data row2 col0" >290.000000</td>
+      <td id="T_341ea_row2_col1" class="data row2 col1" >1000.000000</td>
+      <td id="T_341ea_row2_col2" class="data row2 col2" >0.179820</td>
+      <td id="T_341ea_row2_col3" class="data row2 col3" >0.851683</td>
+      <td id="T_341ea_row2_col4" class="data row2 col4" >0.005994</td>
+      <td id="T_341ea_row2_col5" class="data row2 col5" >3.029439</td>
+      <td id="T_341ea_row2_col6" class="data row2 col6" >0.000000</td>
+      <td id="T_341ea_row2_col7" class="data row2 col7" >3.000000</td>
+      <td id="T_341ea_row2_col8" class="data row2 col8" >13.000000</td>
+    </tr>
+    <tr>
+      <th id="T_341ea_level0_row3" class="row_heading level0 row3" >microglia</th>
+      <td id="T_341ea_row3_col0" class="data row3 col0" >98.000000</td>
+      <td id="T_341ea_row3_col1" class="data row3 col1" >1000.000000</td>
+      <td id="T_341ea_row3_col2" class="data row3 col2" >0.439560</td>
+      <td id="T_341ea_row3_col3" class="data row3 col3" >0.097814</td>
+      <td id="T_341ea_row3_col4" class="data row3 col4" >0.177822</td>
+      <td id="T_341ea_row3_col5" class="data row3 col5" >0.930177</td>
+      <td id="T_341ea_row3_col6" class="data row3 col6" >0.000000</td>
+      <td id="T_341ea_row3_col7" class="data row3 col7" >2.000000</td>
+      <td id="T_341ea_row3_col8" class="data row3 col8" >3.000000</td>
+    </tr>
+    <tr>
+      <th id="T_341ea_level0_row4" class="row_heading level0 row4" >oligodendrocytes</th>
+      <td id="T_341ea_row4_col0" class="data row4 col0" >820.000000</td>
+      <td id="T_341ea_row4_col1" class="data row4 col1" >1000.000000</td>
+      <td id="T_341ea_row4_col2" class="data row4 col2" >0.767233</td>
+      <td id="T_341ea_row4_col3" class="data row4 col3" >-0.731655</td>
+      <td id="T_341ea_row4_col4" class="data row4 col4" >0.000999</td>
+      <td id="T_341ea_row4_col5" class="data row4 col5" >5.037365</td>
+      <td id="T_341ea_row4_col6" class="data row4 col6" >1.000000</td>
+      <td id="T_341ea_row4_col7" class="data row4 col7" >4.000000</td>
+      <td id="T_341ea_row4_col8" class="data row4 col8" >11.000000</td>
+    </tr>
+    <tr>
+      <th id="T_341ea_level0_row5" class="row_heading level0 row5" >pyramidal CA1</th>
+      <td id="T_341ea_row5_col0" class="data row5 col0" >939.000000</td>
+      <td id="T_341ea_row5_col1" class="data row5 col1" >1000.000000</td>
+      <td id="T_341ea_row5_col2" class="data row5 col2" >0.000999</td>
+      <td id="T_341ea_row5_col3" class="data row5 col3" >7.707747</td>
+      <td id="T_341ea_row5_col4" class="data row5 col4" >0.000999</td>
+      <td id="T_341ea_row5_col5" class="data row5 col5" >9.697396</td>
+      <td id="T_341ea_row5_col6" class="data row5 col6" >50.000000</td>
+      <td id="T_341ea_row5_col7" class="data row5 col7" >105.000000</td>
+      <td id="T_341ea_row5_col8" class="data row5 col8" >189.000000</td>
+    </tr>
+    <tr>
+      <th id="T_341ea_level0_row6" class="row_heading level0 row6" >pyramidal SS</th>
+      <td id="T_341ea_row6_col0" class="data row6 col0" >399.000000</td>
+      <td id="T_341ea_row6_col1" class="data row6 col1" >1000.000000</td>
+      <td id="T_341ea_row6_col2" class="data row6 col2" >0.000999</td>
+      <td id="T_341ea_row6_col3" class="data row6 col3" >5.788910</td>
+      <td id="T_341ea_row6_col4" class="data row6 col4" >0.000999</td>
+      <td id="T_341ea_row6_col5" class="data row6 col5" >6.059032</td>
+      <td id="T_341ea_row6_col6" class="data row6 col6" >26.000000</td>
+      <td id="T_341ea_row6_col7" class="data row6 col7" >43.000000</td>
+      <td id="T_341ea_row6_col8" class="data row6 col8" >70.000000</td>
+    </tr>
+  </tbody>
+</table></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../versions.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Versions</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../downloads.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Downloads</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Quick start</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Preparing-data-sets">Preparing data sets</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#scDRS-analysis-of-disease-enrichment-for-individual-cells"><code class="docutils literal notranslate"><span class="pre">scDRS</span></code> analysis of disease enrichment for individual cells</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#scDRS-test-of-group-level-statistics"><code class="docutils literal notranslate"><span class="pre">scDRS</span></code> test of group level statistics</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#scDRS-test-between-disease-score-and-cell-level-variable"><code class="docutils literal notranslate"><span class="pre">scDRS</span></code> test between disease score and cell-level variable</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Using-scDRS-within-python">Using <code class="docutils literal notranslate"><span class="pre">scDRS</span></code> within python</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Preparing-data">Preparing data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Computing-scDRS-scores">Computing scDRS scores</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Downstream-analyses-for-SCZ">Downstream analyses for SCZ</a></li>
+</ul>
+</li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/notebooks/quickstart.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021, Martin Jinye Zhang, Kangcheng Hou.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

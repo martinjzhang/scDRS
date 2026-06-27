@@ -1,0 +1,6 @@
+﻿scdrs.score\_cell
+=================
+
+.. currentmodule:: scdrs
+
+.. autofunction:: score_cell

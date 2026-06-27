@@ -1,0 +1,6 @@
+﻿scdrs.method.\_pearson\_corr
+============================
+
+.. currentmodule:: scdrs.method
+
+.. autofunction:: _pearson_corr

@@ -1,0 +1,659 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>scDRS &#8212; scDRS 1.0.4 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=535dfbd7"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CLI" href="reference_cli.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+
+<a class="navbar-brand logo" href="#">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">scDRS 1.0.4 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="reference_cli.html">
+                        CLI
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="reference.html">
+                        Documentation
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="file_format.html">
+                        File formats
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="faq.html">
+                        FAQ
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="versions.html">
+                        Versions
+                      </a>
+                    </li>
+                
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="notebooks/quickstart.html">
+                        Quick start
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="downloads.html">
+                        Downloads
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link dropdown-item nav-external" href="https://github.com/martinjzhang/scDRS">
+                    Github
+                  </a>
+                </li>
+                
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="reference_cli.html">
+                        CLI
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="reference.html">
+                        Documentation
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="file_format.html">
+                        File formats
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="faq.html">
+                        FAQ
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="versions.html">
+                        Versions
+                      </a>
+                    </li>
+                
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="pst-nav-more-links-2">
+                    More
+                </button>
+                <ul id="pst-nav-more-links-2" class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="notebooks/quickstart.html">
+                        Quick start
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link dropdown-item nav-internal" href="downloads.html">
+                        Downloads
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link dropdown-item nav-external" href="https://github.com/martinjzhang/scDRS">
+                    Github
+                  </a>
+                </li>
+                
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="scdrs">
+<h1>scDRS<a class="headerlink" href="#scdrs" title="Permalink to this heading">#</a></h1>
+<p>scDRS (single-cell disease-relevance score) is a method for associating individual cells in scRNA-seq data with disease GWASs, built on top of <a class="reference external" href="https://anndata.readthedocs.io/en/latest/">AnnData</a> and <a class="reference external" href="https://scanpy.readthedocs.io/en/stable/">Scanpy</a>.</p>
+<p>Check out our manuscript <a class="reference external" href="https://www.nature.com/articles/s41588-022-01167-z">Zhang*, Hou*, et al. “Polygenic enrichment distinguishes disease associations of individual cells in single-cell RNA-seq data</a>.</p>
+<p>Explore results for 74 diseases/traits and the TMS FACS data on <a class="reference external" href="https://scdrs-tms-facs.herokuapp.com/">cellxgene</a>.</p>
+</section>
+<section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h1>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/martinjzhang/scDRS.git
+<span class="nb">cd</span><span class="w"> </span>scDRS
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+<p>Quick test:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/test_CLI.py<span class="w"> </span>-p<span class="w"> </span>no:warnings
+</pre></div>
+</div>
+<p>Install via <a class="reference external" href="https://pypi.org/project/scdrs/">PyPI</a></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">scdrs</span><span class="o">==</span><span class="m">1</span>.0.2
+</pre></div>
+</div>
+<p>Quick test for PyPI installation: open Python (&gt;=3.5) and run the code in the Usage section below.</p>
+<p><a class="reference external" href="versions.html">Install other versions</a></p>
+</section>
+<section id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h1>
+<p>Use <a class="reference external" href="reference_cli.html">scDRS command-line interface (CLI)</a> for standard analyses.</p>
+<p>Use <a class="reference external" href="reference.html">scDRS Python API</a> for customized analyses.</p>
+<p>Here is a toy example for computing scDRS scores.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">scdrs</span>
+
+<span class="n">DATA_PATH</span> <span class="o">=</span> <span class="n">scdrs</span><span class="o">.</span><span class="n">__path__</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">H5AD_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DATA_PATH</span><span class="p">,</span> <span class="s2">&quot;data/toydata_mouse.h5ad&quot;</span><span class="p">)</span>
+<span class="n">COV_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DATA_PATH</span><span class="p">,</span> <span class="s2">&quot;data/toydata_mouse.cov&quot;</span><span class="p">)</span>
+<span class="n">GS_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DATA_PATH</span><span class="p">,</span> <span class="s2">&quot;data/toydata_mouse.gs&quot;</span><span class="p">)</span>
+
+<span class="c1"># Load .h5ad file, .cov file, and .gs file</span>
+<span class="n">adata</span> <span class="o">=</span> <span class="n">scdrs</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">load_h5ad</span><span class="p">(</span><span class="n">H5AD_FILE</span><span class="p">,</span> <span class="n">flag_filter_data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">flag_raw_count</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">df_cov</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">COV_FILE</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">df_gs</span> <span class="o">=</span> <span class="n">scdrs</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">load_gs</span><span class="p">(</span><span class="n">GS_FILE</span><span class="p">)</span>
+
+<span class="c1"># Preproecssing .h5ad data compute scDRS score</span>
+<span class="n">scdrs</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">df_cov</span><span class="p">)</span>
+<span class="n">gene_list</span> <span class="o">=</span> <span class="n">df_gs</span><span class="p">[</span><span class="s1">&#39;toydata_gs_mouse&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">gene_weight</span> <span class="o">=</span> <span class="n">df_gs</span><span class="p">[</span><span class="s1">&#39;toydata_gs_mouse&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">df_res</span> <span class="o">=</span> <span class="n">scdrs</span><span class="o">.</span><span class="n">score_cell</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">gene_list</span><span class="p">,</span> <span class="n">gene_weight</span><span class="o">=</span><span class="n">gene_weight</span><span class="p">,</span> <span class="n">n_ctrl</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">df_res</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Expected results:</p>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>index</p></th>
+<th class="head"><p>raw_score</p></th>
+<th class="head"><p>norm_score</p></th>
+<th class="head"><p>mc_pval</p></th>
+<th class="head"><p>pval</p></th>
+<th class="head"><p>nlog10_pval</p></th>
+<th class="head"><p>zscore</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>N1.MAA000586.3_8_M.1.1-1-1</p></td>
+<td><p>4.741197</p></td>
+<td><p>6.3260064</p></td>
+<td><p>0.04761905</p></td>
+<td><p>0.0016638935</p></td>
+<td><p>2.7788744</p></td>
+<td><p>2.9357162</p></td>
+</tr>
+<tr class="row-odd"><td><p>F10.D041911.3_8_M.1.1-1-1</p></td>
+<td><p>4.739066</p></td>
+<td><p>5.916272</p></td>
+<td><p>0.04761905</p></td>
+<td><p>0.0016638935</p></td>
+<td><p>2.7788744</p></td>
+<td><p>2.9357162</p></td>
+</tr>
+<tr class="row-even"><td><p>A17_B002755_B007347_S17.mm10-plus-7-0</p></td>
+<td><p>4.6366262</p></td>
+<td><p>5.5523157</p></td>
+<td><p>0.04761905</p></td>
+<td><p>0.0016638935</p></td>
+<td><p>2.7788744</p></td>
+<td><p>2.9357162</p></td>
+</tr>
+<tr class="row-odd"><td><p>C22_B003856_S298_L004.mus-2-0-1</p></td>
+<td><p>4.6805663</p></td>
+<td><p>7.2986684</p></td>
+<td><p>0.04761905</p></td>
+<td><p>0.0016638935</p></td>
+<td><p>2.7788744</p></td>
+<td><p>2.9357162</p></td>
+</tr>
+<tr class="row-even"><td><p>G12.B002765.3_38_F.1.1-1-1</p></td>
+<td><p>4.640043</p></td>
+<td><p>5.7792473</p></td>
+<td><p>0.04761905</p></td>
+<td><p>0.0016638935</p></td>
+<td><p>2.7788744</p></td>
+<td><p>2.9357162</p></td>
+</tr>
+<tr class="row-odd"><td><p>H5.B003278.3_38_F.1.1-1-1</p></td>
+<td><p>4.4457436</p></td>
+<td><p>-0.5613674</p></td>
+<td><p>0.7619048</p></td>
+<td><p>0.687188</p></td>
+<td><p>0.16292442</p></td>
+<td><p>-0.48789537</p></td>
+</tr>
+<tr class="row-even"><td><p>O14.MAA000570.3_8_M.1.1-1-1</p></td>
+<td><p>4.4552336</p></td>
+<td><p>-1.5821338</p></td>
+<td><p>0.95238096</p></td>
+<td><p>0.9467554</p></td>
+<td><p>0.023762206</p></td>
+<td><p>-1.6141763</p></td>
+</tr>
+<tr class="row-odd"><td><p>J21.B000634.3_56_F.1.1-1-1</p></td>
+<td><p>4.4433637</p></td>
+<td><p>-2.3119287</p></td>
+<td><p>1.0</p></td>
+<td><p>0.9916805</p></td>
+<td><p>0.0036282123</p></td>
+<td><p>-2.3945906</p></td>
+</tr>
+<tr class="row-even"><td><p>E5.B002765.3_38_F.1.1-1-1</p></td>
+<td><p>4.4870768</p></td>
+<td><p>1.1566308</p></td>
+<td><p>0.23809524</p></td>
+<td><p>0.13311148</p></td>
+<td><p>0.87578446</p></td>
+<td><p>1.1118028</p></td>
+</tr>
+<tr class="row-odd"><td><p>K20_B000268_B009896_S260.mm10-plus-4-0</p></td>
+<td><p>4.53548</p></td>
+<td><p>-3.1656132</p></td>
+<td><p>1.0</p></td>
+<td><p>1.0</p></td>
+<td><p>-0.0</p></td>
+<td><p>-10.0</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h1>
+<ul class="simple">
+<li><p><a class="reference external" href="notebooks/quickstart.html">Tutorial on a mouse Cortex data set.</a></p></li>
+<li><p>Coming soon</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="right-next"
+       href="reference_cli.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">CLI</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">scDRS</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/index.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021, Martin Jinye Zhang, Kangcheng Hou.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
