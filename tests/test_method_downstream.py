@@ -87,7 +87,7 @@ def test_downstream_group_analysis():
         for icol, col in enumerate(ctrl_list):
             v_ctrl_score = temp_df.loc[cell_list_group, col].values
             v_ctrl_score = np.sort(v_score_group)[
-                rankdata(v_ctrl_score, method="ordinal") - 1
+                rankdata(v_ctrl_score, method="ordinal").astype(int) - 1
             ]
             v_gc_ctrl[icol] = gearyc_naive(mat_W, v_ctrl_score)
         v_mcp_true[i_ct] = ((v_gc_ctrl <= gc).sum() + 1) / (v_gc_ctrl.shape[0] + 1)

@@ -989,7 +989,7 @@ def test_gearysc(
                 """
                 Use order in `v` to match the distribution of `ref`
                 """
-                return np.sort(ref)[rankdata(v, method="ordinal") - 1]
+                return np.sort(ref)[rankdata(v, method="ordinal").astype(int) - 1]
 
             df_stats.loc[group, ["trait"] + [f"null_{i_null}" for i_null in range(n_null)]] = gearys_c(
                 group_adata,
