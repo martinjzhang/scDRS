@@ -13,6 +13,10 @@ def category2dummy(
     """
     Convert categorical variables in a dataframe to binary dummy variables.
 
+    Each converted column gives one float 0/1 column per level except the
+    first one (unused categories of a pandas Categorical are removed first).
+    A missing value gives NaN in all dummy columns of that row.
+
     Parameters
     ----------
     df : pd.DataFrame
@@ -40,7 +44,10 @@ def category2dummy(
     dummy_dfs = []
     for col in cols:
         # create df of dummy variables
-        dummy_df = pd.get_dummies(df[col], drop_first=True)
+        series = df[col]
+        if isinstance(series.dtype, pd.CategoricalDtype):
+            series = series.cat.remove_unused_categories()
+        dummy_df = pd.get_dummies(series, drop_first=True, dtype=float)
         dummy_df.columns = [f"{col}_{s}" for s in dummy_df.columns]
         dummy_df.loc[df[col].isnull(), dummy_df.columns] = np.nan
         cols_to_drop.append(col)
@@ -195,6 +202,7 @@ def preprocess(
         df_cov = pd.DataFrame(index=adata.obs_names)
         df_cov = df_cov.join(cov)
         df_cov = category2dummy(df=df_cov, verbose=True)
+        df_cov = df_cov.astype({c: float for c in df_cov.select_dtypes(bool).columns})
         df_cov.fillna(df_cov.mean(), inplace=True)
 
         # Add const term if df_cov does not already have it (or a linear combination of it)

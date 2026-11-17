@@ -71,6 +71,46 @@ def test_score_cell_cli():
     return
 
 
+def test_score_cell_cli_categorical_cov():
+    """
+    Test CLI `scdrs compute-score` with a string (categorical) covariate and a
+    True/False covariate
+    """
+    ROOT_DIR = scdrs.__path__[0]
+    H5AD_FILE = os.path.join(ROOT_DIR, "data/toydata_mouse.h5ad")
+    GS_FILE = os.path.join(ROOT_DIR, "data/toydata_mouse.gs")
+    df_cov = pd.read_csv(
+        os.path.join(ROOT_DIR, "data/toydata_mouse.cov"), sep="\t", index_col=0
+    )
+    df_cov["batch"] = np.array(["A", "B", "C"])[np.arange(df_cov.shape[0]) % 3]
+    df_cov["flag"] = np.arange(df_cov.shape[0]) % 2 == 0
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        cov_file = os.path.join(tmp_dir_path, "categorical.cov")
+        df_cov.to_csv(cov_file, sep="\t")
+        cmds = [
+            "scdrs compute-score",
+            f"--h5ad_file {H5AD_FILE}",
+            "--h5ad_species mouse",
+            f"--gs_file {GS_FILE}",
+            "--gs_species mouse",
+            f"--cov_file {cov_file}",
+            "--n_ctrl 20",
+            "--flag_filter_data False",
+            "--flag_raw_count False",
+            f"--out_folder {tmp_dir_path}",
+        ]
+        subprocess.check_call(" ".join(cmds), shell=True)
+        df_res = pd.read_csv(
+            os.path.join(tmp_dir_path, "toydata_gs_mouse.score.gz"),
+            sep="\t",
+            index_col=0,
+        )
+    assert df_res.shape[0] == df_cov.shape[0]
+    assert np.isfinite(df_res[["raw_score", "norm_score"]].values).all()
+    return
+
+
 def test_munge_gs_cli():
     """
     Test CLI `scdrs munge-gs`

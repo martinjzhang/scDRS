@@ -127,7 +127,7 @@ python compute_downstream.py \
             
 **.cov** file (.tsv file) : covariate file for the scRNA-seq data
 - index: cell names, consistent with `adata.obs_names`
-- other comlumns: covariate with numerical values
+- other comlumns: covariate with numerical values (columns with non-numerical values, e.g. strings, are treated as categorical and automatically one-hot encoded, dropping the first level)
 
   |          index          | const | n_genes | sex_male |  age  |
   | :---------------------: | :---: | :-----: | :------: | :---: |
