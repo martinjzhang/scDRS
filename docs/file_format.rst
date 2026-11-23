@@ -67,7 +67,7 @@ GENESET
 scDRS covariate file for the :code:`.h5ad` single-cell data. :code:`.tsv` file.
 
 - First column: cell names, consistent with :code:`adata.obs_names`.
-- Other comlumns: covariates with numerical values.
+- Other comlumns: covariates with numerical values. Columns with non-numerical values (e.g. strings) are treated as categorical and automatically one-hot encoded (the first level is dropped).
 
 .. csv-table:: Example .cov file
    :header: "index", "const", "n_genes", "sex_male", "age"

@@ -457,3 +457,115 @@ def test_get_mean_var_implicit_cov_corr():
         ) & np.allclose(v_var, v_var_true, rtol=1e-4, equal_nan=True), err_msg
 
     return
+
+
+def _make_categorical_cov(adata):
+    """Numeric covariate plus a string covariate with 3 levels"""
+    rng = np.random.RandomState(0)
+    df_cov = pd.DataFrame(index=adata.obs_names)
+    df_cov["num"] = rng.normal(size=adata.n_obs)
+    df_cov["batch"] = np.array(["A", "B", "C"])[np.arange(adata.n_obs) % 3]
+    return df_cov
+
+
+def test_category2dummy():
+    """
+    Test scdrs.pp.category2dummy: float dummies for string / Categorical columns,
+    missing values stay missing, first level dropped, numeric columns untouched
+    """
+    df = pd.DataFrame(
+        {
+            "num": [0.5, 1.5, 2.5, 3.5, 4.5, 5.5],
+            "s": ["a", "b", "c", "a", None, "c"],
+            "k": pd.Categorical(
+                ["x", "y", "x", "y", "x", "y"], categories=["w", "x", "y"]
+            ),
+        },
+        index=list("uvwxyz"),
+    )
+    df_out = scdrs.pp.category2dummy(df)
+    assert set(df_out.columns) == {
+        "num",
+        "s_b",
+        "s_c",
+        "k_y",
+    }, "first level dropped, unused level removed"
+    assert all(df_out.dtypes == float), "all columns should be float"
+    assert df_out["num"].equals(df["num"])
+    assert df_out["s_b"].isnull().tolist() == [False] * 4 + [True, False]
+    assert df_out.loc["v", "s_b"] == 1 and df_out.loc["w", "s_c"] == 1
+    assert df_out.loc[["u", "v"], "k_y"].tolist() == [0, 1]
+    return
+
+
+@pytest.mark.parametrize("flag_sparse", [True, False])
+def test_preprocess_categorical_cov(flag_sparse):
+    """
+    Test scdrs.pp.preprocess with a string covariate: same result as passing
+    the dummy variables (first level dropped) as numeric columns
+    """
+    adata, df_cov, df_gs, dic_res_ref = load_toy_data()
+    adata = adata[:, :50].copy()
+    if not flag_sparse:
+        adata.X = adata.X.toarray()
+    df_cat = _make_categorical_cov(adata)
+    df_num = pd.DataFrame(index=df_cat.index)
+    df_num["num"] = df_cat["num"]
+    df_num["batch_B"] = (df_cat["batch"] == "B").astype(float)
+    df_num["batch_C"] = (df_cat["batch"] == "C").astype(float)
+
+    adata_cat = adata.copy()
+    adata_num = adata.copy()
+    scdrs.pp.preprocess(adata_cat, cov=df_cat)
+    scdrs.pp.preprocess(adata_num, cov=df_num)
+
+    stats_cat = adata_cat.uns["SCDRS_PARAM"]["GENE_STATS"]
+    stats_num = adata_num.uns["SCDRS_PARAM"]["GENE_STATS"]
+    pd.testing.assert_frame_equal(stats_cat, stats_num, check_exact=False, rtol=1e-8)
+    if flag_sparse:
+        beta_cat = adata_cat.uns["SCDRS_PARAM"]["COV_BETA"]
+        beta_num = adata_num.uns["SCDRS_PARAM"]["COV_BETA"]
+        assert set(beta_cat.columns) == {"num", "batch_B", "batch_C", "SCDRS_CONST"}
+        assert np.allclose(beta_cat[beta_num.columns].values, beta_num.values)
+    return
+
+
+def test_preprocess_bool_cov():
+    """
+    Test scdrs.pp.preprocess with a True/False covariate: same result as
+    passing it as a 0/1 numeric column
+    """
+    adata, df_cov, df_gs, dic_res_ref = load_toy_data()
+    adata = adata[:, :50].copy()
+    df_bool = _make_categorical_cov(adata)[["num"]].copy()
+    df_bool["flag"] = np.arange(adata.n_obs) % 3 == 0
+    df_num = df_bool.astype({"flag": float})
+
+    adata_bool = adata.copy()
+    adata_num = adata.copy()
+    scdrs.pp.preprocess(adata_bool, cov=df_bool)
+    scdrs.pp.preprocess(adata_num, cov=df_num)
+    for key in ["GENE_STATS", "COV_BETA"]:
+        pd.testing.assert_frame_equal(
+            adata_bool.uns["SCDRS_PARAM"][key], adata_num.uns["SCDRS_PARAM"][key]
+        )
+    return
+
+
+def test_preprocess_categorical_cov_missing_and_unused():
+    """
+    Test scdrs.pp.preprocess with a Categorical covariate that has missing
+    values and an unused category
+    """
+    adata, df_cov, df_gs, dic_res_ref = load_toy_data()
+    adata = adata[:, :50].copy()
+    df_cat = _make_categorical_cov(adata)
+    df_cat["batch"] = pd.Categorical(
+        df_cat["batch"], categories=["A", "B", "C", "unused"]
+    )
+    df_cat.iloc[:2, df_cat.columns.get_loc("batch")] = np.nan
+    scdrs.pp.preprocess(adata, cov=df_cat)
+    df_mat = adata.uns["SCDRS_PARAM"]["COV_MAT"]
+    assert set(df_mat.columns) == {"num", "batch_B", "batch_C", "SCDRS_CONST"}
+    assert np.isfinite(df_mat.values.astype(float)).all()
+    return
